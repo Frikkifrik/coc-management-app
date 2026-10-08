@@ -1,0 +1,31 @@
+{
+  "name": "clan-command",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "dev": "node server/run.mjs",
+    "build": "vite build && tsc --noEmit",
+    "check": "tsc --noEmit",
+    "start": "NODE_ENV=production node server/run.mjs"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.8.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^4.7.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
+}

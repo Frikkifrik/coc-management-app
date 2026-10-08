@@ -1,0 +1,12 @@
+export { DashboardPage } from './dashboard';
+export { MembersPage, MemberDetailPage } from './members';
+export { ClanPage } from './clans';
+export { WarsPage } from './wars';
+export { ReadinessPage } from './readiness';
+export { HistoryPage } from './progression';
+export { RankedPage } from './ranked';
+export { RewardsPage } from './rewards';
+export { AlertPage } from './alerts';
+export { FinderPage } from './finder';
+export { IntegrationPage } from './integrations';
+export { SettingsPage } from './settings';

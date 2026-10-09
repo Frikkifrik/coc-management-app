@@ -2,6 +2,13 @@ import { useState, type FormEvent } from 'react';
 import { BrowserRouter, Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Activity, Bell, Bot, Building2, ChevronDown, Crown, Gift, LayoutDashboard, LogOut, Menu, RefreshCw, Search, Shield, ShieldCheck, Swords, TrendingUp, Trophy, UsersRound, X, Zap } from 'lucide-react';
 import { WorkspaceProvider, useWorkspace } from './workspace-context';
+import { OperationsProvider } from './operations-context';
+import { ApplicantsPage } from './pages/applicants';
+import { BaseBuilderPage } from './pages/base-builder';
+import { CWLRoomPage } from './pages/cwl-room';
+import { FamilyHubPage } from './pages/family-hub';
+import { KotHEventsPage } from './pages/koth-events';
+import { RecruitmentPage } from './pages/recruitment';
 import type { AppRole } from './types';
 import { AlertPage, ClanPage, DashboardPage, FinderPage, HistoryPage, IntegrationPage, MemberDetailPage, MembersPage, RankedPage, ReadinessPage, RewardsPage, SettingsPage, WarsPage } from './pages';
 import { Avatar, Badge, Button, IconButton, ProgressBar } from './components/ui';
@@ -11,15 +18,21 @@ const roleLabels: Record<AppRole, string> = { leader: 'Leader', co_leader: 'Co-L
 
 const navigation = [
   { label: 'Dashboard', to: '/app/dashboard', icon: LayoutDashboard, group: 'Command', minimum: 'member' as AppRole },
+  { label: 'Family hub', to: '/app/family', icon: UsersRound, group: 'Clan', minimum: 'member' as AppRole },
   { label: 'Roster', to: '/app/members', icon: UsersRound, group: 'Clan', minimum: 'elder' as AppRole },
   { label: 'Clans', to: '/app/clans', icon: Building2, group: 'Clan', minimum: 'leader' as AppRole },
+  { label: 'Applicant inspector', to: '/app/applicants', icon: Search, group: 'Clan', minimum: 'co_leader' as AppRole },
   { label: 'War room', to: '/app/wars', icon: Swords, group: 'Battle', minimum: 'elder' as AppRole },
+  { label: 'CWL War Room', to: '/app/cwl', icon: ShieldCheck, group: 'Battle', minimum: 'co_leader' as AppRole },
   { label: 'War readiness', to: '/app/readiness', icon: ShieldCheck, group: 'Battle', minimum: 'elder' as AppRole },
+  { label: 'King of the Hill', to: '/app/events', icon: Trophy, group: 'Battle', minimum: 'member' as AppRole },
   { label: 'Progression', to: '/app/progression', icon: TrendingUp, group: 'Growth', minimum: 'member' as AppRole },
   { label: 'Ranked', to: '/app/ranked', icon: Trophy, group: 'Growth', minimum: 'member' as AppRole },
   { label: 'Rewards', to: '/app/rewards', icon: Gift, group: 'Growth', minimum: 'member' as AppRole },
+  { label: 'Base builder', to: '/app/bases', icon: Building2, group: 'Growth', minimum: 'member' as AppRole },
   { label: 'Alerts', to: '/app/alerts', icon: Bell, group: 'Tools', minimum: 'elder' as AppRole },
   { label: 'Player finder', to: '/app/finder', icon: Search, group: 'Tools', minimum: 'member' as AppRole },
+  { label: 'Recruitment search', to: '/recruitment', icon: UsersRound, group: 'Tools', minimum: 'member' as AppRole },
   { label: 'Discord bot', to: '/app/discord', icon: Bot, group: 'Tools', minimum: 'leader' as AppRole },
   { label: 'Settings', to: '/app/settings', icon: Activity, group: 'Tools', minimum: 'leader' as AppRole },
 ];
@@ -69,6 +82,7 @@ function SignInPage() {
           {(['leader','co_leader','elder','member'] as AppRole[]).map((role) => <button key={role} type="button" disabled={busy} onClick={() => void tryDemo(role)}><span className={`role-seal role-seal--${role}`}><ShieldCheck size={15} /></span><span>{roleLabels[role]}<small>{role === 'leader' ? 'Full command' : role === 'co_leader' ? 'War & roster' : role === 'elder' ? 'Readiness tools' : 'Player view'}</small></span><b>↗</b></button>)}
         </div>
       </div> : <p className="sign-in-help">Need access? Ask a clan Leader to provision your account.</p>}
+      <a className="sign-in-public-link" href="/recruitment">Explore public player &amp; clan search <Search size={14}/></a>
       <footer><span><i /> Secure session</span><span>Clash of Clans clan management</span></footer>
     </section>
     <aside className="sign-in-side-note"><span className="eyebrow">Your clan, in sync</span><h2>Built for every<br />role in the clan.</h2><div className="sign-in-side-note__roles"><span><Crown size={15} /> Leadership</span><span><Swords size={15} /> Battle crew</span><span><Zap size={15} /> Every member</span></div></aside>
@@ -107,7 +121,7 @@ function WorkspaceLayout() {
         <span className="brand-lockup__crest"><Shield size={26} fill="currentColor" /></span>
         <span><strong>CLAN COMMAND</strong><small>OPERATIONS HUB <i /></small></span>
       </a>
-      <div className="family-selector"><span className="family-selector__badge"><Crown size={16} /></span><span><small>ACTIVE FAMILY</small><strong>Ironclad Family</strong></span><ChevronDown size={15} /></div>
+      <div className="family-selector"><span className="family-selector__badge"><Crown size={16} /></span><span><small>ACTIVE FAMILY</small><strong>Misclicked Family</strong></span><ChevronDown size={15} /></div>
       <nav className="side-nav" aria-label="Main navigation">
         {['Command','Clan','Battle','Growth','Tools'].map((group) => {
           const links = navigation.filter((item) => item.group === group && canSee(item.minimum));
@@ -144,9 +158,15 @@ function AppRoutes() {
   return <>
     <Routes>
       <Route path="/login" element={<SignInPage />} />
+      <Route path="/recruitment" element={<RecruitmentPage />} />
       <Route path="/app" element={user ? <WorkspaceLayout /> : <Navigate to="/login" replace />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="family" element={<FamilyHubPage />} />
+        <Route path="applicants" element={<ProtectedRoute minimum="co_leader"><ApplicantsPage /></ProtectedRoute>} />
+        <Route path="cwl" element={<ProtectedRoute minimum="co_leader"><CWLRoomPage /></ProtectedRoute>} />
+        <Route path="events" element={<KotHEventsPage />} />
+        <Route path="bases" element={<BaseBuilderPage />} />
         <Route path="members" element={<ProtectedRoute minimum="elder"><MembersPage /></ProtectedRoute>} />
         <Route path="members/:memberId" element={<MemberDetailPage />} />
         <Route path="clans" element={<ProtectedRoute minimum="leader"><ClanPage /></ProtectedRoute>} />
@@ -161,7 +181,7 @@ function AppRoutes() {
         <Route path="settings" element={<ProtectedRoute minimum="leader"><SettingsPage /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Route>
-      <Route path="/" element={<Navigate to={user ? '/app/dashboard' : '/login'} replace />} />
+      <Route path="/" element={<Navigate to={user ? '/app/dashboard' : '/recruitment'} replace />} />
       <Route path="*" element={<Navigate to={user ? '/app/dashboard' : '/login'} replace />} />
     </Routes>
     <ToastStack />
@@ -169,5 +189,5 @@ function AppRoutes() {
 }
 
 export default function App() {
-  return <WorkspaceProvider><BrowserRouter><AppRoutes /></BrowserRouter></WorkspaceProvider>;
+  return <WorkspaceProvider><OperationsProvider><BrowserRouter><AppRoutes /></BrowserRouter></OperationsProvider></WorkspaceProvider>;
 }

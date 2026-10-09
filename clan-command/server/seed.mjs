@@ -9,9 +9,9 @@ const DEMO_ROLES = [
 ];
 
 const CLANS = [
-  { name: 'Ironclad Vanguard', shortName: 'IRONCLAD', tag: '#2Q0P2YLRG', clanLevel: 27, league: 'Champion II', trophies: 48_620, warWinStreak: 8, description: 'The flagship war roster. Calm calls, clean hits, no missed stars.' },
-  { name: 'Frostfire Battalion', shortName: 'FROSTFIRE', tag: '#8Y2Q0P9LV', clanLevel: 22, league: 'Master I', trophies: 39_240, warWinStreak: 3, description: 'A disciplined second home for builders, grinders and dependable attackers.' },
-  { name: 'Goblin Foundry', shortName: 'FOUNDRY', tag: '#YJ2P8Q0RC', clanLevel: 19, league: 'Crystal I', trophies: 31_870, warWinStreak: 5, description: 'The proving ground. Grow your base, learn your hits, earn your place.' },
+  { name: 'Misclicked Main', shortName: 'MAIN', tag: '#2Q0P2YLRG', clanLevel: 27, league: 'Champion II', trophies: 48_620, warWinStreak: 8, description: 'The flagship war roster. Calm calls, clean hits, no missed stars.' },
+  { name: 'Misclicked Feeder', shortName: 'FEEDER', tag: '#8Y2Q0P9LV', clanLevel: 22, league: 'Master I', trophies: 39_240, warWinStreak: 3, description: 'A disciplined second home for builders, grinders and dependable attackers.' },
+  { name: 'Misclicked Academy', shortName: 'ACADEMY', tag: '#YJ2P8Q0RC', clanLevel: 19, league: 'Crystal I', trophies: 31_870, warWinStreak: 5, description: 'The proving ground. Grow your base, learn your hits, earn your place.' },
 ];
 
 const CORE_PLAYER_SEED = [
@@ -87,10 +87,12 @@ function createDemoData() {
     @id,@tag,@name,@personId,@accountType,@builderHall,@xpLevel,@bestTrophies,@builderBaseTrophies,@builderBaseLeague,@warStars,
     @warEntries90d,@warAttacks90d,@warMissed90d,@averageStars90d,@averageDestruction90d,@leftAt,@returnCount,@clanId,@role,@townHall,
     @trophies,@league,@rankedTier,@rankedPoints,@rewardPoints,@heroReadiness,@heroLevels,@warOptIn,@cwlOptIn,@missedAttacks30d,@warAttacks30d,
-    @donationRatio,@lastActiveAt,@joinedAt,@baseLink,1,@bio,@createdAt,@updatedAt
+    @donationRatio,@lastActiveAt,@joinedAt,@baseLink,@isActive,@bio,@createdAt,@updatedAt
   )`);
+  const formerIndexes = new Set([40, 54, 68]);
   const playerRows = PLAYER_SEED.map((person, index) => {
     const [name, clanIndex, role, townHall, trophies, league, rankedTier, rankedPoints, heroReadiness, missedAttacks30d, warAttacks30d, donationRatio] = person;
+    const isFormer = formerIndexes.has(index);
     const id = cryptoId();
     const tag = tagFrom(`clan-command-demo-player-${index}-${name}`);
     playerInsert.run({
@@ -100,7 +102,7 @@ function createDemoData() {
       builderBaseLeague: ['Copper League II','Iron League I','Steel League III','Platinum League I','Titanium League II'][index % 5],
       warStars: 175 + index * 83, warEntries90d: 8 + (index * 3 % 17), warAttacks90d: 15 + (index * 7 % 38),
       warMissed90d: missedAttacks30d + index % 2, averageStars90d: Math.round((2.1 + (index % 9) * 0.1) * 100) / 100,
-      averageDestruction90d: 72 + (index * 7 % 28), leftAt: null, returnCount: index % 8 === 0 ? 1 : 0,
+      averageDestruction90d: 72 + (index * 7 % 28), leftAt: isFormer ? ago(24 * (12 + index % 20)) : null, returnCount: index % 8 === 0 ? 1 : 0,
       clanId: clanIds[clanIndex], role, townHall, trophies, league, rankedTier, rankedPoints,
       rewardPoints: 55 + ((index * 37) % 440), heroReadiness, heroLevels: JSON.stringify(aroundTownHall(townHall, index)),
 
@@ -109,9 +111,10 @@ function createDemoData() {
       lastActiveAt: ago((index * 5) % 38), joinedAt: ago(24 * (45 + index * 9)),
       baseLink: `https://link.clashofclans.com/en?action=OpenPlayerProfile&tag=${encodeURIComponent(tag)}`,
       bio: ['Three-star specialist and calm war caller.', 'Working toward max heroes this season.', 'Always up for friendly challenges.', 'Focused on clean attacks and steady upgrades.'][index % 4],
+      isActive: isFormer ? 0 : 1,
       createdAt: ago(24 * (45 + index * 9)), updatedAt: stamp,
     });
-    return { id, tag, name, clanId: clanIds[clanIndex], role, townHall, index };
+    return { id, tag, name, clanId: clanIds[clanIndex], role, townHall, index, isFormer };
   });
 
   const userInsert = db.prepare(`INSERT INTO users (id,email,display_name,role,player_id,password_salt,password_hash,is_active,created_at,updated_at)
@@ -175,6 +178,14 @@ function createDemoData() {
     const clan = CLANS[PLAYER_SEED[playerIndex][1]];
     historyInsert.run({ id: cryptoId(), playerId: player.id, playerName: player.name, playerTag: player.tag, clanName: clan.name, eventType, title, details, fromValue, toValue, createdAt: ago(ageHours) });
   }
+  for (const playerIndex of formerIndexes) {
+    const player = playerRows[playerIndex];
+    const clan = CLANS[PLAYER_SEED[playerIndex][1]];
+    historyInsert.run({ id: cryptoId(), playerId: player.id, playerName: player.name, playerTag: player.tag, clanName: clan.name, eventType: 'roster_departure', title: 'Left the family roster', details: `${player.name} was archived as a former family member.`, fromValue: clan.name, toValue: 'Former member', createdAt: ago(24 * (12 + playerIndex % 20)) });
+  }
+  const formerNameChange = playerRows[40];
+  historyInsert.run({ id: cryptoId(), playerId: formerNameChange.id, playerName: formerNameChange.name, playerTag: formerNameChange.tag, clanName: CLANS[PLAYER_SEED[40][1]].name, eventType: 'name_change', title: 'Player name changed', details: 'The account name was updated after the member left.', fromValue: 'AshSignal', toValue: formerNameChange.name, createdAt: ago(24 * 6) });
+  historyInsert.run({ id: cryptoId(), playerId: formerNameChange.id, playerName: formerNameChange.name, playerTag: formerNameChange.tag, clanName: CLANS[PLAYER_SEED[40][1]].name, eventType: 'town_hall', title: 'Town Hall progressed after departure', details: 'The player continued upgrading their village while away from the family.', fromValue: 'TH17', toValue: 'TH18', createdAt: ago(24 * 4) });
 
   const alertInsert = db.prepare(`INSERT INTO alerts (id,clan_id,clan_name,player_id,player_name,player_tag,title,details,category,severity,status,created_by,created_at,resolved_at)
     VALUES (@id,@clanId,@clanName,@playerId,@playerName,@playerTag,@title,@details,@category,@severity,@status,NULL,@createdAt,NULL)`);
@@ -223,7 +234,7 @@ function createDemoData() {
 
   db.prepare(`INSERT INTO discord_integrations (id,enabled,guild_id,channel_label,webhook_cipher,notifications_json,updated_at)
     VALUES ('discord',0,'','war-room',NULL,?,?)`)
-    .run(JSON.stringify({ warReminders: true, cwlLineup: true, memberMilestones: true, rankedMovement: false }), stamp);
+    .run(JSON.stringify({ warReminders: true, cwlLineup: true, memberMilestones: true, rankedMovement: false, applicantAlerts: true }), stamp);
 }
 
 function createBootstrapLeader() {

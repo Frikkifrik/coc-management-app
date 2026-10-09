@@ -6,6 +6,7 @@ import { createServer as createViteServer } from 'vite';
 import { appDir, audit, cryptoId, db, makePassword, nowIso, runTransaction, verifyPassword } from './database.mjs';
 import { seedIfEmpty, getDemoRoles } from './seed.mjs';
 import { decryptSecret, encryptSecret, isAllowedDiscordWebhook } from './secrets.mjs';
+import { isSupercellConfigured, supercellLookup } from './supercell.mjs';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const demoMode = process.env.DEMO_MODE === 'true' || (!isProduction && process.env.DEMO_MODE !== 'false');
@@ -111,7 +112,7 @@ function allClans() {
   return db.prepare(`SELECT c.id,c.name,c.tag,c.short_name AS shortName,c.clan_level AS clanLevel,c.league,c.trophies,
       c.war_win_streak AS warWinStreak,c.description,c.created_at AS createdAt,
       (SELECT COUNT(*) FROM players p WHERE p.clan_id=c.id AND p.is_active=1) AS memberCount
-    FROM clans c ORDER BY c.name COLLATE NOCASE`).all().map(mapClan);
+    FROM clans c ORDER BY CASE c.short_name WHEN 'MAIN' THEN 0 WHEN 'FEEDER' THEN 1 WHEN 'ACADEMY' THEN 2 ELSE 3 END,c.name COLLATE NOCASE`).all().map(mapClan);
 }
 function memberSelect() {
   return `SELECT p.id,p.tag,p.name,p.person_id AS personId,p.account_type AS accountType,p.builder_hall AS builderHall,p.xp_level AS xpLevel,
@@ -194,21 +195,22 @@ function getIntegration() {
   try { notifications = JSON.parse(row.notifications_json || '{}'); } catch { notifications = {}; }
   return {
     id: 'discord', enabled: Boolean(row.enabled), guildId: row.guild_id, channelLabel: row.channel_label,
-    notifications: { warReminders: true, cwlLineup: true, memberMilestones: true, rankedMovement: false, ...notifications },
+    notifications: { warReminders: true, cwlLineup: true, memberMilestones: true, rankedMovement: false, applicantAlerts: true, ...notifications },
     webhookConfigured: Boolean(row.webhook_cipher), updatedAt: row.updated_at,
   };
 }
 async function dispatchDiscord(notificationKey, content) {
   const row = db.prepare(`SELECT enabled,webhook_cipher,notifications_json FROM discord_integrations WHERE id='discord'`).get();
-  if (!row?.enabled) return;
+  if (!row?.enabled) return false;
   let notifications = {};
-  try { notifications = JSON.parse(row.notifications_json || '{}'); } catch { return; }
-  if (!notifications[notificationKey]) return;
+  try { notifications = JSON.parse(row.notifications_json || '{}'); } catch { return false; }
+  if (!notifications[notificationKey] && notificationKey !== 'applicantAlerts') return false;
   const webhook = decryptSecret(row.webhook_cipher);
-  if (!webhook || !isAllowedDiscordWebhook(webhook)) return;
+  if (!webhook || !isAllowedDiscordWebhook(webhook)) return false;
   try {
-    await fetch(webhook, { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(5000), headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: String(content).slice(0, 1800) }) });
-  } catch { /* Integration failures never block a saved clan action. */ }
+    const response = await fetch(webhook, { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(5000), headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: String(content).slice(0, 1800) }) });
+    return response.ok;
+  } catch { return false; /* Integration failures never block a saved clan action. */ }
 }
 function addHistory({ member, eventType, title, details = '', fromValue = null, toValue = null, userId = null, at = now() }) {
   db.prepare(`INSERT INTO progression_events (id,player_id,player_name,player_tag,clan_name,event_type,title,details,from_value,to_value,created_by,created_at)
@@ -229,6 +231,31 @@ function failLogin(ip) {
   const current = loginFailures.get(ip) || { count: 0, startedAt: Date.now() };
   current.count += 1;
   loginFailures.set(ip, current);
+}
+
+function publicRecruitProfile(member) {
+  const clan = allClans().find((item) => item.id === member.clanId);
+  const hash = [...member.tag].reduce((value, char) => (value * 31 + char.charCodeAt(0)) >>> 0, 7);
+  const equipmentNames = ['Giant Gauntlet', 'Rage Vial', 'Frozen Arrow', 'Healer Puppet', 'Eternal Tome', 'Life Gem'];
+  const heroEquipment = equipmentNames.slice(0, 4).map((name, index) => ({ name, level: 9 + ((hash >> (index * 3)) % 18) }));
+  const rushPercent = Math.max(0, Math.min(100, Math.round((100 - member.heroReadiness) * 0.62 + (hash % 13))));
+  const labPurity = Math.max(35, Math.min(100, Math.round(48 + member.heroReadiness * 0.46 + (hash % 12))));
+  const threeStarRate = Math.max(0, Math.min(100, Math.round(((member.averageStars90d || (1.5 + (hash % 15) / 10)) / 3) * 100)));
+  const membershipTypes = new Set(['roster_join','roster_return','roster_departure','clan_transfer','name_change']);
+  const mobilityTimeline = allHistory().filter((event) => (event.playerId === member.id || event.playerTag === member.tag) && membershipTypes.has(event.eventType))
+    .map((event) => ({ title: event.title, type: event.eventType, from: event.fromValue, to: event.toValue, date: event.createdAt }))
+    .sort((left, right) => left.date.localeCompare(right.date));
+  if (!mobilityTimeline.some((event) => event.type === 'roster_join')) {
+    mobilityTimeline.unshift({ title: 'Joined the family', type: 'roster_join', from: null, to: clan?.name || member.clanName, date: member.joinedAt });
+  }
+  return {
+    tag: member.tag, name: member.name, townHall: member.townHall, trophies: member.trophies,
+    clanName: clan?.name || member.clanName, clanTag: clan?.tag || '', clanLevel: clan?.clanLevel || 0,
+    active: member.isActive, joinedAt: member.joinedAt, leftAt: member.leftAt || null,
+    returnCount: member.returnCount || 0, rushPercent, labPurity, heroLevels: member.heroLevels,
+    heroEquipment, threeStarRate, warStars: member.warStars, mobilityTimeline,
+    mockMetrics: true,
+  };
 }
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, app: 'clan-command', demoMode, storage: 'sqlite' }));
@@ -275,6 +302,23 @@ app.post('/api/auth/logout', (req, res) => {
   }
   res.setHeader('Set-Cookie', `clan_command_session=; ${cookieOptions(req).replace('Max-Age=604800', 'Max-Age=0')}`);
   return res.json({ ok: true });
+});
+
+app.get('/api/public-search', (req, res) => {
+  const query = String(req.query.q || req.query.tag || '').trim().toUpperCase();
+  if (!query || query.length > 40) return res.json({ kind: 'none', query, items: [] });
+  const tagQuery = query.startsWith('#') ? query : `#${query}`;
+  const clan = /^#[0-9A-Z]{3,16}$/.test(tagQuery) ? allClans().find((item) => item.tag.toUpperCase() === tagQuery) : null;
+  if (clan) {
+    const members = allMembers().filter((member) => member.clanId === clan.id).map(publicRecruitProfile);
+    return res.json({ kind: 'clan', query, clan, items: members });
+  }
+  const all = allMembers();
+  let members = /^#[0-9A-Z]{3,16}$/.test(tagQuery)
+    ? all.filter((member) => member.tag.toUpperCase() === tagQuery)
+    : all.filter((member) => member.name.toUpperCase().includes(query) || member.clanName.toUpperCase().includes(query));
+  members = members.slice(0, 12).map(publicRecruitProfile);
+  return res.json({ kind: members.length ? 'player' : 'none', query, items: members });
 });
 
 app.use('/api', requireSession);
@@ -441,7 +485,7 @@ app.patch('/api/members/:id', (req, res) => {
   } catch (error) { return publicError(res, 409, isUniqueError(error) ? 'That player tag is already in the roster.' : 'Player base could not be saved.'); }
   const after = memberById(before.id);
   const tracked = [
-    ['townHall','town_hall','Town Hall upgraded'], ['builderHall','builder_hall','Builder Hall upgraded'],
+    ['name','name_change','Player name changed'], ['townHall','town_hall','Town Hall upgraded'], ['builderHall','builder_hall','Builder Hall upgraded'],
     ['league','league_change','Home village league changed'], ['bestTrophies','trophy_record','Home village trophy record updated'],
     ['builderBaseLeague','builder_league_change','Builder Base league changed'], ['builderBaseTrophies','builder_trophy_record','Builder Base trophy record updated'],
     ['rankedTier','ranked_promotion','Ranked tier updated'], ['rankedPoints','ranked_movement','Ranked points updated'],
@@ -663,6 +707,7 @@ app.put('/api/integrations/discord', requireRole('leader'), (req, res) => {
     cwlLineup: req.body?.notifications?.cwlLineup !== false,
     memberMilestones: req.body?.notifications?.memberMilestones !== false,
     rankedMovement: Boolean(req.body?.notifications?.rankedMovement),
+    applicantAlerts: req.body?.notifications?.applicantAlerts !== false,
   };
   const enabled = Boolean(req.body?.enabled) && Boolean(webhookCipher);
   const updatedAt = now();
@@ -689,6 +734,27 @@ app.post('/api/integrations/discord/test', requireRole('leader'), async (_req, r
     return res.json({ ok: true, message: 'Test message delivered to Discord.' });
   } catch {
     return publicError(res, 502, 'Discord could not be reached. Check the webhook and try again.');
+  }
+});
+app.post('/api/integrations/discord/dispatch', requireRole('co_leader'), async (req, res) => {
+  const kind = enumValue(req.body?.kind, ['applicant','cwl'], null);
+  const content = safeText(req.body?.content, 1800);
+  if (!kind || content.length < 2) return publicError(res, 400, 'Choose an alert type and provide a message.');
+  const notificationKey = kind === 'applicant' ? 'applicantAlerts' : 'cwlLineup';
+  const delivered = await dispatchDiscord(notificationKey, content);
+  audit(req.user.id, 'dispatch', 'discord', kind, delivered ? 'Message delivered' : 'Message copied locally; Discord is not enabled');
+  return res.json({ delivered, message: delivered ? 'Message delivered to Discord.' : 'Discord is not enabled for this workspace. Copy the generated message to share it.' });
+});
+
+app.get('/api/supercell/status', (_req, res) => res.json({ configured: isSupercellConfigured(), provider: 'Supercell API via static-IP proxy' }));
+app.get('/api/supercell/:kind/:tag', async (req, res) => {
+  if (!['player','clan'].includes(req.params.kind)) return publicError(res, 400, 'Choose a player or clan lookup.');
+  try {
+    const result = await supercellLookup(req.params.kind, req.params.tag);
+    if (!result.configured) return publicError(res, 503, 'Live Supercell lookup is not configured. Using local demo data.');
+    return res.json({ item: result.item });
+  } catch (error) {
+    return publicError(res, Number(error?.status) || 502, error instanceof Error ? error.message : 'Supercell lookup failed.');
   }
 });
 

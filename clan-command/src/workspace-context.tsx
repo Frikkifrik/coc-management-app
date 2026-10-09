@@ -246,7 +246,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const saveIntegration = useCallback(async (payload: Record<string, unknown>) => {
     const before = data?.integration || null;
-    setData((current) => current ? { ...current, integration: { ...(current.integration || { id: 'discord', enabled: false, guildId: '', channelLabel: '', notifications: { warReminders: true, cwlLineup: true, memberMilestones: true, rankedMovement: false }, webhookConfigured: false, updatedAt: new Date().toISOString() }), ...payload } as DiscordIntegration } : current);
+    setData((current) => current ? { ...current, integration: { ...(current.integration || { id: 'discord', enabled: false, guildId: '', channelLabel: '', notifications: { warReminders: true, cwlLineup: true, memberMilestones: true, rankedMovement: false, applicantAlerts: true }, webhookConfigured: false, updatedAt: new Date().toISOString() }), ...payload } as DiscordIntegration } : current);
     try {
       const result = await apiRequest<{ item: DiscordIntegration }>('/api/integrations/discord', { method: 'PUT', body: jsonBody(payload) });
       setData((current) => current ? { ...current, integration: result.item } : current);

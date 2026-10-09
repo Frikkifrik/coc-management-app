@@ -8,7 +8,8 @@ function configuration() {
 
   if (!apiKey) return null;
 
-  if (proxyUrl) {
+  // Only validate if it's a real non-empty URL string
+  if (proxyUrl && proxyUrl.length > 5) {
     if (!/^https?:\/\//i.test(proxyUrl)) {
       proxyUrl = `http://${proxyUrl}`;
     }
@@ -17,6 +18,8 @@ function configuration() {
     } catch {
       proxyUrl = '';
     }
+  } else {
+    proxyUrl = '';
   }
 
   return { apiKey, proxyUrl };

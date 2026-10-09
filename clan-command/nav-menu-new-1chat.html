@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NAV-TOPMENU-01 — visual</title>
+
+<style>
+@font-face {
+  font-family: "Clash_Bold.otf";
+  src: url("./Clash_Bold.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  --cream: #e8e8e0;
+  --frame: #5d5653;
+  --tab: #787266;
+  --tab-edge: #a19c92;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html, body { margin: 0; height: 100%; }
+
+body {
+  height: 100vh;
+  height: 100dvh;
+  padding: 12px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #33482e;
+  color: white;
+  font: 13px/1.4 system-ui, sans-serif;
+}
+
+button { cursor: pointer; }
+button, a { -webkit-tap-highlight-color: transparent; }
+
+:focus-visible {
+  outline: 3px solid #43dfff;
+  outline-offset: 3px;
+}
+
+/* PREVIEW ONLY — outside the menu being designed */
+.preview {
+  width: 100%;
+  max-width: 1000px;
+  height: 100%;
+  max-height: 720px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preview-tools {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Actual game-style text: no synthesized font weight */
+.game-text {
+  font-family: "Clash_Bold.otf", sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-synthesis: none;
+  color: #fff;
+  text-shadow:
+    -1px -1px 0 #000,
+     0   -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  0   0 #000,
+     1px  0   0 #000,
+    -1px  1px 0 #000,
+     0    1px 0 #000,
+     1px  1px 0 #000,
+     0    3px 0 #000;
+}
+
+/* DRAFT CHROME — CSS approximation, not an official sprite */
+.game-window {
+  --tab-height: clamp(52px, 6.7vw, 68px);
+  --close-size: clamp(36px, 4.4vw, 44px);
+
+  position: relative;
+  isolation: isolate;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 7px 9px 9px;
+
+  background: var(--frame);
+  border: 2px solid #272321;
+  border-radius: 13px;
+  box-shadow:
+    inset 0 2px 0 #aaa39d,
+    0 4px 0 #342e2a,
+    0 8px 0 rgb(0 0 0 / 28%);
+}
+
+/* Lighter upper strip visible around and between the tabs */
+.game-window::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 7px;
+  left: 7px;
+  right: 7px;
+  height: 38px;
+  border-radius: 8px;
+  background: #7d7672;
+  pointer-events: none;
+}
+
+.menu-header {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 var(--tab-height);
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--close-size);
+  column-gap: 18px;
+  padding: 0 6px 0 clamp(48px, 8.8vw, 90px);
+}
+
+.tabs {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.tab {
+  position: relative;
+  appearance: none;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 6px 5px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 2px solid var(--tab-edge);
+  border-bottom: 0;
+  border-radius: 9px 9px 0 0;
+  background: var(--tab);
+
+  font-size: clamp(14px, 1.95vw, 20px);
+  line-height: 1.15;
+  text-align: center;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.tab.active {
+  background: var(--cream);
+  border-color: #fff;
+}
+
+/* Cream bridge: active tab and body read as one surface */
+.tab.active::after {
+  content: "";
+  position: relative;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 4px;
+  background: var(--cream);
+}
+
+.close-btn {
+  appearance: none;
+  width: var(--close-size);
+  height: var(--close-size);
+  margin-top: 9px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+
+  border: 2px solid #291817;
+  border-radius: 11px;
+  background: linear-gradient(
+    #ff888b 0%,
+    #ff5259 40%,
+    #e82631 41%,
+    #cd1723 100%
+  );
+  box-shadow:
+    inset 0 2px 0 #ffd0ca,
+    inset 0 -3px 0 #a5121c,
+    0 3px 0 #32221f;
+
+  font-size: clamp(26px, 3vw, 31px);
+  line-height: 1;
+}
+
+.close-btn:active { transform: translateY(1px); }
+
+.content {
+  position: grid;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px 6px;
+  border-radius: 9px;
+  background: var(--cream);
+}
+
+/* Fixed navigation row — only the blue content panel scrolls */
+.sub-tabs {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(var(--count, 3), minmax(0, 1fr));
+  gap: 18px;
+  margin: 0 14px 17px;
+}
+
+.sub-tab {
+  position: relative;
+  min-width: 0;
+  height: clamp(44px, 5.1vw, 52px);
+  padding: 0 8px;
+
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 5px;
+
+  border: 2px solid #918a81;
+  border-radius: 8px;
+  background: linear-gradient(
+    #a09a90 0 48%,
+    #867e74 48% 100%
+  );
+  box-shadow:
+    inset 0 1px 0 #c0b9af,
+    0 3px 0 #514b44,
+    0 5px 0 #c2c0b7;
+
+  font-size: clamp(15px, 2.2vw, 22px);
+  text-decoration: none;
+}
+
+.sub-tab.active {
+  border-color: #c2c1b4;
+  background: linear-gradient(
+    #cecebc 0 48%,
+    #bdbdad 48% 100%
+  );
+  box-shadow:
+    inset 0 3px 0 #949587,
+    0 3px 0 #fff;
+}
+
+.sub-tab:active { transform: translateY(1px); }
+
+.icon-slot {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+}
+
+/* No emoji and no invented icon filenames */
+.icon-slot img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 0 rgb(0 0 0 / 55%));
+}
+
+.sub-label {
+  min-width: 0;
+  line-height: 1.1;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* Equal space to the right keeps labels centred in the whole button */
+.sub-tabs[data-count="4"] {
+  gap: 12px;
+  margin-inline: 10px;
+}
+
+.sub-tabs[data-count="4"] .sub-tab {
+  grid-template-columns: 26px minmax(0, 1fr) 26px;
+  gap: 3px;
+  padding-inline: 5px;
+  font-size: clamp(12px, 1.7vw, 17px);
+}
+
+.sub-tabs[data-count="4"] .icon-slot {
+  width: 26px;
+  height: 26px;
+}
+
+.inner-panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+
+  padding: 14px;
+  border: 3px solid #9ca7c6;
+  border-radius: 9px;
+  background: linear-gradient(#8b96ae, #697596 220px);
+  box-shadow: inset 0 3px 0 #7783a5;
+}
+
+.inner-panel h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.inner-panel p {
+  margin: 12px 0 0;
+  font-size: 15px;
+}
+
+/* Compact widths: keep four tabs and one selector row, without scrolling */
+@media (max-width: 700px) {
+  .menu-header { padding-left: 0; column-gap: 10px; }
+  .tabs { gap: 5px; }
+  .sub-tabs { margin-inline: 0; gap: 10px; }
+  .sub-tabs[data-count="4"] { margin-inline: 0; gap: 8px; }
+}
+
+@media (max-width: 500px) {
+  body { padding: 6px; }
+
+  .game-window {
+    --tab-height: 54px;
+    --close-size: 36px;
+    padding: 6px;
+    border-radius: 11px;
+  }
+
+  .game-window::before { height: 30px; }
+  .menu-header { gap: 7px; padding-right: 1px; }
+  .tabs { gap: 4px; }
+  .tab { padding: 4px 2px; font-size: 12px; }
+  .close-btn { font-size: 26px; margin-top: 7px; }
+  .content { padding: 7px 6px 6px; }
+
+  .sub-tabs,
+  .sub-tabs[data-count="4"] {
+    gap: 6px;
+    margin: 0 0 12px;
+  }
+
+  .sub-tab,
+  .sub-tabs[data-count="4"] .sub-tab {
+    height: 68px;
+    padding: 4px 2px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 20px minmax(0, 1fr);
+    gap: 1px;
+    font-size: 12px;
+  }
+
+  .icon-slot,
+  .sub-tabs[data-count="4"] .icon-slot {
+    width: 22px;
+    height: 20px;
+    margin-inline: auto;
+  }
+}
+
+/* Requested close fallback: artwork fills the viewport, without cropping */
+.exit-screen {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  background: #000;
+}
+
+.exit-screen > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.exit-footer {
+  position: absolute;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  max-width: calc(100% - 24px);
+  padding: 8px;
+  border-radius: 6px;
+  background: rgb(0 0 0 / 75%);
+  text-align: center;
+}
+
+.exit-footer p { margin: 0 0 8px; }
+</style>
+</head>
+
+<body>
+
+<div class="preview" id="preview">
+
+  <div class="game-window">
+    <header class="menu-header">
+      <nav class="tabs" id="tabs" aria-label="Main Navigation"></nav>
+
+      <button
+        class="close-btn game-text"
+        id="close-button"
+        type="button"
+        aria-label="Close the portal"
+      >X</button>
+    </header>
+
+    <div class="content">
+      <nav
+        class="sub-tabs"
+        id="selectors"
+        aria-label="Sub Navigation"
+      ></nav>
+
+      <main class="inner-panel">
+
+    </div>
+  </div>
+</div>
+
+<section
+  class="exit-screen"
+  id="exit-screen"
+  aria-label="Selected Artwork"
+  hidden
+>
+  <img id="exit-art" alt="Your selected artwork">
+
+  <!-- PREVIEW ONLY: lets you return without reopening the HTML file -->
+  <div class="exit-footer">
+    <p id="art-error" hidden>
+      The artwork could not load. Check your internet connection.
+    </p>
+    <button type="button" id="reopen-button">Heropen voorskou</button>
+  </div>
+</section>
+
+<script>
+/*
+  STANDALONE PREVIEW LOGIC — not production routing.
+  Route destinations remain real <a href> links.
+  Ordinary clicks are intercepted below only to preview selected states.
+*/
+
+const CLOSE_ART =
+  "https://100afrikaansclan.co.za/arsenaal-artwork/official/2026-article-heroes/wwe-search-for-cena.png";
+
+/*
+  Add only verified Arsenaal/official icon URLs, keyed by route.
+  Deliberately empty: no guessed filenames or emoji substitutes.
+*/
+const ICON_URLS = {};
+
+const GROUPS = [
+  {
+    label: "Main Portal",
+    items: [
+      ["Dashboard", "/command"],
+      ["Dashboard", "/command/dashboard"],
+      ["Alerts", "/command/alerts"]
+    ]
+  },
+  {
+    label: "Clan",
+    items: [
+      ["Lede", "/command/members"],
+      ["Clans", "/command/clans"],
+      ["Progressie", "/command/progression"]
+    ]
+  },
+  {
+    label: "Battle",
+    items: [
+      ["War Centre", "/command/war-centre"],
+      ["CWL", "/command/cwl"],
+      ["Ranked", "/command/ranked"]
+    ]
+  },
+  {
+    label: "Tools",
+    items: [
+      ["Intelligensie", "/intelligensie/user"],
+      ["Access Control", "/command/access"],
+      ["Blueprint", "/blueprint"],
+      ["Arsenaal", "/arsenaal"]
+    ]
+  }
+];
+
+const MEMBERS = [
+  ["Tuis", "/command"],
+  ["Lede", "/command/members"],
+  ["Clans", "/command/clans"],
+  ["Intelligensie", "/intelligensie/user"]
+];
+
+const tabs = document.getElementById("tabs");
+const selectors = document.getElementById("selectors");
+const pageTitle = document.getElementById("page-title");
+let ownerGroup = 0;
+
+function selectRoute(item) {
+  const [label, href] = item;
+
+  document.querySelectorAll("#tabs a, #selectors a").forEach(a => {
+    const selected = a.getAttribute("href") === href;
+    a.classList.toggle("active", selected);
+
+    if (selected) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  });
+
+  pageTitle.textContent = label;
+}
+
+function routeLink(item, isSelector) {
+  const [label, href] = item;
+  const a = document.createElement("a");
+
+  a.href = href;
+  a.className = isSelector ? "sub-tab" : "tab game-text";
+
+  if (isSelector) {
+    const slot = document.createElement("span");
+    slot.className = "icon-slot";
+    slot.setAttribute("aria-hidden", "true");
+
+    if (ICON_URLS[href]) {
+      const img = document.createElement("img");
+      img.src = ICON_URLS[href];
+      img.alt = "";
+      slot.appendChild(img);
+    }
+
+    const text = document.createElement("span");
+    text.className = "sub-label game-text";
+    text.textContent = label;
+    a.append(slot, text);
+  } else {
+    a.textContent = label;
+  }
+
+  // PREVIEW ONLY. Do not port this navigation interception.
+  a.addEventListener("click", event => {
+    if (
+      event.button !== 0 ||
+      event.metaKey || event.ctrlKey ||
+      event.shiftKey || event.altKey
+    ) return;
+
+    event.preventDefault();
+    selectRoute(item);
+  });
+
+  return a;
+}
+
+function showGroup(index) {
+  ownerGroup = index;
+  const group = GROUPS[index];
+
+  tabs.querySelectorAll("button").forEach((button, i) => {
+    const selected = i === index;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+
+  selectors.hidden = false;
+  selectors.style.setProperty("--count", group.items.length);
+  selectors.dataset.count = String(group.items.length);
+  selectors.setAttribute("aria-label", group.label + ": bladsye");
+
+  selectors.replaceChildren(
+    ...group.items.map(item => routeLink(item, true))
+  );
+
+  selectRoute(group.items[0]);
+}
+
+function renderView(view) {
+  tabs.replaceChildren();
+  selectors.replaceChildren();
+
+  document.querySelectorAll("[data-view]").forEach(button => {
+    button.setAttribute(
+      "aria-pressed",
+      String(button.dataset.view === view)
+    );
+  });
+
+  if (view === "owner") {
+    GROUPS.forEach((group, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "tab game-text";
+      button.textContent = group.label;
+      button.setAttribute("aria-controls", "selectors");
+      button.addEventListener("click", () => showGroup(index));
+      tabs.appendChild(button);
+    });
+
+    showGroup(ownerGroup);
+  } else {
+    selectors.hidden = true;
+    tabs.append(...MEMBERS.map(item => routeLink(item, false)));
+    selectRoute(MEMBERS[0]);
+  }
+}
+
+document.querySelectorAll("[data-view]").forEach(button => {
+  button.addEventListener("click", () => renderView(button.dataset.view));
+});
+
+renderView("owner");
+
+/* Close fallback: display the supplied artwork, not a guessed route. */
+const preview = document.getElementById("preview");
+const exitScreen = document.getElementById("exit-screen");
+const exitArt = document.getElementById("exit-art");
+const closeButton = document.getElementById("close-button");
+const reopenButton = document.getElementById("reopen-button");
+
+exitArt.addEventListener("error", () => {
+  document.getElementById("art-error").hidden = false;
+});
+exitArt.src = CLOSE_ART;
+
+closeButton.addEventListener("click", () => {
+  // Intentionally no window.close() attempt in this design preview.
+  preview.hidden = true;
+  exitScreen.hidden = false;
+  reopenButton.focus();
+});
+
+reopenButton.addEventListener("click", () => {
+  exitScreen.hidden = true;
+  preview.hidden = false;
+  closeButton.focus();
+});
+
+/* Report missing font instead of presenting fallback text as ClashSite. */
+const fontStatus = document.getElementById("font-status");
+
+
+
+document.fonts.load('700 20px "ClashSite"', "Tuis")
+  .then(faces => reportFont(faces.some(face => face.status === "loaded")))
+  .catch(() => reportFont(false));
+</script>
+
+</body>
+</html>

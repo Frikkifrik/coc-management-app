@@ -345,6 +345,19 @@ app.get('/api/bootstrap', (req, res) => {
   return res.json({ user: publicUser(user), data: response });
 });
 
+app.get('/api/supercell/clan/:tag', async (req, res) => {
+  try {
+    const { tag } = req.params;
+    const result = await supercellLookup('clan', tag);
+    if (!result.configured) {
+      return res.status(503).json({ message: 'Supercell API key is not configured.' });
+    }
+    return res.json(result.item);
+  } catch (err) {
+    return res.status(err.status || 500).json({ message: err.message });
+  }
+});
+
 app.get('/api/clans', (_req, res) => res.json({ items: allClans() }));
 app.post('/api/clans', requireRole('leader'), (req, res) => {
   const body = req.body || {};

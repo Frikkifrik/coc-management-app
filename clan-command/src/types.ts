@@ -159,6 +159,7 @@ export interface DiscordIntegration {
     cwlLineup: boolean;
     memberMilestones: boolean;
     rankedMovement: boolean;
+    applicantAlerts: boolean;
   };
   webhookConfigured: boolean;
   updatedAt: string;

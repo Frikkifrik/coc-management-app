@@ -746,7 +746,6 @@ app.post('/api/integrations/discord/dispatch', requireRole('co_leader'), async (
   return res.json({ delivered, message: delivered ? 'Message delivered to Discord.' : 'Discord is not enabled for this workspace. Copy the generated message to share it.' });
 });
 
-app.get('/api/supercell/status', (_req, res) => res.json({ configured: isSupercellConfigured(), provider: 'Supercell API via static-IP proxy' }));
 app.get('/api/supercell/:kind/:tag', async (req, res) => {
   if (!['player','clan'].includes(req.params.kind)) return publicError(res, 400, 'Choose a player or clan lookup.');
   try {
@@ -754,6 +753,7 @@ app.get('/api/supercell/:kind/:tag', async (req, res) => {
     if (!result.configured) return publicError(res, 503, 'Live Supercell lookup is not configured. Using local demo data.');
     return res.json({ item: result.item });
   } catch (error) {
+    console.error('Supercell Lookup Error:', error);
     return publicError(res, Number(error?.status) || 502, error instanceof Error ? error.message : 'Supercell lookup failed.');
   }
 });

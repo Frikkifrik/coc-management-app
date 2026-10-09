@@ -41,3 +41,10 @@ export async function apiRequest<T = unknown>(path: string, init: RequestInit = 
 export function jsonBody(value: unknown): string {
   return JSON.stringify(value);
 }
+
+// Live Supercell proxy call via local server
+export async function fetchLivePlayer<T = unknown>(tag: string): Promise<T> {
+  const cleanTag = tag.trim().startsWith('#') ? tag.trim() : `#${tag.trim()}`;
+  const response = await apiRequest<{ item: T }>(`/api/supercell/player/${encodeURIComponent(cleanTag)}`);
+  return response.item;
+}

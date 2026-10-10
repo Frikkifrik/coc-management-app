@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luke's Lukulele Adventure! 🎵</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        :root {
+            --primary: #FF6B35; --secondary: #4ECDC4; --accent: #FFE66D;
+            --purple: #A855F7; --pink: #EC4899; --dark: #2D3436;
+            --light: #FFF9F0; --green: #10B981; --blue: #3B82F6; --red: #EF4444;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        /* SPLASH SCREEN */
+        .splash-screen {
+            position: fixed; inset: 0;
+            background: linear-gradient(135deg, #FF6B35, #FFE66D, #4ECDC4);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; transition: opacity 0.6s ease; text-align: center; padding: 20px;
+        }
+        .splash-screen.hidden { opacity: 0; pointer-events: none; }
+        .splash-uke { width: clamp(136px, 42vw, 190px); height: auto; animation: bounce 1.2s infinite; }
+        .splash-title { font-family: 'Fredoka One', cursive; font-size: 34px; color: white; text-shadow: 2px 2px 0 rgba(0,0,0,0.15); margin: 15px 0 5px; }
+        .splash-sub { font-size: 17px; color: rgba(255,255,255,0.95); font-weight: 700; margin-bottom: 25px; }
+        .splash-btn {
+            background: white; color: var(--primary); border: none; padding: 16px 45px;
+            border-radius: 50px; font-family: 'Fredoka One', cursive; font-size: 22px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15); cursor: pointer;
+        }
+
+        @keyframes bounce { 0%,100%{transform:translateY(0) rotate(-4deg);} 50%{transform:translateY(-15px) rotate(4deg);} }
+
+        /* HEADER */
+        .top-header {
+            background: linear-gradient(135deg, var(--primary), #FF8F65);
+            padding: 20px 20px 25px; border-radius: 0 0 28px 28px; color: white;
+        }
+        .greeting { font-family: 'Fredoka One', cursive; font-size: 24px; }
+        .streak-bar {
+            display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
+            background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 13px;
+        }
+        .xp-display { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-weight: 700; font-size: 13px; }
+        .xp-bar-outer { flex: 1; height: 10px; background: rgba(255,255,255,0.3); border-radius: 10px; overflow: hidden; max-width: 180px; }
+        .xp-bar-inner { height: 100%; background: var(--accent); border-radius: 10px; transition: width 0.4s ease; }
+        .level-badge {
+            display: inline-flex; background: var(--accent); color: var(--dark);
+            padding: 4px 12px; border-radius: 12px; font-weight: 800; font-size: 12px; margin-top: 8px;
+        }
+
+        /* DAILY CHALLENGE */
+        .daily-challenge {
+            background: linear-gradient(135deg, var(--purple), var(--pink));
+            border-radius: 18px; padding: 16px; margin: 15px; color: white; cursor: pointer;
+        }
+        .daily-challenge h3 { font-family: 'Fredoka One', cursive; font-size: 16px; margin-bottom: 4px; }
+        .daily-challenge p { font-size: 13px; opacity: 0.95; }
+        .today-card { margin: 0 15px 12px; }
+        .goal-row { display: flex; align-items: center; gap: 9px; margin: 10px 0; font-size: 13px; font-weight: 800; }
+        .goal-row > span:nth-child(2) { flex: 1; }
+        .goal-check { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: #F3F4F6; color: #9CA3AF; flex: 0 0 auto; }
+        .goal-check.done { color: white; background: var(--green); }
+        .goal-progress { display: block; width: 100%; height: 9px; margin-top: 4px; border-radius: 8px; background: #E5E7EB; overflow: hidden; }
+        .goal-progress-fill { height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--secondary), var(--green)); transition: width .3s; }
+        .goal-count { min-width: 58px; text-align: right; color: #6B7280; font-size: 12px; }
+
+        /* NAV TABS */
+        .nav-tabs { display: flex; gap: 8px; padding: 10px 15px 5px; overflow-x: auto; scrollbar-width: none; }
+        .nav-tabs::-webkit-scrollbar { display: none; }
+        .nav-tab {
+            flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: 2px solid #E5E7EB;
+            background: white; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s;
+        }
+        .nav-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* SECTIONS */
+        .section { display: none; padding: 15px; }
+        .section.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+        .section-title { font-family: 'Fredoka One', cursive; font-size: 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+        /* CARDS */
+        .card {
+            background: white; border-radius: 18px; padding: 18px; margin-bottom: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 2px solid #F3F4F6;
+        }
+        .card-title { font-weight: 800; font-size: 17px; margin-bottom: 6px; }
+        .card-text { font-size: 14px; line-height: 1.5; color: #4B5563; }
+
+        /* LESSON PATH */
+        .lesson-path { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .lesson-node {
+            width: 100%; max-width: 340px; background: white; border-radius: 16px;
+            padding: 14px 16px; border: 3px solid #E5E7EB; cursor: pointer; display: flex; align-items: center; gap: 12px;
+        }
+        .lesson-node.completed { border-color: var(--green); background: #F0FDF4; }
+        .lesson-node.current { border-color: var(--primary); box-shadow: 0 4px 15px rgba(255,107,53,0.25); }
+        .lesson-node.locked { opacity: 0.5; pointer-events: none; }
+        .lesson-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+        .lesson-info h3 { font-weight: 800; font-size: 15px; margin-bottom: 2px; }
+        .lesson-info p { font-size: 12px; color: #6B7280; font-weight: 600; }
+        .lesson-status { margin-left: auto; font-size: 20px; }
+        .path-connector { width: 3px; height: 16px; background: #E5E7EB; border-radius: 3px; }
+        .path-connector.completed { background: var(--green); }
+
+        /* LESSON MODAL */
+        .lesson-view, .song-player {
+            position: fixed; inset: 0; background: var(--light); z-index: 500;
+            overflow-y: auto; display: none;
+        }
+        .lesson-view.active, .song-player.active { display: block; }
+        .lesson-header {
+            background: linear-gradient(135deg, var(--primary), #FF8F65);
+            padding: 16px 20px; color: white; display: flex; align-items: center; gap: 12px;
+            position: sticky; top: 0; z-index: 10;
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.25); border: none; color: white;
+            width: 36px; height: 36px; border-radius: 10px; font-size: 18px; cursor: pointer;
+        }
+        .lesson-progress-bar { height: 6px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden; margin-top: 6px; width: 140px; }
+        .lesson-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+        .lesson-content { padding: 18px; padding-bottom: 80px; }
+
+        /* CALLOUTS */
+        .fun-fact, .tip-box, .warning-box {
+            border-radius: 14px; padding: 12px; margin: 12px 0; font-size: 13px; line-height: 1.4;
+        }
+        .fun-fact { background: #EDE9FE; border-left: 4px solid var(--purple); color: #5B21B6; }
+        .tip-box { background: #ECFDF5; border-left: 4px solid var(--green); color: #065F46; }
+        .warning-box { background: #FFF7ED; border-left: 4px solid var(--primary); color: #9A3412; }
+
+        /* BUTTONS */
+        .action-btn {
+            display: block; width: 100%; padding: 14px; border-radius: 14px; border: none;
+            font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 15px; text-align: center;
+        }
+        .btn-orange { background: var(--primary); color: white; }
+        .btn-green { background: var(--green); color: white; }
+
+        /* CHORD GRID */
+        .chord-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+        .chord-card {
+            background: white; border-radius: 14px; padding: 12px; text-align: center;
+            border: 2px solid #F3F4F6; cursor: pointer;
+        }
+        .chord-card.selected { border-color: var(--primary); background: #FFF7ED; }
+        .chord-name { font-family: 'Fredoka One', cursive; font-size: 26px; color: var(--primary); }
+
+        /* FRETBOARD DIAGRAM */
+        .fretboard-box {
+            background: #78350F; border-radius: 16px; padding: 16px 12px; margin: 15px 0; color: white;
+        }
+        .fret-header { display: flex; justify-content: space-around; font-weight: 800; font-size: 14px; margin-bottom: 4px; }
+        .fret-nut { height: 6px; background: #FDE68A; border-radius: 3px; margin-bottom: 4px; }
+        .fret-row { display: flex; height: 42px; border-bottom: 2px solid #B45309; position: relative; }
+        .fret-string {
+            flex: 1; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer;
+        }
+        .fret-string::before {
+            content:''; position: absolute; top:0; bottom:0; width: 2px; background: #FCD34D;
+        }
+        .fret-dot {
+            width: 26px; height: 26px; border-radius: 50%; color: white; font-weight: 800;
+            font-size: 13px; display: none; align-items: center; justify-content: center; z-index: 2;
+        }
+        .fret-dot.show { display: flex; }
+        .fret-label { position: absolute; right: -8px; font-size: 11px; opacity: 0.6; }
+
+        /* SONGS */
+        .song-card {
+            background: white; border-radius: 16px; padding: 14px; margin-bottom: 10px;
+            border: 2px solid #F3F4F6; cursor: pointer;
+        }
+        .song-difficulty {
+            display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 10px;
+            font-weight: 800; text-transform: uppercase; background: #ECFDF5; color: var(--green); margin-bottom: 4px;
+        }
+        .song-title { font-weight: 800; font-size: 16px; }
+        .song-tag {
+            display: inline-block; padding: 2px 8px; background: #F3F4F6; border-radius: 6px;
+            font-size: 11px; font-weight: 700; margin: 4px 4px 0 0;
+        }
+        .lyric-line { padding: 8px; border-radius: 8px; margin-bottom: 8px; background: white; }
+        .lyric-chord { font-family: 'Fredoka One', cursive; color: var(--primary); font-size: 16px; cursor: pointer; }
+        .lyric-text { font-size: 15px; font-weight: 600; color: #374151; }
+
+        /* TUNER */
+        .tuner-strings { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
+        .tuner-btn {
+            width: 65px; height: 65px; border-radius: 50%; border: 3px solid #E5E7EB;
+            background: white; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .tuner-btn.playing { border-color: var(--primary); background: #FFF7ED; transform: scale(1.08); }
+        .tuner-note { font-family: 'Fredoka One', cursive; font-size: 22px; color: var(--primary); }
+        .tuner-sub { font-size: 10px; color: #6B7280; font-weight: 700; }
+        .term-help-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .glossary-link {
+            border: 0; border-radius: 999px; padding: 5px 10px; background: #F3E8FF;
+            color: #6B21A8; font: 800 12px 'Nunito', sans-serif; cursor: pointer;
+        }
+        .glossary-link:hover, .glossary-link:focus-visible { background: #E9D5FF; outline: 3px solid #C084FC; }
+        .mic-tuner { margin-top: 18px; border-top: 2px dashed #E5E7EB; padding-top: 16px; }
+        .mic-tuner-title { font-family: 'Fredoka One', cursive; font-size: 19px; margin-bottom: 5px; }
+        .mic-status { min-height: 42px; margin: 8px 0; font-size: 14px; font-weight: 800; color: #4B5563; }
+        .mic-note { font: 800 27px 'Fredoka One', cursive; color: var(--dark); }
+        .tuner-meter { position: relative; width: min(100%, 320px); height: 54px; margin: 10px auto 2px; }
+        .tuner-meter-track {
+            position: absolute; left: 0; right: 0; top: 22px; height: 13px; border-radius: 20px;
+            background: linear-gradient(90deg, #EF4444 0%, #F59E0B 34%, #E5E7EB 46%, #10B981 50%, #E5E7EB 54%, #F59E0B 66%, #EF4444 100%);
+        }
+        .tuner-meter-tick { position: absolute; top: 15px; height: 28px; width: 2px; left: 50%; background: #374151; }
+        .tuner-needle {
+            position: absolute; z-index: 1; left: 50%; top: 5px; width: 7px; height: 37px;
+            background: var(--red); border-radius: 8px; transform: translateX(-50%) rotate(0deg);
+            transform-origin: 50% 31px; box-shadow: 0 0 0 3px white, 0 2px 8px #0005;
+            transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+        }
+        .tuner-needle.in-tune { background: #059669; width: 10px; height: 42px; box-shadow: 0 0 0 4px #D1FAE5, 0 0 18px #10B981; }
+        .meter-labels { display: flex; justify-content: space-between; width: min(100%, 320px); margin: 0 auto; color: #6B7280; font-size: 11px; font-weight: 800; }
+        .tuner-string-select { display: flex; justify-content: center; gap: 7px; margin: 12px 0 6px; }
+        .target-note-btn { border: 2px solid #E5E7EB; background: white; border-radius: 12px; padding: 7px 11px; font: 800 13px 'Nunito', sans-serif; cursor: pointer; }
+        .target-note-btn.selected { border-color: var(--primary); background: #FFF7ED; color: #C2410C; }
+        .mic-actions { display: flex; gap: 8px; }
+        .mic-actions .action-btn { margin-top: 8px; }
+        .mic-actions .action-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+        /* PRACTICE & METRONOME */
+        .metronome-visual { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
+        .met-beat {
+            width: 36px; height: 36px; border-radius: 50%; background: #E5E7EB;
+            display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; font-size: 13px;
+        }
+        .met-beat.active { background: var(--primary); transform: scale(1.15); }
+        .met-beat.down { background: var(--green); }
+        .ctrl-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 10px 0; }
+        .ctrl-btn {
+            width: 36px; height: 36px; border-radius: 50%; border: 2px solid #E5E7EB;
+            background: white; font-size: 16px; font-weight: 800; cursor: pointer;
+        }
+
+        /* QUIZ */
+        .quiz-opt {
+            width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #E5E7EB;
+            background: white; font-weight: 700; font-size: 14px; text-align: left; margin-bottom: 8px; cursor: pointer;
+        }
+        .quiz-opt.correct { border-color: var(--green); background: #F0FDF4; color: var(--green); }
+        .quiz-opt.wrong { border-color: var(--red); background: #FEF2F2; color: var(--red); }
+
+        /* ACHIEVEMENTS GRID */
+        .achieve-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .achieve-card {
+            background: white; border-radius: 14px; padding: 12px 6px; text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 2px solid #F3F4F6;
+        }
+        .achieve-card.locked { opacity: 0.35; filter: grayscale(1); }
+        .achieve-card.unlocked { border-color: var(--accent); background: #FFFBEB; }
+        .achieve-icon { font-size: 32px; margin-bottom: 4px; }
+        .achieve-name { font-size: 11px; font-weight: 800; color: #4B5563; }
+
+        /* DAD POPUP (HEARTFELT MODAL) */
+        .dad-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 20000;
+            display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .dad-overlay.show { display: flex; animation: fadeIn 0.2s ease; }
+        .dad-modal {
+            background: white; border-radius: 26px; padding: 28px 22px; max-width: 340px; width: 100%;
+            text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border-top: 8px solid var(--primary);
+        }
+        .dad-badge-icon { font-size: 60px; margin-bottom: 8px; }
+        .dad-title { font-family: 'Fredoka One', cursive; font-size: 20px; color: var(--primary); }
+        .dad-achieve-name { font-weight: 800; font-size: 14px; color: var(--purple); margin: 4px 0 12px; }
+        .dad-msg-bubble {
+            background: #FFF7ED; border: 2px dashed #FDBA74; border-radius: 14px;
+            padding: 14px; font-size: 15px; font-weight: 700; color: #1F2937; line-height: 1.5; margin-bottom: 12px;
+        }
+        .dad-sign { font-size: 13px; font-weight: 800; color: #6B7280; margin-bottom: 16px; }
+        .dad-btn {
+            background: var(--primary); color: white; border: none; padding: 12px 30px;
+            border-radius: 30px; font-family: 'Fredoka One', cursive; font-size: 16px; cursor: pointer;
+        }
+        .glossary-overlay {
+            position: fixed; inset: 0; z-index: 21000; display: none; align-items: center;
+            justify-content: center; padding: 18px; background: rgba(27, 22, 35, .68);
+        }
+        .glossary-overlay.show { display: flex; animation: fadeIn .18s ease; }
+        .glossary-card {
+            width: min(100%, 380px); max-height: min(84vh, 620px); overflow-y: auto; position: relative;
+            background: white; border-radius: 24px; padding: 22px; text-align: center;
+            box-shadow: 0 20px 50px #0004; border-top: 7px solid var(--purple);
+        }
+        .glossary-close {
+            position: absolute; right: 12px; top: 12px; border: 0; border-radius: 50%; width: 38px; height: 38px;
+            background: #F3F4F6; font-size: 22px; font-weight: 800; cursor: pointer;
+        }
+        .glossary-visual { width: min(180px, 48vw); height: 112px; margin: 8px auto 12px; }
+        .glossary-visual svg { width: 100%; height: 100%; }
+        .glossary-title { font: 24px 'Fredoka One', cursive; color: var(--purple); padding-right: 25px; }
+        .glossary-definition { font-size: 16px; line-height: 1.55; color: #374151; font-weight: 700; }
+        .glossary-example { margin-top: 12px; background: #F5F3FF; padding: 10px 12px; border-radius: 12px; color: #5B21B6; font-size: 13px; font-weight: 700; }
+
+        .ear-game { text-align: center; }
+        .ear-note { font: 48px 'Fredoka One', cursive; color: var(--primary); min-height: 58px; }
+        .ear-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+        .ear-option { border: 2px solid #E5E7EB; background: white; border-radius: 12px; padding: 10px 5px; font: 800 16px 'Nunito', sans-serif; cursor: pointer; }
+        .ear-option:disabled { cursor: default; }
+        .ear-option.correct { border-color: var(--green); background: #ECFDF5; color: #047857; }
+        .ear-option.wrong { border-color: var(--red); background: #FEF2F2; color: #B91C1C; }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; background: white;
+            display: flex; box-shadow: 0 -4px 15px rgba(0,0,0,0.06); border-radius: 18px 18px 0 0;
+            z-index: 100; padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+        }
+        .b-nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+            cursor: pointer; font-size: 10px; font-weight: 800; color: #9CA3AF;
+        }
+        .b-nav-item.active { color: var(--primary); }
+        .b-nav-item span { font-size: 20px; }
+
+        /* CONFETTI & TOAST */
+        .confetti-box { position: fixed; inset:0; pointer-events:none; z-index:9999; }
+        .confetti-piece { position: absolute; width:8px; height:8px; animation: fall 2.5s ease forwards; }
+        @keyframes fall { 0%{transform:translateY(-10px) rotate(0);} 100%{transform:translateY(100vh) rotate(720deg); opacity:0;} }
+        .toast {
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: white; padding: 12px 22px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            z-index: 10000; font-weight: 700; font-size: 14px; transition: transform 0.3s;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        @media (max-width: 420px) {
+            .top-header { padding: 16px 15px 20px; }
+            .greeting { font-size: 21px; }
+            .section { padding: 12px; }
+            .card { padding: 14px; }
+            .tuner-strings { flex-wrap: wrap; gap: 8px; }
+            .achieve-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .lesson-header { padding: 12px 14px; }
+            .lesson-progress-bar { width: min(140px, 36vw); }
+            .today-card { margin-inline: 12px; }
+            .mic-actions { flex-direction: column; }
+            .target-note-btn { padding: 7px 9px; }
+        }
+
+        @media (max-width: 340px) {
+            .splash-title { font-size: 29px; }
+            .splash-sub { font-size: 15px; }
+            .splash-btn { padding: 14px 32px; font-size: 20px; }
+            .nav-tabs { padding-inline: 10px; }
+            .nav-tab { padding: 8px 12px; }
+            .tuner-btn { width: 58px; height: 58px; }
+        }
+
+        @media (max-height: 600px) {
+            .splash-uke { width: clamp(104px, 26vh, 150px); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div class="splash-screen" id="splashScreen">
+    <svg class="splash-uke" viewBox="0 0 200 260" role="img" aria-label="Luke's four-string lukulele">
+        <g transform="rotate(24 100 130)" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M82 72V35c0-6 4-10 10-10h16c6 0 10 4 10 10v37" fill="#D99A45" stroke="#70431F" stroke-width="5"/>
+            <path d="M91 72v97M109 72v97" fill="none" stroke="#70431F" stroke-width="4"/>
+            <path d="M87 43h26M87 55h26M87 67h26M87 79h26M87 91h26M87 103h26M87 115h26M87 127h26M87 139h26M87 151h26" stroke="#F8D38A" stroke-width="2"/>
+            <path d="M83 36H71v-9h12M117 36h12v-9h-12M83 56H71v9h12M117 56h12v9h-12" fill="#F1D7A4" stroke="#70431F" stroke-width="3"/>
+            <path d="M100 151c-16-10-43-7-52 13-8 18 5 32 20 40-19 11-18 34 1 43 14 6 25-2 31-14 6 12 17 20 31 14 19-9 20-32 1-43 15-8 28-22 20-40-9-20-36-23-52-13z" fill="#C97935" stroke="#70431F" stroke-width="5"/>
+            <circle cx="100" cy="193" r="14" fill="#5A321D" stroke="#F1D7A4" stroke-width="3"/>
+            <path d="M88 221h24" stroke="#70431F" stroke-width="6"/>
+            <path d="M93 25v193M98 25v193M103 25v193M108 25v193" stroke="#FFF3D1" stroke-width="1.5"/>
+        </g>
+    </svg>
+    <div class="splash-title">Lukulele Adventure!</div>
+    <div class="splash-sub">Luke's Musical Quest! 🎸</div>
+    <button class="splash-btn" onclick="startApp()">Let's Go! 🚀</button>
+</div>
+
+<!-- DAD MESSAGE POPUP -->
+<div class="dad-overlay" id="dadPopup">
+    <div class="dad-modal">
+        <div class="dad-badge-icon" id="dadBadge">🏅</div>
+        <div class="dad-title">Badge Unlocked! 🎉</div>
+        <div class="dad-achieve-name" id="dadAchieveName">Achievement</div>
+        <div class="dad-msg-bubble" id="dadMsg">Message from Dad</div>
+        <div class="dad-sign">— Proud of you, Dad! ❤️</div>
+        <button class="dad-btn" onclick="closeDadPopup()">Thanks, Dad! 😊</button>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="confetti-box" id="confettiBox"></div>
+
+<!-- HEADER -->
+<div class="top-header">
+    <div class="greeting" id="greeting">Hey, Mr. Blister! 🌟</div>
+    <div class="streak-bar">🔥 <span id="streakCount">0</span> Day Streak!</div>
+    <div class="xp-display">
+        ⭐ <span id="xpCount">0</span> XP
+        <div class="xp-bar-outer"><div class="xp-bar-inner" id="xpBar" style="width:0%"></div></div>
+    </div>
+    <div class="level-badge">🏆 Level <span id="levelNum">1</span> - <span id="levelName">Beginner</span></div>
+</div>
+
+<div class="daily-challenge" onclick="switchSection('practice')">
+    <h3>🎯 Daily Challenge</h3>
+    <p id="dailyText">Pick a little practice goal to try today!</p>
+</div>
+
+<div class="card today-card" id="todayProgress" aria-live="polite">
+    <div class="card-title">🌟 Today's Practice Wins</div>
+    <p class="card-text">Small steps count! Try one, two, or all three.</p>
+    <div class="goal-row">
+        <span class="goal-check" id="practiceGoalCheck" aria-label="Not complete"></span>
+        <span>Practice 5 minutes <span class="goal-progress"><span class="goal-progress-fill" id="practiceGoalBar"></span></span></span>
+        <span class="goal-count" id="practiceGoalCount">0 / 5</span>
+    </div>
+    <div class="goal-row">
+        <span class="goal-check" id="switchGoalCheck" aria-label="Not complete"></span>
+        <span>Try 10 chord switches <span class="goal-progress"><span class="goal-progress-fill" id="switchGoalBar"></span></span></span>
+        <span class="goal-count" id="switchGoalCount">0 / 10</span>
+    </div>
+    <div class="goal-row">
+        <span class="goal-check" id="songGoalCheck" aria-label="Not complete"></span>
+        <span>Play a song <span class="goal-progress"><span class="goal-progress-fill" id="songGoalBar"></span></span></span>
+        <span class="goal-count" id="songGoalCount">0 / 1</span>
+    </div>
+</div>
+
+<!-- TABS -->
+<div class="nav-tabs" id="navTabs">
+    <div class="nav-tab active" onclick="switchSection('learn', this)">📚 Learn</div>
+    <div class="nav-tab" onclick="switchSection('chords', this)">🎵 Chords</div>
+    <div class="nav-tab" onclick="switchSection('songs', this)">🎶 Songs</div>
+    <div class="nav-tab" onclick="switchSection('tuner', this)">🎯 Tuner</div>
+    <div class="nav-tab" onclick="switchSection('practice', this)">⏱️ Practice</div>
+    <div class="nav-tab" onclick="switchSection('quiz', this)">🧠 Quiz</div>
+    <div class="nav-tab" onclick="switchSection('badges', this)">🏅 Badges</div>
+</div>
+
+<!-- SECTIONS -->
+
+<!-- 1. LEARN -->
+<div class="section active" id="sec-learn">
+    <div class="section-title">📚 Your Learning Path</div>
+    <div class="lesson-path" id="lessonPath"></div>
+</div>
+
+<!-- 2. CHORDS -->
+<div class="section" id="sec-chords">
+    <div class="section-title">🎵 Chord Library</div>
+    <div class="chord-grid" id="chordGrid"></div>
+    <div class="card" id="chordDetail">
+        <div class="card-title" id="cdName">C Major</div>
+        <div class="card-text" id="cdDesc">The easiest chord on Luke's Lukulele!</div>
+        <div class="fretboard-box" id="fretDiagram"></div>
+        <div class="tip-box" id="cdTip">Press string 1 with your 3rd finger!</div>
+        <button class="action-btn btn-orange" onclick="playCurrentChordAudio()">🔊 Strum Chord</button>
+    </div>
+</div>
+
+<!-- 3. SONGS -->
+<div class="section" id="sec-songs">
+    <div class="section-title">🎶 Songs Luke Can Play</div>
+    <div id="songsList"></div>
+</div>
+
+<!-- 4. TUNER -->
+<div class="section" id="sec-tuner">
+    <div class="section-title">🎯 Soprano Lukulele Tuner</div>
+    <div class="card" style="text-align:center;">
+        <div class="card-title">Standard G - C - E - A Tuning</div>
+        <div class="card-text">Tap a string to hear its note. Turn your peg gently until they match!</div>
+        <div class="tuner-strings">
+            <div class="tuner-btn" onclick="playTunerNote('G4', this)"><span class="tuner-note">G</span><span class="tuner-sub">String 4</span></div>
+            <div class="tuner-btn" onclick="playTunerNote('C4', this)"><span class="tuner-note">C</span><span class="tuner-sub">String 3</span></div>
+            <div class="tuner-btn" onclick="playTunerNote('E4', this)"><span class="tuner-note">E</span><span class="tuner-sub">String 2</span></div>
+            <div class="tuner-btn" onclick="playTunerNote('A4', this)"><span class="tuner-note">A</span><span class="tuner-sub">String 1</span></div>
+        </div>
+        <div class="tip-box">🐐 <strong>"Goats Can Eat Anything!"</strong> (G - C - E - A from top to bottom)</div>
+        <div class="term-help-row">
+            <button class="glossary-link" type="button" data-term="soprano">What does soprano mean?</button>
+            <button class="glossary-link" type="button" data-term="tuning">What is tuning?</button>
+        </div>
+    </div>
+    <div class="card mic-tuner" style="text-align:center;">
+        <div class="mic-tuner-title">🎤 Listen & Tune</div>
+        <p class="card-text">Pick a string, then tap Listen and pluck that string on your Lukulele.</p>
+        <div class="term-help-row">
+            <button class="glossary-link" type="button" data-term="pitch">What is pitch?</button>
+        </div>
+        <div class="tuner-string-select" aria-label="Choose a string to tune">
+            <button class="target-note-btn selected" type="button" data-target-note="G4" onclick="selectTunerTarget('G4', this)">G</button>
+            <button class="target-note-btn" type="button" data-target-note="C4" onclick="selectTunerTarget('C4', this)">C</button>
+            <button class="target-note-btn" type="button" data-target-note="E4" onclick="selectTunerTarget('E4', this)">E</button>
+            <button class="target-note-btn" type="button" data-target-note="A4" onclick="selectTunerTarget('A4', this)">A</button>
+        </div>
+        <div class="mic-note" id="detectedNote">--</div>
+        <div class="tuner-meter" role="img" aria-label="Tuner needle">
+            <div class="tuner-meter-track"></div>
+            <div class="tuner-meter-tick"></div>
+            <div class="tuner-needle" id="tunerNeedle"></div>
+        </div>
+        <div class="meter-labels"><span>♭ Flat</span><span>In tune</span><span>Sharp ♯</span></div>
+        <div class="mic-status" id="micStatus" aria-live="polite">Choose a string. Your sound stays on this device.</div>
+        <div class="mic-actions">
+            <button class="action-btn btn-green" id="listenBtn" type="button" onclick="startMicrophoneTuner()">🎤 Listen</button>
+            <button class="action-btn btn-orange" id="stopListenBtn" type="button" onclick="stopMicrophoneTuner()" disabled>Stop</button>
+        </div>
+        <p class="card-text" style="margin-top:10px; font-size:12px;">The sound buttons above still work offline. Listening needs microphone permission.</p>
+    </div>
+</div>
+
+<!-- 5. PRACTICE -->
+<div class="section" id="sec-practice">
+    <div class="section-title">⏱️ Practice Zone</div>
+    <div class="card" style="text-align:center;">
+        <div class="card-title">Practice Timer</div>
+        <div style="font-family:'Fredoka One',cursive; font-size:42px; color:var(--primary); margin:10px 0;" id="timerDisplay">5:00</div>
+        <div class="ctrl-row">
+            <button class="ctrl-btn" onclick="adjustTimer(-1)">−</button>
+            <span style="font-weight:800;" id="timerMinLabel">5 min</span>
+            <button class="ctrl-btn" onclick="adjustTimer(1)">+</button>
+        </div>
+        <button class="action-btn btn-green" id="timerBtn" onclick="toggleTimer()">▶ Start Practice</button>
+    </div>
+
+    <div class="card" style="text-align:center;">
+        <div class="card-title">🥁 Metronome <button class="glossary-link" type="button" data-term="metronome">What is this?</button></div>
+        <div class="metronome-visual">
+            <div class="met-beat" id="mb1">1</div><div class="met-beat" id="mb2">2</div>
+            <div class="met-beat" id="mb3">3</div><div class="met-beat" id="mb4">4</div>
+        </div>
+        <div class="ctrl-row">
+            <button class="ctrl-btn" onclick="adjustBpm(-5)">−</button>
+            <span style="font-weight:800;"><span id="bpmValue">80</span> BPM</span>
+            <button class="glossary-link" type="button" data-term="bpm">What does BPM mean?</button>
+            <button class="ctrl-btn" onclick="adjustBpm(5)">+</button>
+        </div>
+        <button class="action-btn btn-orange" id="metBtn" onclick="toggleMetronome()">▶ Start Beat</button>
+    </div>
+
+    <div class="card" style="text-align:center;">
+        <div class="card-title">🔄 Chord Switching Game</div>
+        <div style="font-family:'Fredoka One',cursive; font-size:48px; color:var(--primary);" id="switchChordText">C</div>
+        <p class="card-text">Quick! Switch your fingers to this chord!</p>
+        <div style="margin:10px 0; font-weight:800;">Switches: <span id="switchScore">0</span></div>
+        <button class="action-btn btn-green" onclick="nextSwitchChord()">✅ Switched! Next!</button>
+    </div>
+</div>
+
+<!-- 6. QUIZ -->
+<div class="section" id="sec-quiz">
+    <div class="section-title">🧠 Test Your Knowledge</div>
+    <div class="card" id="quizCard"></div>
+    <div class="card ear-game">
+        <div class="card-title">👂 Note Detective</div>
+        <p class="card-text">Listen to a note, then guess which string made it!</p>
+        <div class="ear-note" id="earNote">🎵</div>
+        <button class="action-btn btn-orange" id="playEarNoteBtn" type="button" onclick="playEarNote()">🔊 Play a note</button>
+        <div class="ear-options" id="earOptions" aria-label="Choose the note">
+            <button class="ear-option" type="button" data-ear-note="G4" onclick="guessEarNote('G4')" disabled>G</button>
+            <button class="ear-option" type="button" data-ear-note="C4" onclick="guessEarNote('C4')" disabled>C</button>
+            <button class="ear-option" type="button" data-ear-note="E4" onclick="guessEarNote('E4')" disabled>E</button>
+            <button class="ear-option" type="button" data-ear-note="A4" onclick="guessEarNote('A4')" disabled>A</button>
+        </div>
+        <p class="card-text" id="earScoreText">Correct guesses: 0</p>
+    </div>
+</div>
+
+<!-- 7. BADGES -->
+<div class="section" id="sec-badges">
+    <div class="section-title">🏅 Luke's Trophies</div>
+    <p class="card-text" style="margin-bottom:12px;">Tap any unlocked badge to re-read Dad's message!</p>
+    <div class="achieve-grid" id="badgesGrid"></div>
+</div>
+
+<!-- LESSON MODAL -->
+<div class="lesson-view" id="lessonView">
+    <div class="lesson-header">
+        <button class="back-btn" onclick="closeLesson()">←</button>
+        <div>
+            <div style="font-weight:800; font-size:16px;" id="lViewTitle">Lesson</div>
+            <div class="lesson-progress-bar"><div class="lesson-progress-fill" id="lProgFill"></div></div>
+        </div>
+    </div>
+    <div class="lesson-content" id="lContent"></div>
+</div>
+
+<!-- SONG MODAL -->
+<div class="song-player" id="songPlayer">
+    <div class="lesson-header">
+        <button class="back-btn" onclick="closeSong()">←</button>
+        <div style="font-weight:800; font-size:16px;" id="sPlayerTitle">Song</div>
+    </div>
+    <div class="lesson-content" id="sLyrics"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+    <div class="b-nav-item active" onclick="switchSection('learn')"><span>📚</span>Learn</div>
+    <div class="b-nav-item" onclick="switchSection('chords')"><span>🎵</span>Chords</div>
+    <div class="b-nav-item" onclick="switchSection('songs')"><span>🎶</span>Songs</div>
+    <div class="b-nav-item" onclick="switchSection('practice')"><span>⏱️</span>Practice</div>
+    <div class="b-nav-item" onclick="switchSection('badges')"><span>🏅</span>Badges</div>
+</div>
+
+<div class="glossary-overlay" id="glossaryPopup" aria-hidden="true" onclick="closeGlossary()">
+    <section class="glossary-card" role="dialog" aria-modal="true" aria-labelledby="glossaryTitle" onclick="event.stopPropagation()">
+        <button class="glossary-close" type="button" aria-label="Close explanation" onclick="closeGlossary()">×</button>
+        <div class="glossary-visual" id="glossaryVisual" aria-hidden="true"></div>
+        <h2 class="glossary-title" id="glossaryTitle"></h2>
+        <p class="glossary-definition" id="glossaryDefinition"></p>
+        <p class="glossary-example" id="glossaryExample"></p>
+    </section>
+</div>
+
+<script>
+// ===== WEB AUDIO ENGINE =====
+let audioCtx = null;
+function getAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+}
+
+function playNote(freq, dur = 1.2) {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0.35, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + dur);
+}
+
+function playStrumChord(freqs) {
+    freqs.forEach((f, i) => setTimeout(() => playNote(f, 1.4), i * 50));
+}
+
+function playClickSound(freq = 900) {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + 0.04);
+}
+
+const FREQS = { 'G4': 392.00, 'C4': 261.63, 'E4': 329.63, 'A4': 440.00, 'C5': 523.25, 'D4': 293.66, 'F4': 349.23, 'B4': 493.88 };
+
+const GLOSSARY = {
+    fret: {
+        title: 'Fret',
+        definition: 'A fret is a small metal strip across the neck. Press a string just behind a fret to make a different note.',
+        example: 'On the chord picture, the numbered dots show which fret your fingers press.',
+        visual: '<svg viewBox="0 0 180 112" role="img" aria-label="Ukulele fretboard with a finger dot"><rect x="20" y="18" width="140" height="78" rx="12" fill="#78350F"/><path d="M55 22v70M90 22v70M125 22v70" stroke="#FCD34D" stroke-width="4"/><path d="M24 42h132M24 67h132" stroke="#FDE68A" stroke-width="3"/><circle cx="90" cy="54" r="12" fill="#FF6B35" stroke="white" stroke-width="3"/></svg>'
+    },
+    soprano: {
+        title: 'Soprano',
+        definition: 'Soprano is the smallest common size of ukulele. It has a bright, high sound.',
+        example: "Luke's Lukulele is a soprano ukulele.",
+        visual: '<svg viewBox="0 0 180 112" role="img" aria-label="Small and larger ukuleles side by side"><path d="M47 30v39c-13-6-27 2-27 17 0 12 10 20 21 14 7-4 10-11 10-11s3 7 10 11c11 6 21-2 21-14 0-15-14-23-27-17V30z" fill="#D99A45" stroke="#70431F" stroke-width="4"/><path d="M57 32v53" stroke="#FFF3D1" stroke-width="2"/><path d="M126 18v49c-15-7-32 3-32 20 0 14 12 23 25 17 8-4 12-13 12-13s4 9 12 13c13 6 25-3 25-17 0-17-17-27-32-20V18z" fill="#C97935" stroke="#70431F" stroke-width="4"/><path d="M131 20v66" stroke="#FFF3D1" stroke-width="2"/></svg>'
+    },
+    metronome: {
+        title: 'Metronome',
+        definition: 'A metronome makes a steady beat to help you keep time while you play.',
+        example: 'Start it slowly, then try matching your strums to the clicks.',
+        visual: '<svg viewBox="0 0 180 112" role="img" aria-label="A metronome with a swinging arm"><path d="M52 94 69 20h42l17 74z" fill="#A855F7" stroke="#5B21B6" stroke-width="4"/><path d="m90 76-20-49" stroke="#FFE66D" stroke-width="7" stroke-linecap="round"/><circle cx="90" cy="76" r="8" fill="white"/><path d="M78 43h25" stroke="white" stroke-width="4"/></svg>'
+    },
+    bpm: {
+        title: 'BPM',
+        definition: 'BPM means “beats per minute.” It tells you how fast the metronome clicks.',
+        example: '80 BPM means 80 steady beats in one minute. A smaller number is slower.',
+        visual: '<svg viewBox="0 0 180 112" role="img" aria-label="A dial showing a steady beat"><path d="M28 83a62 62 0 0 1 124 0" fill="none" stroke="#E5E7EB" stroke-width="13" stroke-linecap="round"/><path d="M28 83a62 62 0 0 1 62-62" fill="none" stroke="#4ECDC4" stroke-width="13" stroke-linecap="round"/><path d="m90 82 34-35" stroke="#FF6B35" stroke-width="6" stroke-linecap="round"/><circle cx="90" cy="82" r="9" fill="#2D3436"/><text x="90" y="108" text-anchor="middle" font-size="16" font-weight="800" fill="#2D3436">80 BPM</text></svg>'
+    },
+    tuning: {
+        title: 'Tuning',
+        definition: 'Tuning means turning the pegs so each string makes the right note.',
+        example: 'The four usual ukulele notes are G, C, E, and A.',
+        visual: '<svg viewBox="0 0 180 112" role="img" aria-label="A tuner showing a note in tune"><path d="M25 54h130" stroke="#D1D5DB" stroke-width="8" stroke-linecap="round"/><path d="M90 34v43" stroke="#10B981" stroke-width="7" stroke-linecap="round"/><circle cx="90" cy="56" r="17" fill="#D1FAE5" stroke="#10B981" stroke-width="4"/><path d="m82 56 6 6 12-14" fill="none" stroke="#047857" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    },
+    pitch: {
+        title: 'Pitch',
+        definition: 'Pitch means how high or low a sound is. A tight string usually sounds higher than a loose one.',
+        example: 'The tuner compares the pitch you play with the note you want.',
+        visual: '<svg viewBox="0 0 180 112" role="img" aria-label="Sound waves showing a musical pitch"><path d="M14 35h18l12-16v74L32 77H14z" fill="#4ECDC4"/><path d="M58 38q15 18 0 36M72 28q25 28 0 56M89 18q36 38 0 76" fill="none" stroke="#A855F7" stroke-width="5" stroke-linecap="round"/><path d="M123 79h45" stroke="#FF6B35" stroke-width="5" stroke-linecap="round"/><path d="m158 66 13 13-13 13" fill="none" stroke="#FF6B35" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    },
+    strum: {
+        title: 'Strum',
+        definition: 'To strum is to brush your finger across several strings to play them together.',
+        example: 'Keep your hand relaxed and brush across all four strings.',
+        visual: '<svg viewBox="0 0 180 112" role="img" aria-label="A finger brushing across four strings"><path d="M39 23v66M72 23v66M105 23v66M138 23v66" stroke="#D99A45" stroke-width="5"/><path d="M26 70h124" stroke="#78350F" stroke-width="7" stroke-linecap="round"/><path d="m126 48 24 22-24 22" fill="none" stroke="#FF6B35" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    }
+};
+
+// ===== DATA =====
+const CHORDS_DATA = {
+    'C': { name: 'C Major', desc: 'The easiest chord! Happy and bright. 😊', freqs: [392, 261.63, 329.63, 523.25], tip: 'Ring finger (Finger 3) on string 1 (bottom A string) at Fret 3.', dots: [{str:3, fret:2, fNum:3}] },
+    'Am': { name: 'A Minor', desc: 'A little sad and soulful chord. 💙', freqs: [392, 293.66, 329.63, 440], tip: 'Middle finger (Finger 2) on string 4 (top G string) at Fret 2.', dots: [{str:0, fret:1, fNum:2}] },
+    'F': { name: 'F Major', desc: 'Two fingers! Warm and sunny. 🌸', freqs: [440, 261.63, 349.23, 440], tip: 'Index finger on String 2 Fret 1, Middle finger on String 4 Fret 2.', dots: [{str:2, fret:0, fNum:1}, {str:0, fret:1, fNum:2}] },
+    'G': { name: 'G Major', desc: 'Three fingers - making real rock moves! 🎸', freqs: [392, 293.66, 392, 493.88], tip: 'Triangle shape: Index (str 3, fret 2), Middle (str 1, fret 2), Ring (str 2, fret 3).', dots: [{str:1, fret:1, fNum:1}, {str:3, fret:1, fNum:2}, {str:2, fret:2, fNum:3}] },
+    'G7': { name: 'G7 Chord', desc: 'Hawaiian island blues vibe! 🌺', freqs: [392, 293.66, 349.23, 493.88], tip: 'Index on String 2 Fret 1, Middle on String 3 Fret 2, Ring on String 1 Fret 2.', dots: [{str:2, fret:0, fNum:1}, {str:1, fret:1, fNum:2}, {str:3, fret:1, fNum:3}] }
+};
+
+let currentSelectedChord = 'C';
+
+const LESSONS_DATA = [
+    {
+        id: 'meet_uke', title: "Meet Luke's Lukulele! 🎵", sub: 'Parts & strings of your Lukulele', xp: 20,
+        cards: [
+            { title: 'Welcome Luke! 🎉', body: `<p class="card-text">This is your very own <strong>soprano Lukulele</strong>—a four-string friend with a bright, sunny sound!</p><div class="fun-fact"><strong>Fun Fact:</strong> Lukulele is a special name just for you and your instrument, Luke—made from your name and your love of music! 🎵</div>` },
+            { title: 'The 4 Strings 🎵', body: `<p class="card-text">From top (nearest your chin) to bottom (nearest the floor):</p><div style="font-family:'Fredoka One',cursive; font-size:24px; color:var(--primary); text-align:center; margin:10px 0;">G - C - E - A</div><div class="tip-box">Easy trick to remember: <strong>"Goats Can Eat Anything!"</strong> 🐐</div>` },
+            { title: 'Finger Numbers 🖐️', body: `<p class="card-text">When reading Lukulele music, we number left-hand fingers:</p><ul style="padding-left:20px; font-size:14px; margin:8px 0;"><li><strong>1</strong> = Index finger 👉</li><li><strong>2</strong> = Middle finger 🖕</li><li><strong>3</strong> = Ring finger 💍</li></ul><p class="card-text">Thumb stays gently resting behind the neck!</p>` }
+        ]
+    },
+    {
+        id: 'strumming', title: 'How to Strum & Hold 🤗', sub: 'Getting clean, sweet sound', xp: 25,
+        cards: [
+            { title: "Holding Your Lukulele 🤗", body: `<p class="card-text">Hold your Lukulele's body gently against your ribs with your right forearm. Support the neck lightly with your left hand like you are holding a bird—firm but gentle!</p>` },
+            { title: 'The Down Strum ⬇️', body: `<p class="card-text">Use the soft pad of your right index finger. Brush downward across all 4 strings where the neck meets the body.</p><div class="tip-box">Keep your wrist loose like you're flicking water off your fingertips! 💧</div>` },
+            { title: 'Island Strum Pattern 🏝️', body: `<div style="text-align:center; font-family:'Fredoka One',cursive; font-size:20px; color:var(--primary); margin:10px 0;">D - D - U - U - D - U</div><p class="card-text">Say it out loud: <em>"Down, Down, Up, Up, Down, Up"</em>. That is the rhythm of Hawaii!</p>` }
+        ]
+    },
+    {
+        id: 'chord_c', title: 'Your First Chord: C Major! 🎵', sub: 'Only one finger needed!', xp: 30,
+        cards: [
+            { title: 'Playing Chord C 🥇', body: `<p class="card-text">1. Find string 1 (bottom A string).<br>2. Place your <strong>Ring finger (3)</strong> on <strong>Fret 3</strong>.<br>3. Strum down all 4 strings!</p><div class="tip-box">Make your finger curl like a tiger claw so it doesn't touch other strings! 🐅</div>` }
+        ]
+    },
+    {
+        id: 'chord_am', title: 'Second Chord: Am 💙', sub: 'Another easy 1-finger chord', xp: 30,
+        cards: [
+            { title: 'Playing Chord Am 🎸', body: `<p class="card-text">1. Find string 4 (the top G string closest to your face).<br>2. Place your <strong>Middle finger (2)</strong> on <strong>Fret 2</strong>.<br>3. Strum all 4 strings!</p><div class="fun-fact">Minor chords sound sad or mysterious. Major chords sound happy!</div>` }
+        ]
+    },
+    {
+        id: 'chord_f', title: 'Third Chord: F Major ✌️', sub: 'Two fingers working together', xp: 35,
+        cards: [
+            { title: 'Playing Chord F 🌸', body: `<p class="card-text">1. Index finger on String 2 (E string) Fret 1.<br>2. Middle finger on String 4 (G string) Fret 2.<br>3. Strum!</p><div class="tip-box">You're already 3 chords in, Luke! That's huge!</div>` }
+        ]
+    },
+    {
+        id: 'chord_g', title: 'The Rockstar Chord: G 🤟', sub: 'Master the 3-finger triangle', xp: 40,
+        cards: [
+            { title: 'Playing Chord G 🚀', body: `<p class="card-text">Index on String 3 (Fret 2), Middle on String 1 (Fret 2), Ring on String 2 (Fret 3). Form a little triangle!</p><div class="tip-box"><strong>C, G, Am, F</strong> are the 4 chords that make up hundreds of popular songs!</div>` }
+        ]
+    }
+];
+
+const SONGS_DATA = [
+    {
+        title: "Row, Row, Row Your Boat 🚣", chords: ['C'], diff: "Easy",
+        lines: [
+            {c:'C', t:'Row, row, row your boat gently down the stream,'},
+            {c:'C', t:'Merrily, merrily, merrily, merrily, life is but a dream!'}
+        ]
+    },
+    {
+        title: "Happy Birthday 🎂", chords: ['C', 'G', 'F'], diff: "Easy",
+        lines: [
+            {c:'C', t:'Happy birthday to you,'},
+            {c:'G', t:'Happy birthday to you,'},
+            {c:'C', t:'Happy birthday dear friend,'},
+            {c:'F', t:'Happy birthday to '},
+            {c:'C', t:'you!'}
+        ]
+    },
+    {
+        title: "You Are My Sunshine ☀️", chords: ['C', 'F', 'G'], diff: "Medium",
+        lines: [
+            {c:'C', t:'You are my sunshine, my only sunshine,'},
+            {c:'F', t:'You make me happy when skies are '},
+            {c:'C', t:'gray.'},
+            {c:'F', t:'You\'ll never know dear, how much I '},
+            {c:'C', t:'love you,'},
+            {c:'G', t:'Please don\'t take my sunshine '},
+            {c:'C', t:'away.'}
+        ]
+    },
+    {
+        title: "Riptide (Vance Joy) 🌊", chords: ['Am', 'G', 'C'], diff: "Medium",
+        lines: [
+            {c:'Am', t:'I was scared of dentists and the '},
+            {c:'G', t:'dark,'},
+            {c:'C', t:'I was scared of pretty girls and starting conversations...'},
+            {c:'Am', t:'Lady, '},
+            {c:'G', t:'running down to the '},
+            {c:'C', t:'riptide!'}
+        ]
+    }
+];
+
+const QUIZ_DATA = [
+    { q: "How many strings does Luke's Lukulele have?", opts: ["6", "4", "3", "5"], ans: 1 },
+    { q: "What is the phrase to remember the 4 strings?", opts: ["Good Cats Eat Apples", "Goats Can Eat Anything", "Great Cows Eat Alone", "Goats Can Enjoy Animals"], ans: 1 },
+    { q: "Which finger plays the 1-finger C chord?", opts: ["Thumb", "Ring finger (3)", "Index finger (1)", "Pinky"], ans: 1 },
+    { q: "What is Luke's special name for his instrument?", opts: ["Lukulele", "Jumping flea", "Little guitar", "Island rhythm"], ans: 0 },
+    { q: "Which string is closest to the floor?", opts: ["G string", "C string", "E string", "A string"], ans: 3 }
+];
+
+// PERSONALIZED BADGE MESSAGES: edit each msg below to change Dad's note for that badge.
+const ACHIEVEMENTS_DATA = [
+    { id: 'first_step', icon: '🌟', name: 'First Steps', msg: "That's my boy! You just took your very first step into the world of music. I'm so proud of you man! 🎸❤️", cond: s => s.completedLessons.length >= 1 },
+    { id: 'chord_c_king', icon: '👑', name: 'C Chord Master', msg: "Listen to that clean sound! You nailed your first chord Mr. Blister! Your fingers are getting stronger every day 💪", cond: s => s.completedLessons.includes('chord_c') },
+    { id: 'three_lessons', icon: '📚', name: 'Curious Mind', msg: "Look at you powering through these lessons! I love seeing you focus and learn like this. Keep going 🚀", cond: s => s.completedLessons.length >= 3 },
+    { id: 'grad', icon: '🎓', name: 'Lukulele Graduate', msg: "Well done my boy! You finished every single beginner lesson! You are officially an awesome Lukulele player! 🏆", cond: s => s.completedLessons.length >= LESSONS_DATA.length },
+    { id: 'songbird', icon: '🎶', name: 'First Song', msg: "What?!? You played a real song! There's nothing better than hearing you make music. You make your dad so proud 🥹❤️", cond: s => s.songsPlayed >= 1 },
+    { id: 'practice_champ', icon: '⏱️', name: 'Practice Champ', msg: "5 whole minutes of pure practice! Dedication like that is how true rockstars are made Mr. Blister!", cond: s => s.practiceMin >= 5 },
+    { id: 'quiz_wiz', icon: '🧠', name: 'Quiz Wizard', msg: "So you're smart AND musical! Is there anything you can't do Luke? Proud of that big brain! 💡", cond: s => s.quizScore >= 3 },
+    { id: 'streak_3', icon: '🔥', name: '3-Day Rocker', msg: "3 days in a row! You're really sticking with it boy. Dad is smiling from ear to ear! 😊🔥", cond: s => s.streak >= 3 },
+    { id: 'streak_7', icon: '💎', name: 'Week Warrior', msg: "A full 7-day streak! I knew you had music in your soul Mr. Blister. Love you with my everything! ❤️🎸", cond: s => s.streak >= 7 },
+    { id: 'daily_triple', icon: '🏅', name: "Today's Triple Win", msg: "You practiced, switched chords, and played a song today! What a brilliant music day, Luke. I'm so proud of you! 🎵❤️", cond: s => s.dailyProgress.completed.practice && s.dailyProgress.completed.switches && s.dailyProgress.completed.song },
+    { id: 'sharp_ears', icon: '👂', name: 'Sharp Ears', msg: "You guessed five notes with your ears! You're becoming a brilliant little musician, Luke! 🎶", cond: s => s.earScore >= 5 }
+];
+
+// ===== STATE MANAGEMENT =====
+let state = {
+    xp: 0, level: 1, streak: 1, lastDate: null,
+    completedLessons: [], unlockedBadges: [],
+    songsPlayed: 0, practiceMin: 0, quizScore: 0, earScore: 0,
+    dailyProgress: {
+        date: '', practiceMinutes: 0, chordSwitches: 0, songsPlayed: 0,
+        completed: { practice: false, switches: false, song: false }
+    }
+};
+
+function prepareDailyProgress() {
+    const today = new Date().toDateString();
+    if (state.dailyProgress?.date !== today) {
+        state.dailyProgress = {
+            date: today, practiceMinutes: 0, chordSwitches: 0, songsPlayed: 0,
+            completed: { practice: false, switches: false, song: false }
+        };
+    } else {
+        state.dailyProgress = {
+            ...state.dailyProgress,
+            completed: { practice: false, switches: false, song: false, ...state.dailyProgress.completed }
+        };
+    }
+}
+
+function loadState() {
+    const saved = localStorage.getItem('lukeUkeData');
+    if (saved) {
+        const savedState = JSON.parse(saved);
+        state = {
+            ...state,
+            ...savedState,
+            dailyProgress: { ...state.dailyProgress, ...savedState.dailyProgress }
+        };
+    }
+    prepareDailyProgress();
+    const today = new Date().toDateString();
+    if (state.lastDate && state.lastDate !== today) {
+        const diff = (new Date(today) - new Date(state.lastDate)) / (1000*60*60*24);
+        if (diff === 1) state.streak++;
+        else if (diff > 1) state.streak = 1;
+    }
+    state.lastDate = today;
+    saveState();
+}
+
+function saveState() {
+    localStorage.setItem('lukeUkeData', JSON.stringify(state));
+}
+
+// PERSONALIZED LEVEL-UP MESSAGE: shown when Luke earns enough XP to level up.
+function addXP(amount) {
+    state.xp += amount;
+    const req = state.level * 80;
+    if (state.xp >= req) {
+        state.xp -= req;
+        state.level++;
+        showToast(`🎉 Level UP! Luke is now Level ${state.level}!`);
+        throwConfetti();
+    }
+    saveState();
+    updateUI();
+    checkBadges();
+}
+
+function updateUI() {
+    document.getElementById('xpCount').textContent = state.xp;
+    document.getElementById('streakCount').textContent = state.streak;
+    document.getElementById('levelNum').textContent = state.level;
+    const titles = ['Beginner', 'Strummer', 'Rockstar', 'Lukulele Master', 'Legend'];
+    document.getElementById('levelName').textContent = titles[Math.min(state.level - 1, titles.length - 1)];
+    const req = state.level * 80;
+    document.getElementById('xpBar').style.width = Math.min(100, (state.xp / req) * 100) + '%';
+    renderLessonPath();
+    renderBadges();
+    updateDailyProgressUI();
+}
+
+function updateDailyProgressUI() {
+    const progress = state.dailyProgress;
+    const goals = [
+        { key: 'practice', value: progress.practiceMinutes, target: 5, check: 'practiceGoalCheck', bar: 'practiceGoalBar', count: 'practiceGoalCount' },
+        { key: 'switches', value: progress.chordSwitches, target: 10, check: 'switchGoalCheck', bar: 'switchGoalBar', count: 'switchGoalCount' },
+        { key: 'song', value: progress.songsPlayed, target: 1, check: 'songGoalCheck', bar: 'songGoalBar', count: 'songGoalCount' }
+    ];
+    goals.forEach(goal => {
+        const complete = Boolean(progress.completed[goal.key]);
+        const check = document.getElementById(goal.check);
+        check.textContent = complete ? '✓' : '';
+        check.classList.toggle('done', complete);
+        check.setAttribute('aria-label', complete ? 'Complete' : 'Not complete');
+        document.getElementById(goal.bar).style.width = `${Math.min(100, goal.value / goal.target * 100)}%`;
+        document.getElementById(goal.count).textContent = `${Math.min(goal.value, goal.target)} / ${goal.target}`;
+    });
+    const completedCount = goals.filter(goal => progress.completed[goal.key]).length;
+    document.getElementById('dailyText').textContent = completedCount === goals.length
+        ? "You did all three practice goals today! Amazing work, Luke!"
+        : `You have completed ${completedCount} of 3 practice goals today. Tap to see them!`;
+    document.getElementById('switchScore').textContent = progress.chordSwitches;
+}
+
+function completeDailyGoal(goal, message) {
+    if (state.dailyProgress.completed[goal]) return;
+    state.dailyProgress.completed[goal] = true;
+    saveState();
+    updateDailyProgressUI();
+    addXP(10);
+    showToast(message);
+}
+
+let glossaryReturnFocus = null;
+
+function showGlossary(term) {
+    const entry = GLOSSARY[term];
+    if (!entry) return;
+    glossaryReturnFocus = document.activeElement;
+    document.getElementById('glossaryTitle').textContent = entry.title;
+    document.getElementById('glossaryDefinition').textContent = entry.definition;
+    document.getElementById('glossaryExample').textContent = entry.example;
+    document.getElementById('glossaryVisual').innerHTML = entry.visual;
+    const popup = document.getElementById('glossaryPopup');
+    popup.classList.add('show');
+    popup.setAttribute('aria-hidden', 'false');
+    popup.querySelector('.glossary-close').focus();
+}
+
+function closeGlossary() {
+    const popup = document.getElementById('glossaryPopup');
+    popup.classList.remove('show');
+    popup.setAttribute('aria-hidden', 'true');
+    if (glossaryReturnFocus?.isConnected) glossaryReturnFocus.focus();
+}
+
+function addGlossaryLinks(root) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+    while (walker.nextNode()) {
+        const node = walker.currentNode;
+        if (node.parentElement?.closest('button, a, script, style, svg, .glossary-card')) continue;
+        if (/\b(?:frets?|soprano|metronome|bpm|tuning|pitch|strumming|strum)\b/i.test(node.textContent)) {
+            textNodes.push(node);
+        }
+    }
+    const aliases = { frets: 'fret', strumming: 'strum' };
+    textNodes.forEach(node => {
+        const fragment = document.createDocumentFragment();
+        const pattern = /\b(frets?|soprano|metronome|bpm|tuning|pitch|strumming|strum)\b/gi;
+        let lastIndex = 0;
+        let match;
+        while ((match = pattern.exec(node.textContent))) {
+            fragment.append(node.textContent.slice(lastIndex, match.index));
+            const term = match[0].toLowerCase();
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'glossary-link';
+            button.dataset.term = aliases[term] || term;
+            button.textContent = match[0];
+            button.setAttribute('aria-label', `What does ${match[0]} mean?`);
+            fragment.append(button);
+            lastIndex = pattern.lastIndex;
+        }
+        fragment.append(node.textContent.slice(lastIndex));
+        node.replaceWith(fragment);
+    });
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+document.addEventListener('click', event => {
+    const helpButton = event.target instanceof Element ? event.target.closest('.glossary-link') : null;
+    if (helpButton) showGlossary(helpButton.dataset.term);
+});
+
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && document.getElementById('glossaryPopup').classList.contains('show')) closeGlossary();
+});
+
+function throwConfetti() {
+    const box = document.getElementById('confettiBox');
+    const cols = ['#FF6B35', '#4ECDC4', '#FFE66D', '#A855F7', '#EC4899', '#10B981'];
+    for (let i = 0; i < 40; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.background = cols[Math.floor(Math.random() * cols.length)];
+        p.style.animationDelay = (Math.random() * 1.5) + 's';
+        box.appendChild(p);
+        setTimeout(() => p.remove(), 3000);
+    }
+}
+
+// ===== DAD POPUP =====
+// Displays the personalized msg text defined for the unlocked badge above.
+function showDadPopup(badge) {
+    document.getElementById('dadBadge').textContent = badge.icon;
+    document.getElementById('dadAchieveName').textContent = badge.name;
+    document.getElementById('dadMsg').textContent = badge.msg;
+    document.getElementById('dadPopup').classList.add('show');
+    throwConfetti();
+}
+
+function closeDadPopup() {
+    document.getElementById('dadPopup').classList.remove('show');
+}
+
+function checkBadges() {
+    ACHIEVEMENTS_DATA.forEach(b => {
+        if (!state.unlockedBadges.includes(b.id) && b.cond(state)) {
+            state.unlockedBadges.push(b.id);
+            saveState();
+            showDadPopup(b);
+        }
+    });
+    renderBadges();
+}
+
+// ===== APP START =====
+function startApp() {
+    document.getElementById('splashScreen').classList.add('hidden');
+    loadState();
+    updateUI();
+    renderChords();
+    renderSongs();
+    renderQuiz();
+    renderChordDiagram('C');
+    addGlossaryLinks(document.getElementById('sec-tuner'));
+    addGlossaryLinks(document.getElementById('sec-practice'));
+    if ('serviceWorker' in navigator && window.isSecureContext && window.location.protocol !== 'file:') {
+        navigator.serviceWorker.register('./lukulele-sw.js').catch(error => {
+            console.error('Could not enable offline access for Lukulele:', error);
+            showToast('Offline access could not be set up. Please try again while online.');
+        });
+    }
+}
+
+function switchSection(secId, tabEl) {
+    if (secId !== 'tuner' && micStream) stopMicrophoneTuner();
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.b-nav-item').forEach(b => b.classList.remove('active'));
+
+    const targetSec = document.getElementById('sec-' + secId);
+    if (targetSec) targetSec.classList.add('active');
+
+    if (tabEl) tabEl.classList.add('active');
+    else {
+        const match = Array.from(document.querySelectorAll('.nav-tab')).find(t => t.textContent.toLowerCase().includes(secId));
+        if (match) match.classList.add('active');
+    }
+
+    const bMatch = Array.from(document.querySelectorAll('.b-nav-item')).find(b => b.textContent.toLowerCase().includes(secId));
+    if (bMatch) bMatch.classList.add('active');
+}
+
+// ===== LESSONS =====
+function renderLessonPath() {
+    const path = document.getElementById('lessonPath');
+    path.innerHTML = '';
+    LESSONS_DATA.forEach((l, idx) => {
+        const done = state.completedLessons.includes(l.id);
+        const locked = idx > 0 && !state.completedLessons.includes(LESSONS_DATA[idx - 1].id);
+        const current = !done && !locked;
+
+        if (idx > 0) {
+            const conn = document.createElement('div');
+            conn.className = 'path-connector' + (done ? ' completed' : '');
+            path.appendChild(conn);
+        }
+
+        const node = document.createElement('div');
+        node.className = `lesson-node ${done ? 'completed' : ''} ${current ? 'current' : ''} ${locked ? 'locked' : ''}`;
+        node.onclick = () => { if (!locked) openLesson(idx); };
+        node.innerHTML = `
+            <div class="lesson-icon" style="background:${done ? '#DCFCE7' : '#FFEDD5'}">${done ? '✅' : '🎸'}</div>
+            <div class="lesson-info"><h3>${l.title}</h3><p>${l.sub}</p></div>
+            <div class="lesson-status">${done ? '⭐' : current ? '👉' : '🔒'}</div>
+        `;
+        path.appendChild(node);
+    });
+}
+
+let activeLessonIdx = 0;
+let activeCardIdx = 0;
+
+function openLesson(idx) {
+    activeLessonIdx = idx; activeCardIdx = 0;
+    const l = LESSONS_DATA[idx];
+    document.getElementById('lViewTitle').textContent = l.title;
+    document.getElementById('lessonView').classList.add('active');
+    showLessonCard();
+}
+
+function showLessonCard() {
+    const l = LESSONS_DATA[activeLessonIdx];
+    const c = l.cards[activeCardIdx];
+    const total = l.cards.length;
+    document.getElementById('lProgFill').style.width = (((activeCardIdx + 1) / total) * 100) + '%';
+    const isLast = activeCardIdx === total - 1;
+
+    document.getElementById('lContent').innerHTML = `
+        <div class="card">
+            <div class="card-title">${c.title}</div>
+            ${c.body}
+        </div>
+        <div style="text-align:center; font-size:12px; color:#9CA3AF; margin-top:8px;">Step ${activeCardIdx + 1} of ${total}</div>
+        <button class="action-btn ${isLast ? 'btn-green' : 'btn-orange'}" onclick="${isLast ? 'finishLesson()' : 'nextLessonCard()'}">
+            ${isLast ? `Complete Lesson (+${l.xp} XP) 🎉` : 'Next Step →'}
+        </button>
+    `;
+    addGlossaryLinks(document.getElementById('lContent'));
+}
+
+function nextLessonCard() { activeCardIdx++; showLessonCard(); }
+
+// PERSONALIZED LESSON REWARD: lesson XP and completion feedback.
+function finishLesson() {
+    const l = LESSONS_DATA[activeLessonIdx];
+    if (!state.completedLessons.includes(l.id)) {
+        state.completedLessons.push(l.id);
+        addXP(l.xp);
+        showToast(`🎉 Awesome work Luke! You finished a lesson and earned ${l.xp} XP!`);
+    }
+    closeLesson();
+}
+
+function closeLesson() {
+    document.getElementById('lessonView').classList.remove('active');
+    updateUI();
+}
+
+// ===== CHORDS =====
+function renderChords() {
+    const g = document.getElementById('chordGrid');
+    g.innerHTML = '';
+    Object.keys(CHORDS_DATA).forEach(k => {
+        const card = document.createElement('div');
+        card.className = `chord-card ${k === currentSelectedChord ? 'selected' : ''}`;
+        card.onclick = () => { selectChord(k); };
+        card.innerHTML = `<div class="chord-name">${k}</div><div style="font-size:11px; color:#6B7280;">${CHORDS_DATA[k].name}</div>`;
+        g.appendChild(card);
+    });
+}
+
+function selectChord(k) {
+    currentSelectedChord = k;
+    renderChords();
+    const c = CHORDS_DATA[k];
+    document.getElementById('cdName').textContent = `${k} - ${c.name}`;
+    document.getElementById('cdDesc').textContent = c.desc;
+    document.getElementById('cdTip').textContent = c.tip;
+    renderChordDiagram(k);
+    addGlossaryLinks(document.getElementById('chordDetail'));
+    playStrumChord(c.freqs);
+}
+
+function renderChordDiagram(k) {
+    const chord = CHORDS_DATA[k];
+    const box = document.getElementById('fretDiagram');
+    let html = `
+        <div class="fret-header"><span>G</span><span>C</span><span>E</span><span>A</span></div>
+        <div class="fret-nut"></div>
+    `;
+    for (let f = 0; f < 3; f++) {
+        html += `<div class="fret-row">`;
+        for (let s = 0; s < 4; s++) {
+            const dot = chord.dots.find(d => d.str === s && d.fret === f);
+            html += `<div class="fret-string">
+                <div class="fret-dot ${dot ? 'show' : ''}" style="background:var(--primary);">${dot ? dot.fNum : ''}</div>
+            </div>`;
+        }
+        html += `<span class="fret-label">Fret ${f+1}</span></div>`;
+    }
+    box.innerHTML = html;
+}
+
+function playCurrentChordAudio() {
+    playStrumChord(CHORDS_DATA[currentSelectedChord].freqs);
+}
+
+// ===== SONGS =====
+function renderSongs() {
+    const list = document.getElementById('songsList');
+    list.innerHTML = '';
+    SONGS_DATA.forEach((s, idx) => {
+        const card = document.createElement('div');
+        card.className = 'song-card';
+        card.onclick = () => openSong(idx);
+        card.innerHTML = `
+            <span class="song-difficulty">${s.diff}</span>
+            <div class="song-title">${s.title}</div>
+            <div>${s.chords.map(c => `<span class="song-tag">${c}</span>`).join('')}</div>
+        `;
+        list.appendChild(card);
+    });
+}
+
+function openSong(idx) {
+    const s = SONGS_DATA[idx];
+    document.getElementById('sPlayerTitle').textContent = s.title;
+    document.getElementById('songPlayer').classList.add('active');
+    document.getElementById('sLyrics').innerHTML = `
+        <div class="card">
+            <div class="card-title">Chords in this song:</div>
+            <div style="margin-bottom:8px;">${s.chords.map(c => `<span class="song-tag" style="background:#FED7AA; font-size:14px; cursor:pointer;" onclick="selectChord('${c}')">${c} 🔊</span>`).join(' ')}</div>
+            <div class="tip-box">Tap a chord above to hear it! Switch your fingers when you see the chord name!</div>
+        </div>
+        ${s.lines.map(l => `
+            <div class="lyric-line">
+                <div class="lyric-chord" onclick="playStrumChord(CHORDS_DATA['${l.c}']?.freqs || [392,261,329,523])">[ ${l.c} ] 🔊</div>
+                <div class="lyric-text">${l.t}</div>
+            </div>
+        `).join('')}
+        <button class="action-btn btn-green" onclick="finishSong()">🎉 Luke Played This Song! (+20 XP)</button>
+    `;
+}
+
+// PERSONALIZED SONG REWARD: song XP and completion feedback.
+function finishSong() {
+    state.songsPlayed++;
+    state.dailyProgress.songsPlayed++;
+    saveState();
+    updateDailyProgressUI();
+    addXP(20);
+    completeDailyGoal('song', 'You played a song today, Luke! +10 bonus XP!');
+    showToast('🎸 You rocked that song boy! Well done.');
+    closeSong();
+}
+
+function closeSong() { document.getElementById('songPlayer').classList.remove('active'); }
+
+// ===== TUNER =====
+function playTunerNote(note, btn) {
+    playNote(FREQS[note], 2.5);
+    document.querySelectorAll('.tuner-btn').forEach(b => b.classList.remove('playing'));
+    btn.classList.add('playing');
+    setTimeout(() => btn.classList.remove('playing'), 2500);
+}
+
+let tunerTargetNote = 'G4';
+let micStream = null;
+let micContext = null;
+let micAnalyser = null;
+let micSource = null;
+let micFrame = 0;
+let lastTunerFrame = 0;
+
+function selectTunerTarget(note, button) {
+    tunerTargetNote = note;
+    document.querySelectorAll('.target-note-btn').forEach(option => option.classList.remove('selected'));
+    button.classList.add('selected');
+    document.getElementById('detectedNote').textContent = note;
+    document.getElementById('micStatus').textContent = `Ready for the ${note[0]} string. Pluck it once at a time.`;
+    updateTunerNeedle(0, false);
+}
+
+function estimatePitch(samples, sampleRate) {
+    let mean = 0;
+    for (let i = 0; i < samples.length; i++) mean += samples[i];
+    mean /= samples.length;
+
+    let energy = 0;
+    for (let i = 0; i < samples.length; i++) {
+        const centered = samples[i] - mean;
+        energy += centered * centered;
+    }
+    if (Math.sqrt(energy / samples.length) < 0.012) return null;
+
+    const minLag = Math.floor(sampleRate / 520);
+    const maxLag = Math.min(Math.floor(sampleRate / 150), Math.floor(samples.length / 2));
+    const differences = new Float32Array(maxLag + 1);
+    let bestLag = -1;
+
+    for (let lag = minLag; lag <= maxLag; lag++) {
+        let difference = 0;
+        let count = 0;
+        for (let i = 0; i < samples.length - lag; i += 2) {
+            const delta = samples[i] - samples[i + lag];
+            difference += delta * delta;
+            count++;
+        }
+        differences[lag] = difference / count;
+    }
+
+    for (let lag = minLag + 1; lag < maxLag; lag++) {
+        if (differences[lag] <= differences[lag - 1] && differences[lag] <= differences[lag + 1]) {
+            bestLag = lag;
+            break;
+        }
+    }
+    if (bestLag < 0 || differences[bestLag] / (energy / samples.length) > 0.8) return null;
+
+    const before = differences[bestLag - 1];
+    const center = differences[bestLag];
+    const after = differences[bestLag + 1];
+    const divisor = before - 2 * center + after;
+    const correction = divisor ? 0.5 * (before - after) / divisor : 0;
+    return sampleRate / (bestLag + correction);
+}
+
+function updateTunerNeedle(cents, inTune) {
+    const needle = document.getElementById('tunerNeedle');
+    const angle = Math.max(-42, Math.min(42, cents / 50 * 42));
+    needle.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+    needle.classList.toggle('in-tune', inTune);
+}
+
+function updateMicrophoneTuner() {
+    if (!micAnalyser) return;
+    micFrame = requestAnimationFrame(updateMicrophoneTuner);
+    const now = performance.now();
+    if (now - lastTunerFrame < 80) return;
+    lastTunerFrame = now;
+
+    const samples = new Float32Array(micAnalyser.fftSize);
+    micAnalyser.getFloatTimeDomainData(samples);
+    const frequency = estimatePitch(samples, micContext.sampleRate);
+    if (!frequency) {
+        document.getElementById('detectedNote').textContent = tunerTargetNote;
+        document.getElementById('micStatus').textContent = `Pluck the ${tunerTargetNote[0]} string gently.`;
+        updateTunerNeedle(0, false);
+        return;
+    }
+
+    const targetFrequency = FREQS[tunerTargetNote];
+    const cents = 1200 * Math.log2(frequency / targetFrequency);
+    const nearestNote = Object.entries(FREQS)
+        .filter(([note]) => ['G4', 'C4', 'E4', 'A4'].includes(note))
+        .sort((a, b) => Math.abs(1200 * Math.log2(frequency / a[1])) - Math.abs(1200 * Math.log2(frequency / b[1])))[0][0];
+    const inTune = Math.abs(cents) <= 5;
+    document.getElementById('detectedNote').textContent = `${nearestNote} → ${tunerTargetNote}`;
+    document.getElementById('micStatus').textContent = inTune
+        ? `In tune! Your ${tunerTargetNote[0]} string sounds great!`
+        : cents < 0
+            ? `${cents < -20 ? 'Quite flat' : 'A little flat'} — gently tighten the ${tunerTargetNote[0]} string.`
+            : `${cents > 20 ? 'Quite sharp' : 'A little sharp'} — gently loosen the ${tunerTargetNote[0]} string.`;
+    updateTunerNeedle(cents, inTune);
+}
+
+async function startMicrophoneTuner() {
+    const status = document.getElementById('micStatus');
+    if (!window.isSecureContext) {
+        status.textContent = 'Microphone tuning needs a secure page (HTTPS) or localhost. The sound buttons still work offline.';
+        return;
+    }
+    if (!navigator.mediaDevices?.getUserMedia) {
+        status.textContent = 'This browser cannot use the microphone here. The sound buttons above still work offline.';
+        return;
+    }
+    if (micStream) return;
+
+    status.textContent = 'Waiting for microphone permission…';
+    try {
+        micStream = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+        });
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) {
+            stopMicrophoneTuner();
+            status.textContent = 'This browser does not support the live tuner. The sound buttons still work offline.';
+            return;
+        }
+        micContext = new AudioContextClass();
+        await micContext.resume();
+        micAnalyser = micContext.createAnalyser();
+        micAnalyser.fftSize = 4096;
+        micSource = micContext.createMediaStreamSource(micStream);
+        micSource.connect(micAnalyser);
+        document.getElementById('listenBtn').disabled = true;
+        document.getElementById('stopListenBtn').disabled = false;
+        status.textContent = `Listening for the ${tunerTargetNote[0]} string. Pluck one string at a time.`;
+        lastTunerFrame = 0;
+        micFrame = requestAnimationFrame(updateMicrophoneTuner);
+    } catch (error) {
+        stopMicrophoneTuner();
+        if (error.name === 'NotAllowedError' || error.name === 'SecurityError') {
+            status.textContent = 'Microphone access was blocked. Allow it in your browser settings, then tap Listen again.';
+        } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+            status.textContent = 'No microphone was found. Check that your device has one connected.';
+        } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+            status.textContent = 'The microphone is busy in another app. Close that app and try again.';
+        } else {
+            console.error('Could not start the microphone tuner:', error);
+            status.textContent = 'The microphone tuner could not start. Check microphone permission and try again.';
+        }
+    }
+}
+
+function stopMicrophoneTuner() {
+    if (micFrame) cancelAnimationFrame(micFrame);
+    micFrame = 0;
+    micAnalyser = null;
+    micSource?.disconnect();
+    micSource = null;
+    micStream?.getTracks().forEach(track => track.stop());
+    micStream = null;
+    if (micContext && micContext.state !== 'closed') {
+        const context = micContext;
+        context.close().catch(error => console.error('Could not close tuner audio:', error));
+    }
+    micContext = null;
+    const listenButton = document.getElementById('listenBtn');
+    const stopButton = document.getElementById('stopListenBtn');
+    if (listenButton) listenButton.disabled = false;
+    if (stopButton) stopButton.disabled = true;
+    const status = document.getElementById('micStatus');
+    if (status) status.textContent = 'Microphone is off. The sound buttons above still work offline.';
+    updateTunerNeedle(0, false);
+}
+
+window.addEventListener('pagehide', stopMicrophoneTuner);
+
+// ===== PRACTICE & METRONOME =====
+let timerSec = 300;
+let timerRunning = false;
+let timerInt = null;
+let timerMinutes = 5;
+
+function adjustTimer(amt) {
+    if (timerRunning) return;
+    timerMinutes = Math.max(1, Math.min(20, timerMinutes + amt));
+    timerSec = timerMinutes * 60;
+    updateTimerText();
+    document.getElementById('timerMinLabel').textContent = timerMinutes + ' min';
+}
+
+function updateTimerText() {
+    const m = Math.floor(timerSec / 60);
+    const s = timerSec % 60;
+    document.getElementById('timerDisplay').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+function toggleTimer() {
+    const btn = document.getElementById('timerBtn');
+    if (timerRunning) {
+        clearInterval(timerInt); timerRunning = false;
+        btn.textContent = '▶ Start Practice'; btn.className = 'action-btn btn-green';
+    } else {
+        timerRunning = true;
+        btn.textContent = '⏸ Pause'; btn.className = 'action-btn btn-orange';
+        timerInt = setInterval(() => {
+            timerSec--;
+            updateTimerText();
+            if (timerSec <= 0) {
+                clearInterval(timerInt); timerRunning = false;
+                state.practiceMin += timerMinutes;
+                state.dailyProgress.practiceMinutes += timerMinutes;
+                saveState();
+                updateDailyProgressUI();
+                addXP(timerMinutes * 5);
+                if (state.dailyProgress.practiceMinutes >= 5) {
+                    completeDailyGoal('practice', 'You finished 5 minutes of practice, Luke! +10 bonus XP!');
+                }
+                btn.textContent = '▶ Start Practice'; btn.className = 'action-btn btn-green';
+                // PERSONALIZED PRACTICE REWARD: shown when the timer reaches zero.
+                showToast(`⏱️ Practice finished! Great job Luke! You practiced ${state.dailyProgress.practiceMinutes} minutes today.`);
+                throwConfetti();
+                checkBadges();
+            }
+        }, 1000);
+    }
+}
+
+let bpm = 80;
+let metRunning = false;
+let metInt = null;
+let currentBeat = 0;
+
+function adjustBpm(amt) {
+    bpm = Math.max(40, Math.min(180, bpm + amt));
+    document.getElementById('bpmValue').textContent = bpm;
+    if (metRunning) { toggleMetronome(); toggleMetronome(); }
+}
+
+function toggleMetronome() {
+    const btn = document.getElementById('metBtn');
+    if (metRunning) {
+        clearInterval(metInt); metRunning = false;
+        btn.textContent = '▶ Start Beat'; btn.className = 'action-btn btn-orange';
+        document.querySelectorAll('.met-beat').forEach(b => b.classList.remove('active', 'down'));
+    } else {
+        metRunning = true; currentBeat = 0;
+        btn.textContent = '⏹ Stop Beat'; btn.className = 'action-btn btn-green';
+        const interval = (60 / bpm) * 1000;
+        metInt = setInterval(() => {
+            document.querySelectorAll('.met-beat').forEach(b => b.classList.remove('active', 'down'));
+            const bEl = document.getElementById('mb' + (currentBeat + 1));
+            bEl.classList.add('active');
+            if (currentBeat === 0) { bEl.classList.add('down'); playClickSound(1000); }
+            else { playClickSound(650); }
+            currentBeat = (currentBeat + 1) % 4;
+        }, interval);
+    }
+}
+
+// ===== CHORD SWITCH GAME =====
+let switchCount = 0;
+const switchList = ['C', 'Am', 'F', 'G'];
+
+// PERSONALIZED CHALLENGE REWARD: encouragement each time Luke completes 10 chord switches.
+function nextSwitchChord() {
+    switchCount++;
+    state.dailyProgress.chordSwitches++;
+    saveState();
+    updateDailyProgressUI();
+    playClickSound(800);
+    const next = switchList[Math.floor(Math.random() * switchList.length)];
+    document.getElementById('switchChordText').textContent = next;
+    if (state.dailyProgress.chordSwitches === 10) {
+        completeDailyGoal('switches', 'You finished 10 chord switches today, Luke! +10 bonus XP!');
+    }
+    if (state.dailyProgress.chordSwitches % 10 === 0) {
+        addXP(15);
+        showToast('🔥 10 quick switches! Speed master Luke!');
+    }
+}
+
+// ===== QUIZ =====
+let curQuizIdx = 0;
+let currentEarNote = null;
+let waitingForEarGuess = false;
+
+function playEarNote() {
+    const notes = ['G4', 'C4', 'E4', 'A4'];
+    currentEarNote = notes[Math.floor(Math.random() * notes.length)];
+    waitingForEarGuess = true;
+    document.querySelectorAll('.ear-option').forEach(button => {
+        button.disabled = false;
+        button.classList.remove('correct', 'wrong');
+    });
+    document.getElementById('earNote').textContent = 'Listen…';
+    document.getElementById('earScoreText').textContent = `Correct guesses: ${state.earScore}`;
+    playNote(FREQS[currentEarNote], 1.4);
+}
+
+function guessEarNote(note) {
+    if (!waitingForEarGuess || !currentEarNote) {
+        showToast('Tap “Play a note” first, Luke!');
+        return;
+    }
+    waitingForEarGuess = false;
+    document.querySelectorAll('.ear-option').forEach(button => {
+        button.disabled = true;
+        if (button.dataset.earNote === currentEarNote) button.classList.add('correct');
+    });
+    const chosen = document.querySelector(`[data-ear-note="${note}"]`);
+    if (note === currentEarNote) {
+        state.earScore++;
+        chosen.classList.add('correct');
+        document.getElementById('earNote').textContent = `Yes! ${note[0]}!`;
+        document.getElementById('earScoreText').textContent = `Correct guesses: ${state.earScore}`;
+        addXP(3);
+        showToast(`🎵 You heard the ${note[0]} string, Luke! +3 XP`);
+    } else {
+        chosen.classList.add('wrong');
+        document.getElementById('earNote').textContent = `That was ${currentEarNote[0]}!`;
+        showToast(`Good try Luke! That was the ${currentEarNote[0]} string.`);
+    }
+    currentEarNote = null;
+}
+
+function renderQuiz() {
+    const q = QUIZ_DATA[curQuizIdx];
+    const card = document.getElementById('quizCard');
+    card.innerHTML = `
+        <div style="font-size:12px; font-weight:800; color:#9CA3AF; margin-bottom:6px;">Question ${curQuizIdx + 1} of ${QUIZ_DATA.length}</div>
+        <div style="font-weight:800; font-size:17px; margin-bottom:12px;">${q.q}</div>
+        ${q.opts.map((opt, i) => `<button class="quiz-opt" onclick="checkAnswer(${i})">${opt}</button>`).join('')}
+    `;
+}
+
+// PERSONALIZED QUIZ FEEDBACK: encouragement for both correct and incorrect answers.
+function checkAnswer(chosen) {
+    const q = QUIZ_DATA[curQuizIdx];
+    const opts = document.querySelectorAll('.quiz-opt');
+    opts.forEach(b => b.disabled = true);
+
+    if (chosen === q.ans) {
+        opts[chosen].classList.add('correct');
+        state.quizScore++;
+        addXP(10);
+        showToast('🎯 Correct Luke! +10 XP');
+    } else {
+        opts[chosen].classList.add('wrong');
+        opts[q.ans].classList.add('correct');
+        showToast("Not actually Luke, but good try! You'll get it next time!");
+    }
+
+    setTimeout(() => {
+        curQuizIdx = (curQuizIdx + 1) % QUIZ_DATA.length;
+        renderQuiz();
+    }, 1800);
+}
+
+// ===== BADGES =====
+function renderBadges() {
+    const g = document.getElementById('badgesGrid');
+    g.innerHTML = '';
+    ACHIEVEMENTS_DATA.forEach(b => {
+        const unlocked = state.unlockedBadges.includes(b.id);
+        const el = document.createElement('div');
+        el.className = `achieve-card ${unlocked ? 'unlocked' : 'locked'}`;
+        el.onclick = () => { if (unlocked) showDadPopup(b); };
+        el.innerHTML = `
+            <div class="achieve-icon">${b.icon}</div>
+            <div class="achieve-name">${b.name}</div>
+        `;
+        g.appendChild(el);
+    });
+}
+</script>
+</body>
+</html>

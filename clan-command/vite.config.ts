@@ -14,6 +14,10 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: false,
     rollupOptions: {
+      input: {
+        main: 'index.html',
+        lukulele: 'Lukulele.html',
+      },
       output: {
         manualChunks(id) {
           if (id.includes('/node_modules/lucide-react/')) return 'lucide-icons';

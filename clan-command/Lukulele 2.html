@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Luke's Lukulele Adventure! 🎵</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        :root {
+            --primary: #FF6B35; --secondary: #4ECDC4; --accent: #FFE66D;
+            --purple: #A855F7; --pink: #EC4899; --dark: #2D3436;
+            --light: #FFF9F0; --green: #10B981; --blue: #3B82F6; --red: #EF4444;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        /* SPLASH SCREEN */
+        .splash-screen {
+            position: fixed; inset: 0;
+            background: linear-gradient(135deg, #FF6B35, #FFE66D, #4ECDC4);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; transition: opacity 0.6s ease; text-align: center; padding: 20px;
+        }
+        .splash-screen.hidden { opacity: 0; pointer-events: none; }
+        .splash-uke { font-size: 80px; animation: bounce 1.2s infinite; }
+        .splash-title { font-family: 'Fredoka One', cursive; font-size: 34px; color: white; text-shadow: 2px 2px 0 rgba(0,0,0,0.15); margin: 15px 0 5px; }
+        .splash-sub { font-size: 17px; color: rgba(255,255,255,0.95); font-weight: 700; margin-bottom: 25px; }
+        .splash-btn {
+            background: white; color: var(--primary); border: none; padding: 16px 45px;
+            border-radius: 50px; font-family: 'Fredoka One', cursive; font-size: 22px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15); cursor: pointer;
+        }
+
+        @keyframes bounce { 0%,100%{transform:translateY(0) rotate(-4deg);} 50%{transform:translateY(-15px) rotate(4deg);} }
+
+        /* HEADER */
+        .top-header {
+            background: linear-gradient(135deg, var(--primary), #FF8F65);
+            padding: 20px 20px 25px; border-radius: 0 0 28px 28px; color: white;
+        }
+        .greeting { font-family: 'Fredoka One', cursive; font-size: 24px; }
+        .streak-bar {
+            display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
+            background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 13px;
+        }
+        .xp-display { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-weight: 700; font-size: 13px; }
+        .xp-bar-outer { flex: 1; height: 10px; background: rgba(255,255,255,0.3); border-radius: 10px; overflow: hidden; max-width: 180px; }
+        .xp-bar-inner { height: 100%; background: var(--accent); border-radius: 10px; transition: width 0.4s ease; }
+        .level-badge {
+            display: inline-flex; background: var(--accent); color: var(--dark);
+            padding: 4px 12px; border-radius: 12px; font-weight: 800; font-size: 12px; margin-top: 8px;
+        }
+
+        /* DAILY CHALLENGE */
+        .daily-challenge {
+            background: linear-gradient(135deg, var(--purple), var(--pink));
+            border-radius: 18px; padding: 16px; margin: 15px; color: white; cursor: pointer;
+        }
+        .daily-challenge h3 { font-family: 'Fredoka One', cursive; font-size: 16px; margin-bottom: 4px; }
+        .daily-challenge p { font-size: 13px; opacity: 0.95; }
+
+        /* NAV TABS */
+        .nav-tabs { display: flex; gap: 8px; padding: 10px 15px 5px; overflow-x: auto; scrollbar-width: none; }
+        .nav-tabs::-webkit-scrollbar { display: none; }
+        .nav-tab {
+            flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: 2px solid #E5E7EB;
+            background: white; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s;
+        }
+        .nav-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* SECTIONS */
+        .section { display: none; padding: 15px; }
+        .section.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+        .section-title { font-family: 'Fredoka One', cursive; font-size: 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+        /* CARDS */
+        .card {
+            background: white; border-radius: 18px; padding: 18px; margin-bottom: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 2px solid #F3F4F6;
+        }
+        .card-title { font-weight: 800; font-size: 17px; margin-bottom: 6px; }
+        .card-text { font-size: 14px; line-height: 1.5; color: #4B5563; }
+
+        /* LESSON PATH */
+        .lesson-path { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .lesson-node {
+            width: 100%; max-width: 340px; background: white; border-radius: 16px;
+            padding: 14px 16px; border: 3px solid #E5E7EB; cursor: pointer; display: flex; align-items: center; gap: 12px;
+        }
+        .lesson-node.completed { border-color: var(--green); background: #F0FDF4; }
+        .lesson-node.current { border-color: var(--primary); box-shadow: 0 4px 15px rgba(255,107,53,0.25); }
+        .lesson-node.locked { opacity: 0.5; pointer-events: none; }
+        .lesson-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+        .lesson-info h3 { font-weight: 800; font-size: 15px; margin-bottom: 2px; }
+        .lesson-info p { font-size: 12px; color: #6B7280; font-weight: 600; }
+        .lesson-status { margin-left: auto; font-size: 20px; }
+        .path-connector { width: 3px; height: 16px; background: #E5E7EB; border-radius: 3px; }
+        .path-connector.completed { background: var(--green); }
+
+        /* LESSON MODAL */
+        .lesson-view, .song-player {
+            position: fixed; inset: 0; background: var(--light); z-index: 500;
+            overflow-y: auto; display: none;
+        }
+        .lesson-view.active, .song-player.active { display: block; }
+        .lesson-header {
+            background: linear-gradient(135deg, var(--primary), #FF8F65);
+            padding: 16px 20px; color: white; display: flex; align-items: center; gap: 12px;
+            position: sticky; top: 0; z-index: 10;
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.25); border: none; color: white;
+            width: 36px; height: 36px; border-radius: 10px; font-size: 18px; cursor: pointer;
+        }
+        .lesson-progress-bar { height: 6px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden; margin-top: 6px; width: 140px; }
+        .lesson-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+        .lesson-content { padding: 18px; padding-bottom: 80px; }
+
+        /* CALLOUTS */
+        .fun-fact, .tip-box, .warning-box {
+            border-radius: 14px; padding: 12px; margin: 12px 0; font-size: 13px; line-height: 1.4;
+        }
+        .fun-fact { background: #EDE9FE; border-left: 4px solid var(--purple); color: #5B21B6; }
+        .tip-box { background: #ECFDF5; border-left: 4px solid var(--green); color: #065F46; }
+        .warning-box { background: #FFF7ED; border-left: 4px solid var(--primary); color: #9A3412; }
+
+        /* BUTTONS */
+        .action-btn {
+            display: block; width: 100%; padding: 14px; border-radius: 14px; border: none;
+            font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 15px; text-align: center;
+        }
+        .btn-orange { background: var(--primary); color: white; }
+        .btn-green { background: var(--green); color: white; }
+
+        /* CHORD GRID */
+        .chord-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+        .chord-card {
+            background: white; border-radius: 14px; padding: 12px; text-align: center;
+            border: 2px solid #F3F4F6; cursor: pointer;
+        }
+        .chord-card.selected { border-color: var(--primary); background: #FFF7ED; }
+        .chord-name { font-family: 'Fredoka One', cursive; font-size: 26px; color: var(--primary); }
+
+        /* FRETBOARD DIAGRAM */
+        .fretboard-box {
+            background: #78350F; border-radius: 16px; padding: 16px 12px; margin: 15px 0; color: white;
+        }
+        .fret-header { display: flex; justify-content: space-around; font-weight: 800; font-size: 14px; margin-bottom: 4px; }
+        .fret-nut { height: 6px; background: #FDE68A; border-radius: 3px; margin-bottom: 4px; }
+        .fret-row { display: flex; height: 42px; border-bottom: 2px solid #B45309; position: relative; }
+        .fret-string {
+            flex: 1; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer;
+        }
+        .fret-string::before {
+            content:''; position: absolute; top:0; bottom:0; width: 2px; background: #FCD34D;
+        }
+        .fret-dot {
+            width: 26px; height: 26px; border-radius: 50%; color: white; font-weight: 800;
+            font-size: 13px; display: none; align-items: center; justify-content: center; z-index: 2;
+        }
+        .fret-dot.show { display: flex; }
+        .fret-label { position: absolute; right: -8px; font-size: 11px; opacity: 0.6; }
+
+        /* SONGS */
+        .song-card {
+            background: white; border-radius: 16px; padding: 14px; margin-bottom: 10px;
+            border: 2px solid #F3F4F6; cursor: pointer;
+        }
+        .song-difficulty {
+            display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 10px;
+            font-weight: 800; text-transform: uppercase; background: #ECFDF5; color: var(--green); margin-bottom: 4px;
+        }
+        .song-title { font-weight: 800; font-size: 16px; }
+        .song-tag {
+            display: inline-block; padding: 2px 8px; background: #F3F4F6; border-radius: 6px;
+            font-size: 11px; font-weight: 700; margin: 4px 4px 0 0;
+        }
+        .lyric-line { padding: 8px; border-radius: 8px; margin-bottom: 8px; background: white; }
+        .lyric-chord { font-family: 'Fredoka One', cursive; color: var(--primary); font-size: 16px; cursor: pointer; }
+        .lyric-text { font-size: 15px; font-weight: 600; color: #374151; }
+
+        /* TUNER */
+        .tuner-strings { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
+        .tuner-btn {
+            width: 65px; height: 65px; border-radius: 50%; border: 3px solid #E5E7EB;
+            background: white; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .tuner-btn.playing { border-color: var(--primary); background: #FFF7ED; transform: scale(1.08); }
+        .tuner-note { font-family: 'Fredoka One', cursive; font-size: 22px; color: var(--primary); }
+        .tuner-sub { font-size: 10px; color: #6B7280; font-weight: 700; }
+
+        /* PRACTICE & METRONOME */
+        .metronome-visual { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
+        .met-beat {
+            width: 36px; height: 36px; border-radius: 50%; background: #E5E7EB;
+            display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; font-size: 13px;
+        }
+        .met-beat.active { background: var(--primary); transform: scale(1.15); }
+        .met-beat.down { background: var(--green); }
+        .ctrl-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 10px 0; }
+        .ctrl-btn {
+            width: 36px; height: 36px; border-radius: 50%; border: 2px solid #E5E7EB;
+            background: white; font-size: 16px; font-weight: 800; cursor: pointer;
+        }
+
+        /* QUIZ */
+        .quiz-opt {
+            width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #E5E7EB;
+            background: white; font-weight: 700; font-size: 14px; text-align: left; margin-bottom: 8px; cursor: pointer;
+        }
+        .quiz-opt.correct { border-color: var(--green); background: #F0FDF4; color: var(--green); }
+        .quiz-opt.wrong { border-color: var(--red); background: #FEF2F2; color: var(--red); }
+
+        /* ACHIEVEMENTS GRID */
+        .achieve-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .achieve-card {
+            background: white; border-radius: 14px; padding: 12px 6px; text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 2px solid #F3F4F6;
+        }
+        .achieve-card.locked { opacity: 0.35; filter: grayscale(1); }
+        .achieve-card.unlocked { border-color: var(--accent); background: #FFFBEB; }
+        .achieve-icon { font-size: 32px; margin-bottom: 4px; }
+        .achieve-name { font-size: 11px; font-weight: 800; color: #4B5563; }
+
+        /* DAD POPUP (HEARTFELT MODAL) */
+        .dad-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 20000;
+            display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .dad-overlay.show { display: flex; animation: fadeIn 0.2s ease; }
+        .dad-modal {
+            background: white; border-radius: 26px; padding: 28px 22px; max-width: 340px; width: 100%;
+            text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border-top: 8px solid var(--primary);
+        }
+        .dad-badge-icon { font-size: 60px; margin-bottom: 8px; }
+        .dad-title { font-family: 'Fredoka One', cursive; font-size: 20px; color: var(--primary); }
+        .dad-achieve-name { font-weight: 800; font-size: 14px; color: var(--purple); margin: 4px 0 12px; }
+        .dad-msg-bubble {
+            background: #FFF7ED; border: 2px dashed #FDBA74; border-radius: 14px;
+            padding: 14px; font-size: 15px; font-weight: 700; color: #1F2937; line-height: 1.5; margin-bottom: 12px;
+        }
+        .dad-sign { font-size: 13px; font-weight: 800; color: #6B7280; margin-bottom: 16px; }
+        .dad-btn {
+            background: var(--primary); color: white; border: none; padding: 12px 30px;
+            border-radius: 30px; font-family: 'Fredoka One', cursive; font-size: 16px; cursor: pointer;
+        }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; background: white;
+            display: flex; box-shadow: 0 -4px 15px rgba(0,0,0,0.06); border-radius: 18px 18px 0 0;
+            z-index: 100; padding: 8px 0;
+        }
+        .b-nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+            cursor: pointer; font-size: 10px; font-weight: 800; color: #9CA3AF;
+        }
+        .b-nav-item.active { color: var(--primary); }
+        .b-nav-item span { font-size: 20px; }
+
+        /* CONFETTI & TOAST */
+        .confetti-box { position: fixed; inset:0; pointer-events:none; z-index:9999; }
+        .confetti-piece { position: absolute; width:8px; height:8px; animation: fall 2.5s ease forwards; }
+        @keyframes fall { 0%{transform:translateY(-10px) rotate(0);} 100%{transform:translateY(100vh) rotate(720deg); opacity:0;} }
+        .toast {
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: white; padding: 12px 22px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            z-index: 10000; font-weight: 700; font-size: 14px; transition: transform 0.3s;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div class="splash-screen" id="splashScreen">
+    <div class="splash-uke">🪕</div>
+    <div class="splash-title">Ukulele Adventure!</div>
+    <div class="splash-sub">Luke's Musical Quest! 🎸</div>
+    <button class="splash-btn" onclick="startApp()">Let's Rock! 🚀</button>
+</div>
+
+<!-- DAD MESSAGE POPUP -->
+<div class="dad-overlay" id="dadPopup">
+    <div class="dad-modal">
+        <div class="dad-badge-icon" id="dadBadge">🏅</div>
+        <div class="dad-title">Badge Unlocked! 🎉</div>
+        <div class="dad-achieve-name" id="dadAchieveName">Achievement</div>
+        <div class="dad-msg-bubble" id="dadMsg">Message from Dad</div>
+        <div class="dad-sign">— Proud of you, Dad! ❤️</div>
+        <button class="dad-btn" onclick="closeDadPopup()">Thanks, Dad! 😊</button>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="confetti-box" id="confettiBox"></div>
+
+<!-- HEADER -->
+<div class="top-header">
+    <div class="greeting" id="greeting">Hey, Mr. Blister! 🌟</div>
+    <div class="streak-bar">🔥 <span id="streakCount">0</span> Day Streak!</div>
+    <div class="xp-display">
+        ⭐ <span id="xpCount">0</span> XP
+        <div class="xp-bar-outer"><div class="xp-bar-inner" id="xpBar" style="width:0%"></div></div>
+    </div>
+    <div class="level-badge">🏆 Level <span id="levelNum">1</span> - <span id="levelName">Beginner</span></div>
+</div>
+
+<!-- DAILY CHALLENGE -->
+<div class="daily-challenge" onclick="showToast('🎯 Practice hard today, Luke!')">
+    <h3>🎯 Daily Challenge</h3>
+    <p id="dailyText">Practice the C chord for 2 minutes!</p>
+</div>
+
+<!-- TABS -->
+<div class="nav-tabs" id="navTabs">
+    <div class="nav-tab active" onclick="switchSection('learn', this)">📚 Learn</div>
+    <div class="nav-tab" onclick="switchSection('chords', this)">🎵 Chords</div>
+    <div class="nav-tab" onclick="switchSection('songs', this)">🎶 Songs</div>
+    <div class="nav-tab" onclick="switchSection('tuner', this)">🎯 Tuner</div>
+    <div class="nav-tab" onclick="switchSection('practice', this)">⏱️ Practice</div>
+    <div class="nav-tab" onclick="switchSection('quiz', this)">🧠 Quiz</div>
+    <div class="nav-tab" onclick="switchSection('badges', this)">🏅 Badges</div>
+</div>
+
+<!-- SECTIONS -->
+
+<!-- 1. LEARN -->
+<div class="section active" id="sec-learn">
+    <div class="section-title">📚 Your Learning Path</div>
+    <div class="lesson-path" id="lessonPath"></div>
+</div>
+
+<!-- 2. CHORDS -->
+<div class="section" id="sec-chords">
+    <div class="section-title">🎵 Chord Library</div>
+    <div class="chord-grid" id="chordGrid"></div>
+    <div class="card" id="chordDetail">
+        <div class="card-title" id="cdName">C Major</div>
+        <div class="card-text" id="cdDesc">The easiest chord on the uke!</div>
+        <div class="fretboard-box" id="fretDiagram"></div>
+        <div class="tip-box" id="cdTip">Press string 1 with your 3rd finger!</div>
+        <button class="action-btn btn-orange" onclick="playCurrentChordAudio()">🔊 Strum Chord</button>
+    </div>
+</div>
+
+<!-- 3. SONGS -->
+<div class="section" id="sec-songs">
+    <div class="section-title">🎶 Songs Luke Can Play</div>
+    <div id="songsList"></div>
+</div>
+
+<!-- 4. TUNER -->
+<div class="section" id="sec-tuner">
+    <div class="section-title">🎯 Soprano Ukulele Tuner</div>
+    <div class="card" style="text-align:center;">
+        <div class="card-title">Standard G - C - E - A Tuning</div>
+        <div class="card-text">Tap a string to hear its note. Turn your peg gently until they match!</div>
+        <div class="tuner-strings">
+            <div class="tuner-btn" onclick="playTunerNote('G4', this)"><span class="tuner-note">G</span><span class="tuner-sub">String 4</span></div>
+            <div class="tuner-btn" onclick="playTunerNote('C4', this)"><span class="tuner-note">C</span><span class="tuner-sub">String 3</span></div>
+            <div class="tuner-btn" onclick="playTunerNote('E4', this)"><span class="tuner-note">E</span><span class="tuner-sub">String 2</span></div>
+            <div class="tuner-btn" onclick="playTunerNote('A4', this)"><span class="tuner-note">A</span><span class="tuner-sub">String 1</span></div>
+        </div>
+        <div class="tip-box">🐐 <strong>"Goats Can Eat Anything!"</strong> (G - C - E - A from top to bottom)</div>
+    </div>
+</div>
+
+<!-- 5. PRACTICE -->
+<div class="section" id="sec-practice">
+    <div class="section-title">⏱️ Practice Zone</div>
+    <div class="card" style="text-align:center;">
+        <div class="card-title">Practice Timer</div>
+        <div style="font-family:'Fredoka One',cursive; font-size:42px; color:var(--primary); margin:10px 0;" id="timerDisplay">5:00</div>
+        <div class="ctrl-row">
+            <button class="ctrl-btn" onclick="adjustTimer(-1)">−</button>
+            <span style="font-weight:800;" id="timerMinLabel">5 min</span>
+            <button class="ctrl-btn" onclick="adjustTimer(1)">+</button>
+        </div>
+        <button class="action-btn btn-green" id="timerBtn" onclick="toggleTimer()">▶ Start Practice</button>
+    </div>
+
+    <div class="card" style="text-align:center;">
+        <div class="card-title">🥁 Metronome</div>
+        <div class="metronome-visual">
+            <div class="met-beat" id="mb1">1</div><div class="met-beat" id="mb2">2</div>
+            <div class="met-beat" id="mb3">3</div><div class="met-beat" id="mb4">4</div>
+        </div>
+        <div class="ctrl-row">
+            <button class="ctrl-btn" onclick="adjustBpm(-5)">−</button>
+            <span style="font-weight:800;" id="bpmDisplay">80 BPM</span>
+            <button class="ctrl-btn" onclick="adjustBpm(5)">+</button>
+        </div>
+        <button class="action-btn btn-orange" id="metBtn" onclick="toggleMetronome()">▶ Start Beat</button>
+    </div>
+
+    <div class="card" style="text-align:center;">
+        <div class="card-title">🔄 Chord Switching Game</div>
+        <div style="font-family:'Fredoka One',cursive; font-size:48px; color:var(--primary);" id="switchChordText">C</div>
+        <p class="card-text">Quick! Switch your fingers to this chord!</p>
+        <div style="margin:10px 0; font-weight:800;">Switches: <span id="switchScore">0</span></div>
+        <button class="action-btn btn-green" onclick="nextSwitchChord()">✅ Switched! Next!</button>
+    </div>
+</div>
+
+<!-- 6. QUIZ -->
+<div class="section" id="sec-quiz">
+    <div class="section-title">🧠 Test Your Knowledge</div>
+    <div class="card" id="quizCard"></div>
+</div>
+
+<!-- 7. BADGES -->
+<div class="section" id="sec-badges">
+    <div class="section-title">🏅 Luke's Trophies</div>
+    <p class="card-text" style="margin-bottom:12px;">Tap any unlocked badge to re-read Dad's message!</p>
+    <div class="achieve-grid" id="badgesGrid"></div>
+</div>
+
+<!-- LESSON MODAL -->
+<div class="lesson-view" id="lessonView">
+    <div class="lesson-header">
+        <button class="back-btn" onclick="closeLesson()">←</button>
+        <div>
+            <div style="font-weight:800; font-size:16px;" id="lViewTitle">Lesson</div>
+            <div class="lesson-progress-bar"><div class="lesson-progress-fill" id="lProgFill"></div></div>
+        </div>
+    </div>
+    <div class="lesson-content" id="lContent"></div>
+</div>
+
+<!-- SONG MODAL -->
+<div class="song-player" id="songPlayer">
+    <div class="lesson-header">
+        <button class="back-btn" onclick="closeSong()">←</button>
+        <div style="font-weight:800; font-size:16px;" id="sPlayerTitle">Song</div>
+    </div>
+    <div class="lesson-content" id="sLyrics"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+    <div class="b-nav-item active" onclick="switchSection('learn')"><span>📚</span>Learn</div>
+    <div class="b-nav-item" onclick="switchSection('chords')"><span>🎵</span>Chords</div>
+    <div class="b-nav-item" onclick="switchSection('songs')"><span>🎶</span>Songs</div>
+    <div class="b-nav-item" onclick="switchSection('practice')"><span>⏱️</span>Practice</div>
+    <div class="b-nav-item" onclick="switchSection('badges')"><span>🏅</span>Badges</div>
+</div>
+
+<script>
+// ===== WEB AUDIO ENGINE =====
+let audioCtx = null;
+function getAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+}
+
+function playNote(freq, dur = 1.2) {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0.35, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + dur);
+}
+
+function playStrumChord(freqs) {
+    freqs.forEach((f, i) => setTimeout(() => playNote(f, 1.4), i * 50));
+}
+
+function playClickSound(freq = 900) {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + 0.04);
+}
+
+const FREQS = { 'G4': 392.00, 'C4': 261.63, 'E4': 329.63, 'A4': 440.00, 'C5': 523.25, 'D4': 293.66, 'F4': 349.23, 'B4': 493.88 };
+
+// ===== DATA =====
+const CHORDS_DATA = {
+    'C': { name: 'C Major', desc: 'The easiest chord! Happy and bright. 😊', freqs: [392, 261.63, 329.63, 523.25], tip: 'Ring finger (Finger 3) on string 1 (bottom A string) at Fret 3.', dots: [{str:3, fret:2, fNum:3}] },
+    'Am': { name: 'A Minor', desc: 'A little sad and soulful chord. 💙', freqs: [392, 293.66, 329.63, 440], tip: 'Middle finger (Finger 2) on string 4 (top G string) at Fret 2.', dots: [{str:0, fret:1, fNum:2}] },
+    'F': { name: 'F Major', desc: 'Two fingers! Warm and sunny. 🌸', freqs: [440, 261.63, 349.23, 440], tip: 'Index finger on String 2 Fret 1, Middle finger on String 4 Fret 2.', dots: [{str:2, fret:0, fNum:1}, {str:0, fret:1, fNum:2}] },
+    'G': { name: 'G Major', desc: 'Three fingers - making real rock moves! 🎸', freqs: [392, 293.66, 392, 493.88], tip: 'Triangle shape: Index (str 3, fret 2), Middle (str 1, fret 2), Ring (str 2, fret 3).', dots: [{str:1, fret:1, fNum:1}, {str:3, fret:1, fNum:2}, {str:2, fret:2, fNum:3}] },
+    'G7': { name: 'G7 Chord', desc: 'Hawaiian island blues vibe! 🌺', freqs: [392, 293.66, 349.23, 493.88], tip: 'Index on String 2 Fret 1, Middle on String 3 Fret 2, Ring on String 1 Fret 2.', dots: [{str:2, fret:0, fNum:1}, {str:1, fret:1, fNum:2}, {str:3, fret:1, fNum:3}] }
+};
+
+let currentSelectedChord = 'C';
+
+const LESSONS_DATA = [
+    {
+        id: 'meet_uke', title: 'Meet Your Ukulele! 🪕', sub: 'Parts & strings of your uke', xp: 20,
+        cards: [
+            { title: 'Welcome Luke! 🎉', body: `<p class="card-text">You are holding a genuine <strong>soprano ukulele</strong>! It has 4 strings and produces that classic sunny Hawaiian sound.</p><div class="fun-fact"><strong>Fun Fact:</strong> 'Ukulele' means <em>jumping flea</em> in Hawaiian because your fingers dance so fast! 🪲</div>` },
+            { title: 'The 4 Strings 🎵', body: `<p class="card-text">From top (nearest your chin) to bottom (nearest the floor):</p><div style="font-family:'Fredoka One',cursive; font-size:24px; color:var(--primary); text-align:center; margin:10px 0;">G - C - E - A</div><div class="tip-box">Easy trick to remember: <strong>"Goats Can Eat Anything!"</strong> 🐐</div>` },
+            { title: 'Finger Numbers 🖐️', body: `<p class="card-text">When reading ukulele music, we number left-hand fingers:</p><ul style="padding-left:20px; font-size:14px; margin:8px 0;"><li><strong>1</strong> = Index finger 👉</li><li><strong>2</strong> = Middle finger 🖕</li><li><strong>3</strong> = Ring finger 💍</li></ul><p class="card-text">Thumb stays gently resting behind the neck!</p>` }
+        ]
+    },
+    {
+        id: 'strumming', title: 'How to Strum & Hold 🤗', sub: 'Getting clean, sweet sound', xp: 25,
+        cards: [
+            { title: 'Holding Your Uke 🤗', body: `<p class="card-text">Hold the uke body gently against your ribs with your right forearm. Support the neck lightly with your left hand like you are holding a bird—firm but gentle!</p>` },
+            { title: 'The Down Strum ⬇️', body: `<p class="card-text">Use the soft pad of your right index finger. Brush downward across all 4 strings where the neck meets the body.</p><div class="tip-box">Keep your wrist loose like you're flicking water off your fingertips! 💧</div>` },
+            { title: 'Island Strum Pattern 🏝️', body: `<div style="text-align:center; font-family:'Fredoka One',cursive; font-size:20px; color:var(--primary); margin:10px 0;">D - D - U - U - D - U</div><p class="card-text">Say it out loud: <em>"Down, Down, Up, Up, Down, Up"</em>. That is the rhythm of Hawaii!</p>` }
+        ]
+    },
+    {
+        id: 'chord_c', title: 'Your First Chord: C Major! 🎵', sub: 'Only one finger needed!', xp: 30,
+        cards: [
+            { title: 'Playing Chord C 🥇', body: `<p class="card-text">1. Find string 1 (bottom A string).<br>2. Place your <strong>Ring finger (3)</strong> on <strong>Fret 3</strong>.<br>3. Strum down all 4 strings!</p><div class="tip-box">Make your finger curl like a tiger claw so it doesn't touch other strings! 🐅</div>` }
+        ]
+    },
+    {
+        id: 'chord_am', title: 'Second Chord: Am 💙', sub: 'Another easy 1-finger chord', xp: 30,
+        cards: [
+            { title: 'Playing Chord Am 🎸', body: `<p class="card-text">1. Find string 4 (the top G string closest to your face).<br>2. Place your <strong>Middle finger (2)</strong> on <strong>Fret 2</strong>.<br>3. Strum all 4 strings!</p><div class="fun-fact">Minor chords sound sad or mysterious. Major chords sound happy!</div>` }
+        ]
+    },
+    {
+        id: 'chord_f', title: 'Third Chord: F Major ✌️', sub: 'Two fingers working together', xp: 35,
+        cards: [
+            { title: 'Playing Chord F 🌸', body: `<p class="card-text">1. Index finger on String 2 (E string) Fret 1.<br>2. Middle finger on String 4 (G string) Fret 2.<br>3. Strum!</p><div class="tip-box">You're already 3 chords in, Luke! That's huge!</div>` }
+        ]
+    },
+    {
+        id: 'chord_g', title: 'The Rockstar Chord: G 🤟', sub: 'Master the 3-finger triangle', xp: 40,
+        cards: [
+            { title: 'Playing Chord G 🚀', body: `<p class="card-text">Index on String 3 (Fret 2), Middle on String 1 (Fret 2), Ring on String 2 (Fret 3). Form a little triangle!</p><div class="tip-box"><strong>C, G, Am, F</strong> are the 4 chords that make up hundreds of popular songs!</div>` }
+        ]
+    }
+];
+
+const SONGS_DATA = [
+    {
+        title: "Row, Row, Row Your Boat 🚣", chords: ['C'], diff: "Easy",
+        lines: [
+            {c:'C', t:'Row, row, row your boat gently down the stream,'},
+            {c:'C', t:'Merrily, merrily, merrily, merrily, life is but a dream!'}
+        ]
+    },
+    {
+        title: "Happy Birthday 🎂", chords: ['C', 'G', 'F'], diff: "Easy",
+        lines: [
+            {c:'C', t:'Happy birthday to you,'},
+            {c:'G', t:'Happy birthday to you,'},
+            {c:'C', t:'Happy birthday dear friend,'},
+            {c:'F', t:'Happy birthday to '},
+            {c:'C', t:'you!'}
+        ]
+    },
+    {
+        title: "You Are My Sunshine ☀️", chords: ['C', 'F', 'G'], diff: "Medium",
+        lines: [
+            {c:'C', t:'You are my sunshine, my only sunshine,'},
+            {c:'F', t:'You make me happy when skies are '},
+            {c:'C', t:'gray.'},
+            {c:'F', t:'You\'ll never know dear, how much I '},
+            {c:'C', t:'love you,'},
+            {c:'G', t:'Please don\'t take my sunshine '},
+            {c:'C', t:'away.'}
+        ]
+    },
+    {
+        title: "Riptide (Vance Joy) 🌊", chords: ['Am', 'G', 'C'], diff: "Medium",
+        lines: [
+            {c:'Am', t:'I was scared of dentists and the '},
+            {c:'G', t:'dark,'},
+            {c:'C', t:'I was scared of pretty girls and starting conversations...'},
+            {c:'Am', t:'Lady, '},
+            {c:'G', t:'running down to the '},
+            {c:'C', t:'riptide!'}
+        ]
+    }
+];
+
+const QUIZ_DATA = [
+    { q: "How many strings does Luke's ukulele have?", opts: ["6", "4", "3", "5"], ans: 1 },
+    { q: "What is the phrase to remember the 4 strings?", opts: ["Good Cats Eat Apples", "Goats Can Eat Anything", "Great Cows Eat Alone", "Goats Can Enjoy Animals"], ans: 1 },
+    { q: "Which finger plays the 1-finger C chord?", opts: ["Thumb", "Ring finger (3)", "Index finger (1)", "Pinky"], ans: 1 },
+    { q: "What does 'Ukulele' mean in Hawaiian?", opts: ["Happy box", "Jumping flea", "Little guitar", "Island rhythm"], ans: 1 },
+    { q: "Which string is closest to the floor?", opts: ["G string", "C string", "E string", "A string"], ans: 3 }
+];
+
+// PERSONALIZED DAD ACHIEVEMENTS
+const ACHIEVEMENTS_DATA = [
+    { id: 'first_step', icon: '🌟', name: 'First Steps', msg: "That's my boy! You just took your very first step into the world of music. I'm so proud of you, Luke! 🎸❤️", cond: s => s.completedLessons.length >= 1 },
+    { id: 'chord_c_king', icon: '👑', name: 'C Chord Master', msg: "Listen to that clean sound! You nailed your first chord, Mr. Blister! Your fingers are getting stronger every day! 💪", cond: s => s.completedLessons.includes('chord_c') },
+    { id: 'three_lessons', icon: '📚', name: 'Curious Mind', msg: "Look at you powering through these lessons! I love seeing you focus and learn like this, son. Keep going! 🚀", cond: s => s.completedLessons.length >= 3 },
+    { id: 'grad', icon: '🎓', name: 'Uke Graduate', msg: "Well done my boy! You finished every single beginner lesson! You are officially an awesome ukulele player! 🏆", cond: s => s.completedLessons.length >= LESSONS_DATA.length },
+    { id: 'songbird', icon: '🎶', name: 'First Song', msg: "You played a real song! There's nothing better than hearing you make music, Luke. You make your dad so proud! 🥹❤️", cond: s => s.songsPlayed >= 1 },
+    { id: 'practice_champ', icon: '⏱️', name: 'Practice Champ', msg: "5 whole minutes of pure practice! Dedication like that is how true rockstars are made, Mr. Blister! ⚡", cond: s => s.practiceMin >= 5 },
+    { id: 'quiz_wiz', icon: '🧠', name: 'Quiz Wizard', msg: "Smart AND musical! Is there anything you can't do, Luke? Proud of that big brain! 💡", cond: s => s.quizScore >= 3 },
+    { id: 'streak_3', icon: '🔥', name: '3-Day Rocker', msg: "3 days in a row! You're really sticking with it, buddy. Dad is smiling from ear to ear! 😊🔥", cond: s => s.streak >= 3 },
+    { id: 'streak_7', icon: '💎', name: 'Week Warrior', msg: "A full 7-day streak! I knew you had music in your soul, Mr. Blister. Love you so much, son! ❤️🎸", cond: s => s.streak >= 7 }
+];
+
+// ===== STATE MANAGEMENT =====
+let state = {
+    xp: 0, level: 1, streak: 1, lastDate: null,
+    completedLessons: [], unlockedBadges: [],
+    songsPlayed: 0, practiceMin: 0, quizScore: 0
+};
+
+function loadState() {
+    const saved = localStorage.getItem('lukeUkeData');
+    if (saved) state = { ...state, ...JSON.parse(saved) };
+    const today = new Date().toDateString();
+    if (state.lastDate && state.lastDate !== today) {
+        const diff = (new Date(today) - new Date(state.lastDate)) / (1000*60*60*24);
+        if (diff === 1) state.streak++;
+        else if (diff > 1) state.streak = 1;
+    }
+    state.lastDate = today;
+    saveState();
+}
+
+function saveState() {
+    localStorage.setItem('lukeUkeData', JSON.stringify(state));
+}
+
+function addXP(amount) {
+    state.xp += amount;
+    const req = state.level * 80;
+    if (state.xp >= req) {
+        state.xp -= req;
+        state.level++;
+        showToast(`🎉 Level UP! Luke is now Level ${state.level}!`);
+        throwConfetti();
+    }
+    saveState();
+    updateUI();
+    checkBadges();
+}
+
+function updateUI() {
+    document.getElementById('xpCount').textContent = state.xp;
+    document.getElementById('streakCount').textContent = state.streak;
+    document.getElementById('levelNum').textContent = state.level;
+    const titles = ['Beginner', 'Strummer', 'Rockstar', 'Uke Master', 'Legend'];
+    document.getElementById('levelName').textContent = titles[Math.min(state.level - 1, titles.length - 1)];
+    const req = state.level * 80;
+    document.getElementById('xpBar').style.width = Math.min(100, (state.xp / req) * 100) + '%';
+    renderLessonPath();
+    renderBadges();
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function throwConfetti() {
+    const box = document.getElementById('confettiBox');
+    const cols = ['#FF6B35', '#4ECDC4', '#FFE66D', '#A855F7', '#EC4899', '#10B981'];
+    for (let i = 0; i < 40; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.background = cols[Math.floor(Math.random() * cols.length)];
+        p.style.animationDelay = (Math.random() * 1.5) + 's';
+        box.appendChild(p);
+        setTimeout(() => p.remove(), 3000);
+    }
+}
+
+// ===== DAD POPUP =====
+function showDadPopup(badge) {
+    document.getElementById('dadBadge').textContent = badge.icon;
+    document.getElementById('dadAchieveName').textContent = badge.name;
+    document.getElementById('dadMsg').textContent = badge.msg;
+    document.getElementById('dadPopup').classList.add('show');
+    throwConfetti();
+}
+
+function closeDadPopup() {
+    document.getElementById('dadPopup').classList.remove('show');
+}
+
+function checkBadges() {
+    ACHIEVEMENTS_DATA.forEach(b => {
+        if (!state.unlockedBadges.includes(b.id) && b.cond(state)) {
+            state.unlockedBadges.push(b.id);
+            saveState();
+            showDadPopup(b);
+        }
+    });
+    renderBadges();
+}
+
+// ===== APP START =====
+function startApp() {
+    document.getElementById('splashScreen').classList.add('hidden');
+    loadState();
+    updateUI();
+    renderChords();
+    renderSongs();
+    renderQuiz();
+    renderChordDiagram('C');
+}
+
+function switchSection(secId, tabEl) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.b-nav-item').forEach(b => b.classList.remove('active'));
+
+    const targetSec = document.getElementById('sec-' + secId);
+    if (targetSec) targetSec.classList.add('active');
+
+    if (tabEl) tabEl.classList.add('active');
+    else {
+        const match = Array.from(document.querySelectorAll('.nav-tab')).find(t => t.textContent.toLowerCase().includes(secId));
+        if (match) match.classList.add('active');
+    }
+
+    const bMatch = Array.from(document.querySelectorAll('.b-nav-item')).find(b => b.textContent.toLowerCase().includes(secId));
+    if (bMatch) bMatch.classList.add('active');
+}
+
+// ===== LESSONS =====
+function renderLessonPath() {
+    const path = document.getElementById('lessonPath');
+    path.innerHTML = '';
+    LESSONS_DATA.forEach((l, idx) => {
+        const done = state.completedLessons.includes(l.id);
+        const locked = idx > 0 && !state.completedLessons.includes(LESSONS_DATA[idx - 1].id);
+        const current = !done && !locked;
+
+        if (idx > 0) {
+            const conn = document.createElement('div');
+            conn.className = 'path-connector' + (done ? ' completed' : '');
+            path.appendChild(conn);
+        }
+
+        const node = document.createElement('div');
+        node.className = `lesson-node ${done ? 'completed' : ''} ${current ? 'current' : ''} ${locked ? 'locked' : ''}`;
+        node.onclick = () => { if (!locked) openLesson(idx); };
+        node.innerHTML = `
+            <div class="lesson-icon" style="background:${done ? '#DCFCE7' : '#FFEDD5'}">${done ? '✅' : '🎸'}</div>
+            <div class="lesson-info"><h3>${l.title}</h3><p>${l.sub}</p></div>
+            <div class="lesson-status">${done ? '⭐' : current ? '👉' : '🔒'}</div>
+        `;
+        path.appendChild(node);
+    });
+}
+
+let activeLessonIdx = 0;
+let activeCardIdx = 0;
+
+function openLesson(idx) {
+    activeLessonIdx = idx; activeCardIdx = 0;
+    const l = LESSONS_DATA[idx];
+    document.getElementById('lViewTitle').textContent = l.title;
+    document.getElementById('lessonView').classList.add('active');
+    showLessonCard();
+}
+
+function showLessonCard() {
+    const l = LESSONS_DATA[activeLessonIdx];
+    const c = l.cards[activeCardIdx];
+    const total = l.cards.length;
+    document.getElementById('lProgFill').style.width = (((activeCardIdx + 1) / total) * 100) + '%';
+    const isLast = activeCardIdx === total - 1;
+
+    document.getElementById('lContent').innerHTML = `
+        <div class="card">
+            <div class="card-title">${c.title}</div>
+            ${c.body}
+        </div>
+        <div style="text-align:center; font-size:12px; color:#9CA3AF; margin-top:8px;">Step ${activeCardIdx + 1} of ${total}</div>
+        <button class="action-btn ${isLast ? 'btn-green' : 'btn-orange'}" onclick="${isLast ? 'finishLesson()' : 'nextLessonCard()'}">
+            ${isLast ? `Complete Lesson (+${l.xp} XP) 🎉` : 'Next Step →'}
+        </button>
+    `;
+}
+
+function nextLessonCard() { activeCardIdx++; showLessonCard(); }
+
+function finishLesson() {
+    const l = LESSONS_DATA[activeLessonIdx];
+    if (!state.completedLessons.includes(l.id)) {
+        state.completedLessons.push(l.id);
+        addXP(l.xp);
+        showToast(`🎉 Lesson Done! +${l.xp} XP`);
+    }
+    closeLesson();
+}
+
+function closeLesson() {
+    document.getElementById('lessonView').classList.remove('active');
+    updateUI();
+}
+
+// ===== CHORDS =====
+function renderChords() {
+    const g = document.getElementById('chordGrid');
+    g.innerHTML = '';
+    Object.keys(CHORDS_DATA).forEach(k => {
+        const card = document.createElement('div');
+        card.className = `chord-card ${k === currentSelectedChord ? 'selected' : ''}`;
+        card.onclick = () => { selectChord(k); };
+        card.innerHTML = `<div class="chord-name">${k}</div><div style="font-size:11px; color:#6B7280;">${CHORDS_DATA[k].name}</div>`;
+        g.appendChild(card);
+    });
+}
+
+function selectChord(k) {
+    currentSelectedChord = k;
+    renderChords();
+    const c = CHORDS_DATA[k];
+    document.getElementById('cdName').textContent = `${k} - ${c.name}`;
+    document.getElementById('cdDesc').textContent = c.desc;
+    document.getElementById('cdTip').textContent = c.tip;
+    renderChordDiagram(k);
+    playStrumChord(c.freqs);
+}
+
+function renderChordDiagram(k) {
+    const chord = CHORDS_DATA[k];
+    const box = document.getElementById('fretDiagram');
+    let html = `
+        <div class="fret-header"><span>G</span><span>C</span><span>E</span><span>A</span></div>
+        <div class="fret-nut"></div>
+    `;
+    for (let f = 0; f < 3; f++) {
+        html += `<div class="fret-row">`;
+        for (let s = 0; s < 4; s++) {
+            const dot = chord.dots.find(d => d.str === s && d.fret === f);
+            html += `<div class="fret-string">
+                <div class="fret-dot ${dot ? 'show' : ''}" style="background:var(--primary);">${dot ? dot.fNum : ''}</div>
+            </div>`;
+        }
+        html += `<span class="fret-label">Fret ${f+1}</span></div>`;
+    }
+    box.innerHTML = html;
+}
+
+function playCurrentChordAudio() {
+    playStrumChord(CHORDS_DATA[currentSelectedChord].freqs);
+}
+
+// ===== SONGS =====
+function renderSongs() {
+    const list = document.getElementById('songsList');
+    list.innerHTML = '';
+    SONGS_DATA.forEach((s, idx) => {
+        const card = document.createElement('div');
+        card.className = 'song-card';
+        card.onclick = () => openSong(idx);
+        card.innerHTML = `
+            <span class="song-difficulty">${s.diff}</span>
+            <div class="song-title">${s.title}</div>
+            <div>${s.chords.map(c => `<span class="song-tag">${c}</span>`).join('')}</div>
+        `;
+        list.appendChild(card);
+    });
+}
+
+function openSong(idx) {
+    const s = SONGS_DATA[idx];
+    document.getElementById('sPlayerTitle').textContent = s.title;
+    document.getElementById('songPlayer').classList.add('active');
+    document.getElementById('sLyrics').innerHTML = `
+        <div class="card">
+            <div class="card-title">Chords in this song:</div>
+            <div style="margin-bottom:8px;">${s.chords.map(c => `<span class="song-tag" style="background:#FED7AA; font-size:14px; cursor:pointer;" onclick="selectChord('${c}')">${c} 🔊</span>`).join(' ')}</div>
+            <div class="tip-box">Tap a chord above to hear it! Switch your fingers when you see the chord name!</div>
+        </div>
+        ${s.lines.map(l => `
+            <div class="lyric-line">
+                <div class="lyric-chord" onclick="playStrumChord(CHORDS_DATA['${l.c}']?.freqs || [392,261,329,523])">[ ${l.c} ] 🔊</div>
+                <div class="lyric-text">${l.t}</div>
+            </div>
+        `).join('')}
+        <button class="action-btn btn-green" onclick="finishSong()">🎉 Luke Played This Song! (+20 XP)</button>
+    `;
+}
+
+function finishSong() {
+    state.songsPlayed++;
+    addXP(20);
+    showToast('🎸 You rocked that song, Luke!');
+    closeSong();
+}
+
+function closeSong() { document.getElementById('songPlayer').classList.remove('active'); }
+
+// ===== TUNER =====
+function playTunerNote(note, btn) {
+    playNote(FREQS[note], 2.5);
+    document.querySelectorAll('.tuner-btn').forEach(b => b.classList.remove('playing'));
+    btn.classList.add('playing');
+    setTimeout(() => btn.classList.remove('playing'), 2500);
+}
+
+// ===== PRACTICE & METRONOME =====
+let timerSec = 300;
+let timerRunning = false;
+let timerInt = null;
+let timerMinutes = 5;
+
+function adjustTimer(amt) {
+    if (timerRunning) return;
+    timerMinutes = Math.max(1, Math.min(20, timerMinutes + amt));
+    timerSec = timerMinutes * 60;
+    updateTimerText();
+    document.getElementById('timerMinLabel').textContent = timerMinutes + ' min';
+}
+
+function updateTimerText() {
+    const m = Math.floor(timerSec / 60);
+    const s = timerSec % 60;
+    document.getElementById('timerDisplay').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+function toggleTimer() {
+    const btn = document.getElementById('timerBtn');
+    if (timerRunning) {
+        clearInterval(timerInt); timerRunning = false;
+        btn.textContent = '▶ Start Practice'; btn.className = 'action-btn btn-green';
+    } else {
+        timerRunning = true;
+        btn.textContent = '⏸ Pause'; btn.className = 'action-btn btn-orange';
+        timerInt = setInterval(() => {
+            timerSec--;
+            updateTimerText();
+            if (timerSec <= 0) {
+                clearInterval(timerInt); timerRunning = false;
+                state.practiceMin += timerMinutes;
+                addXP(timerMinutes * 5);
+                btn.textContent = '▶ Start Practice'; btn.className = 'action-btn btn-green';
+                showToast(`⏱️ Practice finished! Great job Luke!`);
+                throwConfetti();
+                checkBadges();
+            }
+        }, 1000);
+    }
+}
+
+let bpm = 80;
+let metRunning = false;
+let metInt = null;
+let currentBeat = 0;
+
+function adjustBpm(amt) {
+    bpm = Math.max(40, Math.min(180, bpm + amt));
+    document.getElementById('bpmDisplay').textContent = bpm + ' BPM';
+    if (metRunning) { toggleMetronome(); toggleMetronome(); }
+}
+
+function toggleMetronome() {
+    const btn = document.getElementById('metBtn');
+    if (metRunning) {
+        clearInterval(metInt); metRunning = false;
+        btn.textContent = '▶ Start Beat'; btn.className = 'action-btn btn-orange';
+        document.querySelectorAll('.met-beat').forEach(b => b.classList.remove('active', 'down'));
+    } else {
+        metRunning = true; currentBeat = 0;
+        btn.textContent = '⏹ Stop Beat'; btn.className = 'action-btn btn-green';
+        const interval = (60 / bpm) * 1000;
+        metInt = setInterval(() => {
+            document.querySelectorAll('.met-beat').forEach(b => b.classList.remove('active', 'down'));
+            const bEl = document.getElementById('mb' + (currentBeat + 1));
+            bEl.classList.add('active');
+            if (currentBeat === 0) { bEl.classList.add('down'); playClickSound(1000); }
+            else { playClickSound(650); }
+            currentBeat = (currentBeat + 1) % 4;
+        }, interval);
+    }
+}
+
+// ===== CHORD SWITCH GAME =====
+let switchCount = 0;
+const switchList = ['C', 'Am', 'F', 'G'];
+
+function nextSwitchChord() {
+    switchCount++;
+    document.getElementById('switchScore').textContent = switchCount;
+    playClickSound(800);
+    const next = switchList[Math.floor(Math.random() * switchList.length)];
+    document.getElementById('switchChordText').textContent = next;
+    if (switchCount % 10 === 0) {
+        addXP(15);
+        showToast('🔥 10 quick switches! Speed demon, Luke!');
+    }
+}
+
+// ===== QUIZ =====
+let curQuizIdx = 0;
+function renderQuiz() {
+    const q = QUIZ_DATA[curQuizIdx];
+    const card = document.getElementById('quizCard');
+    card.innerHTML = `
+        <div style="font-size:12px; font-weight:800; color:#9CA3AF; margin-bottom:6px;">Question ${curQuizIdx + 1} of ${QUIZ_DATA.length}</div>
+        <div style="font-weight:800; font-size:17px; margin-bottom:12px;">${q.q}</div>
+        ${q.opts.map((opt, i) => `<button class="quiz-opt" onclick="checkAnswer(${i})">${opt}</button>`).join('')}
+    `;
+}
+
+function checkAnswer(chosen) {
+    const q = QUIZ_DATA[curQuizIdx];
+    const opts = document.querySelectorAll('.quiz-opt');
+    opts.forEach(b => b.disabled = true);
+
+    if (chosen === q.ans) {
+        opts[chosen].classList.add('correct');
+        state.quizScore++;
+        addXP(10);
+        showToast('🎯 Correct, Luke! +10 XP');
+    } else {
+        opts[chosen].classList.add('wrong');
+        opts[q.ans].classList.add('correct');
+        showToast('Almost! Good try, Luke!');
+    }
+
+    setTimeout(() => {
+        curQuizIdx = (curQuizIdx + 1) % QUIZ_DATA.length;
+        renderQuiz();
+    }, 1800);
+}
+
+// ===== BADGES =====
+function renderBadges() {
+    const g = document.getElementById('badgesGrid');
+    g.innerHTML = '';
+    ACHIEVEMENTS_DATA.forEach(b => {
+        const unlocked = state.unlockedBadges.includes(b.id);
+        const el = document.createElement('div');
+        el.className = `achieve-card ${unlocked ? 'unlocked' : 'locked'}`;
+        el.onclick = () => { if (unlocked) showDadPopup(b); };
+        el.innerHTML = `
+            <div class="achieve-icon">${b.icon}</div>
+            <div class="achieve-name">${b.name}</div>
+        `;
+        g.appendChild(el);
+    });
+}
+</script>
+</body>
+</html>

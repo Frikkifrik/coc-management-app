@@ -16,6 +16,12 @@ Open `http://localhost:4173`. The Express API and Vite app are served from one o
 
 The root page opens the **public recruitment search**; it does not require a login. Visit `/login` to enter the private command center. In development, use **Sandbox access → Leader** (or Co-Leader, Elder and Member) to explore role-specific screens. Demo names, tags, stats and history are synthetic. Direct demo passwords are `Clash2026!` for `leader@clan.demo`, `coleader@clan.demo`, `elder@clan.demo` and `member@clan.demo`.
 
+## Lukulele learning page
+
+The standalone learning app is available at `/Lukulele.html` in the local preview and after a production build. It saves Luke's progress in this browser. After opening it and tapping **Let's Go** while online, it saves the page for later offline use; the built-in reference tones and microphone pitch analysis work on the device without sending audio to a server.
+
+The live microphone tuner needs a secure page (`https://` or `localhost`) and microphone permission. Opening the HTML directly as a `file://` page does not provide microphone or offline-cache support. Open the page once while online before trying to reopen it offline.
+
 ## Modules
 
 - **Family Hub** — totals across the three clans, live war status, clan tabs, member search, join/leave dates, former-member flags, account history, profile drawer and a registration form for a phone number, main tag and linked alt/baby tags. Phone numbers are kept only in this browser's local demo state; they are not returned by the public API.

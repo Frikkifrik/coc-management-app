@@ -1157,47 +1157,51 @@ function checkBadges() {
 }
 
 // ===== APP START =====
+
 async function setupOfflineAccess() {
     const status = document.getElementById('offlineStatus');
-    if (!('serviceWorker' in navigator) || !window.isSecureContext || window.location.protocol === 'file:') return;
+
+    if (!('serviceWorker' in navigator) ||
+        !window.isSecureContext ||
+        window.location.protocol === 'file:') {
+        return;
+    }
 
     status.hidden = false;
     status.textContent = 'Saving an offline copy on this phone…';
+
     try {
         const scriptUrl = new URL('./lukulele-sw.js', window.location.href);
         const scope = new URL('./', window.location.href);
-        const registration = await navigator.serviceWorker.register(scriptUrl.href, {
-            scope: scope.pathname,
-            updateViaCache: 'none'
-        });
-        if (registration.active) {
-            status.textContent = 'Offline access is ready on this phone.';
-            return;
-        }
 
-        const worker = registration.installing || registration.waiting;
-        if (!worker) throw new Error('The offline worker did not start.');
-        if (worker.state === 'activated') {
+        const registration = await navigator.serviceWorker.register(
+            scriptUrl.href,
+            {
+                scope: scope.pathname,
+                updateViaCache: 'none'
+            }
+        );
+
+        await navigator.serviceWorker.ready;
+
+        const pageUrl = new URL('./Lukulele.html', window.location.href);
+        const cachedPage = await caches.match(pageUrl);
+
+        if (registration.active && cachedPage) {
             status.textContent = 'Offline access is ready on this phone.';
-            return;
-        }
-        await new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => reject(new Error('The offline worker took too long to install.')), 15000);
-            worker.addEventListener('statechange', () => {
-                if (worker.state === 'activated') {
-                    clearTimeout(timeout);
-                    resolve();
-                } else if (worker.state === 'redundant') {
-                    clearTimeout(timeout);
-                    reject(new Error('The offline worker could not be installed.'));
-                }
+        } else {
+            status.textContent =
+                'Offline copy not confirmed. Keep this page open online and reload.';
+            console.warn('Lukulele offline check:', {
+                activeWorker: Boolean(registration.active),
+                cachedPage: Boolean(cachedPage)
             });
-        });
-        status.textContent = 'Offline access is ready on this phone.';
+        }
     } catch (error) {
         console.error('Could not enable offline access for Lukulele:', error);
         status.hidden = false;
-        status.textContent = 'Offline setup failed. Open this HTTPS page online again; if it keeps happening, the hosted lukulele-sw.js may be missing.';
+        status.textContent =
+            'Offline setup failed. Check the hosted Lukulele page and offline worker.';
     }
 }
 

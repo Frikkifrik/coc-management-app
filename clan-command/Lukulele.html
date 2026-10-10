@@ -66,7 +66,7 @@
         }
         .xp-display { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-weight: 700; font-size: 13px; }
         .xp-bar-outer { flex: 1; height: 10px; background: rgba(255,255,255,0.3); border-radius: 10px; overflow: hidden; max-width: 180px; }
-        .xp-bar-inner { height: 100%; background: var(--accent); border-radius: 10px; transition: width 0.4s ease; }
+        .xp-bar-inner { height: 100%; background: var(--accent); border-radius: 10px; transition: width 1.2s ease; }
         .level-badge {
             display: inline-flex; background: var(--accent); color: var(--dark);
             padding: 4px 12px; border-radius: 12px; font-weight: 800; font-size: 12px; margin-top: 8px;
@@ -356,7 +356,7 @@
 
         /* CONFETTI & TOAST */
         .confetti-box { position: fixed; inset:0; pointer-events:none; z-index:9999; }
-        .confetti-piece { position: absolute; width:8px; height:8px; animation: fall 4s ease forwards; }
+        .confetti-piece { position: absolute; width:8px; height:8px; animation: fall 6s ease forwards; }
         @keyframes fall { 0%{transform:translateY(-10px) rotate(0);} 100%{transform:translateY(100vh) rotate(720deg); opacity:0;} }
         .toast {
             position: fixed; top: 15px; left: 50%; transform: translateX(-50%) translateY(-100px);
@@ -1098,7 +1098,7 @@ function addGlossaryLinks(root) {
     });
 }
 
-const CELEBRATION_DURATION_MS = 4000;
+const CELEBRATION_DURATION_MS = 6000;
 let toastTimeout = null;
 
 function showToast(msg) {

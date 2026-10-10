@@ -258,6 +258,14 @@
         }
         .met-beat.active { background: var(--primary); transform: scale(1.15); }
         .met-beat.down { background: var(--green); }
+        .practice-session-prompt {
+            padding: 12px; margin: 12px auto; max-width: 320px;
+            border: 2px solid #FED7AA; border-radius: 14px; background: #FFF7ED;
+        }
+        .practice-session-prompt[hidden], #switchChordBars[hidden], #offlineStatus[hidden] { display: none; }
+        .practice-session-title { color: var(--primary); font: 28px 'Fredoka One', cursive; }
+        #switchChordText.session-chord { font-size: clamp(68px, 20vw, 104px) !important; line-height: 1; }
+        .ctrl-btn:disabled { opacity: .5; cursor: not-allowed; }
         .ctrl-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 10px 0; }
         .ctrl-btn {
             width: 36px; height: 36px; border-radius: 50%; border: 2px solid #E5E7EB;
@@ -348,7 +356,7 @@
 
         /* CONFETTI & TOAST */
         .confetti-box { position: fixed; inset:0; pointer-events:none; z-index:9999; }
-        .confetti-piece { position: absolute; width:8px; height:8px; animation: fall 2.5s ease forwards; }
+        .confetti-piece { position: absolute; width:8px; height:8px; animation: fall 4s ease forwards; }
         @keyframes fall { 0%{transform:translateY(-10px) rotate(0);} 100%{transform:translateY(100vh) rotate(720deg); opacity:0;} }
         .toast {
             position: fixed; top: 15px; left: 50%; transform: translateX(-50%) translateY(-100px);
@@ -413,8 +421,8 @@
         <div class="dad-title">Badge Unlocked! 🎉</div>
         <div class="dad-achieve-name" id="dadAchieveName">Achievement</div>
         <div class="dad-msg-bubble" id="dadMsg">Message from Dad</div>
-        <div class="dad-sign">— Proud of you, Dad! ❤️</div>
-        <button class="dad-btn" onclick="closeDadPopup()">Thanks, Dad! 😊</button>
+        <div class="dad-sign">— I'm proud of you boy! ❤️</div>
+        <button class="dad-btn" onclick="closeDadPopup()">Let's do another one</button>
     </div>
 </div>
 
@@ -547,38 +555,44 @@
 <div class="section" id="sec-practice">
     <div class="section-title">⏱️ Practice Zone</div>
     <div class="card" style="text-align:center;">
-        <div class="card-title">Practice Timer</div>
-        <div style="font-family:'Fredoka One',cursive; font-size:42px; color:var(--primary); margin:10px 0;" id="timerDisplay">5:00</div>
-        <div class="ctrl-row">
-            <button class="ctrl-btn" onclick="adjustTimer(-1)">−</button>
-            <span style="font-weight:800;" id="timerMinLabel">5 min</span>
-            <button class="ctrl-btn" onclick="adjustTimer(1)">+</button>
-        </div>
-        <button class="action-btn btn-green" id="timerBtn" onclick="toggleTimer()">▶ Start Practice</button>
-    </div>
-
-    <div class="card" style="text-align:center;">
         <div class="card-title">🥁 Metronome <button class="glossary-link" type="button" data-term="metronome">What is this?</button></div>
+        <div class="practice-session-prompt" id="practiceSessionPrompt" hidden>
+            <div class="practice-session-title" id="practiceSessionTitle">Ready?</div>
+            <p class="card-text" id="practiceSessionDetail">Get set for two bars.</p>
+        </div>
         <div class="metronome-visual">
             <div class="met-beat" id="mb1">1</div><div class="met-beat" id="mb2">2</div>
             <div class="met-beat" id="mb3">3</div><div class="met-beat" id="mb4">4</div>
         </div>
         <div class="ctrl-row">
-            <button class="ctrl-btn" onclick="adjustBpm(-5)">−</button>
+            <button class="ctrl-btn" id="bpmDownBtn" onclick="adjustBpm(-5)">−</button>
             <span style="font-weight:800;"><span id="bpmValue">80</span> BPM</span>
             <button class="glossary-link" type="button" data-term="bpm">What does BPM mean?</button>
-            <button class="ctrl-btn" onclick="adjustBpm(5)">+</button>
+            <button class="ctrl-btn" id="bpmUpBtn" onclick="adjustBpm(5)">+</button>
         </div>
         <button class="action-btn btn-orange" id="metBtn" onclick="toggleMetronome()">▶ Start Beat</button>
     </div>
 
     <div class="card" style="text-align:center;">
+        <div class="card-title">Practice Timer</div>
+        <div style="font-family:'Fredoka One',cursive; font-size:42px; color:var(--primary); margin:10px 0;" id="timerDisplay">5:00</div>
+        <div class="ctrl-row">
+            <button class="ctrl-btn" id="timerDownBtn" onclick="adjustTimer(-1)">−</button>
+            <span style="font-weight:800;" id="timerMinLabel">5 min</span>
+            <button class="ctrl-btn" id="timerUpBtn" onclick="adjustTimer(1)">+</button>
+        </div>
+        <button class="action-btn btn-green" id="timerBtn" onclick="toggleTimer()">▶ Start Practice</button>
+    </div>
+
+    <div class="card" style="text-align:center;">
         <div class="card-title">🔄 Chord Switching Game</div>
         <div style="font-family:'Fredoka One',cursive; font-size:48px; color:var(--primary);" id="switchChordText">C</div>
-        <p class="card-text">Quick! Switch your fingers to this chord!</p>
+        <p class="card-text" id="switchChordInstruction">Quick! Switch your fingers to this chord!</p>
+        <p class="card-text" id="switchChordBars" hidden></p>
         <div style="margin:10px 0; font-weight:800;">Switches: <span id="switchScore">0</span></div>
-        <button class="action-btn btn-green" onclick="nextSwitchChord()">✅ Switched! Next!</button>
+        <button class="action-btn btn-green" id="switchChordBtn" onclick="nextSwitchChord()">✅ Switched!</button>
     </div>
+    <p class="card-text" id="offlineStatus" role="status" hidden></p>
 </div>
 
 <!-- 6. QUIZ -->
@@ -898,7 +912,7 @@ const QUIZ_DATA = [
     { q: "How many strings does Luke's Lukulele have?", opts: ["6", "4", "3", "5"], ans: 1 },
     { q: "What is the phrase to remember the 4 strings?", opts: ["Good Cats Eat Apples", "Goats Can Eat Anything", "Great Cows Eat Alone", "Goats Can Enjoy Animals"], ans: 1 },
     { q: "Which finger plays the 1-finger C chord?", opts: ["Thumb", "Ring finger (3)", "Index finger (1)", "Pinky"], ans: 1 },
-    { q: "What is Luke's special name for his instrument?", opts: ["Lukulele", "Jumping flea", "Little guitar", "Island rhythm"], ans: 0 },
+    { q: "What is daddy's special name for your instrument?", opts: ["Lukulele", "Jumping flea", "Little guitar", "Island rhythm"], ans: 0 },
     { q: "Which string is closest to the floor?", opts: ["G string", "C string", "E string", "A string"], ans: 3 }
 ];
 
@@ -1084,10 +1098,14 @@ function addGlossaryLinks(root) {
     });
 }
 
+const CELEBRATION_DURATION_MS = 4000;
+let toastTimeout = null;
+
 function showToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg; t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2800);
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => t.classList.remove('show'), CELEBRATION_DURATION_MS);
 }
 
 document.addEventListener('click', event => {
@@ -1107,9 +1125,9 @@ function throwConfetti() {
         p.className = 'confetti-piece';
         p.style.left = Math.random() * 100 + '%';
         p.style.background = cols[Math.floor(Math.random() * cols.length)];
-        p.style.animationDelay = (Math.random() * 1.5) + 's';
+        p.style.animationDelay = (Math.random() * 0.5) + 's';
         box.appendChild(p);
-        setTimeout(() => p.remove(), 3000);
+        setTimeout(() => p.remove(), CELEBRATION_DURATION_MS + 500);
     }
 }
 
@@ -1139,6 +1157,50 @@ function checkBadges() {
 }
 
 // ===== APP START =====
+async function setupOfflineAccess() {
+    const status = document.getElementById('offlineStatus');
+    if (!('serviceWorker' in navigator) || !window.isSecureContext || window.location.protocol === 'file:') return;
+
+    status.hidden = false;
+    status.textContent = 'Saving an offline copy on this phone…';
+    try {
+        const scriptUrl = new URL('./lukulele-sw.js', window.location.href);
+        const scope = new URL('./', window.location.href);
+        const registration = await navigator.serviceWorker.register(scriptUrl.href, {
+            scope: scope.pathname,
+            updateViaCache: 'none'
+        });
+        if (registration.active) {
+            status.textContent = 'Offline access is ready on this phone.';
+            return;
+        }
+
+        const worker = registration.installing || registration.waiting;
+        if (!worker) throw new Error('The offline worker did not start.');
+        if (worker.state === 'activated') {
+            status.textContent = 'Offline access is ready on this phone.';
+            return;
+        }
+        await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('The offline worker took too long to install.')), 15000);
+            worker.addEventListener('statechange', () => {
+                if (worker.state === 'activated') {
+                    clearTimeout(timeout);
+                    resolve();
+                } else if (worker.state === 'redundant') {
+                    clearTimeout(timeout);
+                    reject(new Error('The offline worker could not be installed.'));
+                }
+            });
+        });
+        status.textContent = 'Offline access is ready on this phone.';
+    } catch (error) {
+        console.error('Could not enable offline access for Lukulele:', error);
+        status.hidden = false;
+        status.textContent = 'Offline setup failed. Open this HTTPS page online again; if it keeps happening, the hosted lukulele-sw.js may be missing.';
+    }
+}
+
 function startApp() {
     if (isLukuleleInstalled()) hideInstallButton();
     document.getElementById('splashScreen').classList.add('hidden');
@@ -1150,12 +1212,7 @@ function startApp() {
     renderChordDiagram('C');
     addGlossaryLinks(document.getElementById('sec-tuner'));
     addGlossaryLinks(document.getElementById('sec-practice'));
-    if ('serviceWorker' in navigator && window.isSecureContext && window.location.protocol !== 'file:') {
-        navigator.serviceWorker.register('./lukulele-sw.js').catch(error => {
-            console.error('Could not enable offline access for Lukulele:', error);
-            showToast('Offline access could not be set up. Please try again while online.');
-        });
-    }
+    setupOfflineAccess();
 }
 
 function switchSection(secId, tabEl) {
@@ -1541,9 +1598,17 @@ let timerSec = 300;
 let timerRunning = false;
 let timerInt = null;
 let timerMinutes = 5;
+let practiceSessionActive = false;
+let practiceSessionBeat = 0;
+let practiceSessionChordIndex = -1;
+let practiceSessionSwitchRecorded = false;
+const PRACTICE_CHORDS = ['C', 'Am', 'F', 'G'];
+const BEATS_PER_BAR = 4;
+const COUNT_IN_BEATS = BEATS_PER_BAR * 4;
+const BEATS_PER_CHORD = BEATS_PER_BAR * 4;
 
 function adjustTimer(amt) {
-    if (timerRunning) return;
+    if (timerRunning || practiceSessionActive) return;
     timerMinutes = Math.max(1, Math.min(20, timerMinutes + amt));
     timerSec = timerMinutes * 60;
     updateTimerText();
@@ -1556,34 +1621,59 @@ function updateTimerText() {
     document.getElementById('timerDisplay').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
+function setPracticeControlsDisabled(disabled) {
+    ['timerDownBtn', 'timerUpBtn', 'timerBtn', 'bpmDownBtn', 'bpmUpBtn'].forEach(id => {
+        document.getElementById(id).disabled = disabled;
+    });
+}
+
+function startPracticeTimer() {
+    const btn = document.getElementById('timerBtn');
+    timerRunning = true;
+    btn.textContent = practiceSessionActive ? '🥁 Following the beat' : '⏸ Pause';
+    btn.className = 'action-btn btn-orange';
+    timerInt = setInterval(() => {
+        timerSec--;
+        updateTimerText();
+        if (timerSec <= 0) finishPracticeTimer();
+    }, 1000);
+}
+
+function finishPracticeTimer() {
+    clearInterval(timerInt);
+    timerInt = null;
+    timerRunning = false;
+    timerSec = 0;
+    updateTimerText();
+    if (practiceSessionActive) stopPracticeSession(true);
+
+    state.practiceMin += timerMinutes;
+    state.dailyProgress.practiceMinutes += timerMinutes;
+    saveState();
+    updateDailyProgressUI();
+    addXP(timerMinutes * 5);
+    if (state.dailyProgress.practiceMinutes >= 5) {
+        completeDailyGoal('practice', 'You finished 5 minutes of practice, Luke! +10 bonus XP!');
+    }
+    document.getElementById('timerBtn').textContent = '▶ Start Practice';
+    document.getElementById('timerBtn').className = 'action-btn btn-green';
+    const minuteLabel = state.dailyProgress.practiceMinutes === 1 ? 'minute' : 'minutes';
+    showToast(`⏱️ Practice finished! Great job Luke! You practiced ${state.dailyProgress.practiceMinutes} ${minuteLabel} today.`);
+    throwConfetti();
+    checkBadges();
+}
+
 function toggleTimer() {
+    if (practiceSessionActive) return;
     const btn = document.getElementById('timerBtn');
     if (timerRunning) {
-        clearInterval(timerInt); timerRunning = false;
-        btn.textContent = '▶ Start Practice'; btn.className = 'action-btn btn-green';
+        clearInterval(timerInt);
+        timerInt = null;
+        timerRunning = false;
+        btn.textContent = '▶ Start Practice';
+        btn.className = 'action-btn btn-green';
     } else {
-        timerRunning = true;
-        btn.textContent = '⏸ Pause'; btn.className = 'action-btn btn-orange';
-        timerInt = setInterval(() => {
-            timerSec--;
-            updateTimerText();
-            if (timerSec <= 0) {
-                clearInterval(timerInt); timerRunning = false;
-                state.practiceMin += timerMinutes;
-                state.dailyProgress.practiceMinutes += timerMinutes;
-                saveState();
-                updateDailyProgressUI();
-                addXP(timerMinutes * 5);
-                if (state.dailyProgress.practiceMinutes >= 5) {
-                    completeDailyGoal('practice', 'You finished 5 minutes of practice, Luke! +10 bonus XP!');
-                }
-                btn.textContent = '▶ Start Practice'; btn.className = 'action-btn btn-green';
-                // PERSONALIZED PRACTICE REWARD: shown when the timer reaches zero.
-                showToast(`⏱️ Practice finished! Great job Luke! You practiced ${state.dailyProgress.practiceMinutes} minutes today.`);
-                throwConfetti();
-                checkBadges();
-            }
-        }, 1000);
+        startPracticeTimer();
     }
 }
 
@@ -1593,39 +1683,133 @@ let metInt = null;
 let currentBeat = 0;
 
 function adjustBpm(amt) {
+    if (practiceSessionActive) return;
     bpm = Math.max(40, Math.min(180, bpm + amt));
     document.getElementById('bpmValue').textContent = bpm;
-    if (metRunning) { toggleMetronome(); toggleMetronome(); }
+}
+
+function setPracticeSessionPrompt(title, detail) {
+    document.getElementById('practiceSessionPrompt').hidden = false;
+    document.getElementById('practiceSessionTitle').textContent = title;
+    document.getElementById('practiceSessionDetail').textContent = detail;
+}
+
+function showPracticeSessionChord(chordIndex) {
+    const chord = PRACTICE_CHORDS[chordIndex];
+    practiceSessionChordIndex = chordIndex;
+    practiceSessionSwitchRecorded = false;
+    document.getElementById('switchChordText').textContent = chord;
+    document.getElementById('switchChordText').classList.add('session-chord');
+    document.getElementById('switchChordInstruction').textContent = `Switch to ${chord}, then hold it until the next card.`;
+    document.getElementById('switchChordBars').hidden = false;
+    document.getElementById('switchChordBars').textContent = `Bar 1 of 4 · ${chord}`;
+    const switchButton = document.getElementById('switchChordBtn');
+    switchButton.textContent = '✅ I switched!';
+    switchButton.disabled = false;
+}
+
+function runPracticeSessionBeat() {
+    if (!practiceSessionActive) return;
+    currentBeat = practiceSessionBeat % BEATS_PER_BAR;
+    document.querySelectorAll('.met-beat').forEach(beat => beat.classList.remove('active', 'down'));
+    const beatElement = document.getElementById('mb' + (currentBeat + 1));
+    beatElement.classList.add('active');
+    if (currentBeat === 0) beatElement.classList.add('down');
+    playClickSound(currentBeat === 0 ? 1000 : 650);
+
+    if (practiceSessionBeat < BEATS_PER_BAR * 2) {
+        setPracticeSessionPrompt('Ready?', 'Get set for two bars.');
+    } else if (practiceSessionBeat < COUNT_IN_BEATS) {
+        setPracticeSessionPrompt('Here we go!', 'Two more bars, then practice starts.');
+    } else {
+        const practiceBeat = practiceSessionBeat - COUNT_IN_BEATS;
+        if (practiceBeat === 0) startPracticeTimer();
+        if (practiceBeat % BEATS_PER_CHORD === 0) {
+            const chordIndex = Math.floor(practiceBeat / BEATS_PER_CHORD) % PRACTICE_CHORDS.length;
+            showPracticeSessionChord(chordIndex);
+        }
+        const barNumber = Math.floor((practiceBeat % BEATS_PER_CHORD) / BEATS_PER_BAR) + 1;
+        const chord = PRACTICE_CHORDS[practiceSessionChordIndex];
+        document.getElementById('switchChordBars').textContent = `Bar ${barNumber} of 4 · ${chord}`;
+        setPracticeSessionPrompt('Your turn!', 'Follow the chord card. It changes every four bars.');
+    }
+    practiceSessionBeat++;
+}
+
+function startPracticeSession() {
+    if (timerRunning) {
+        showToast('Pause the practice timer before starting the metronome session.');
+        return;
+    }
+
+    practiceSessionActive = true;
+    practiceSessionBeat = 0;
+    practiceSessionChordIndex = -1;
+    practiceSessionSwitchRecorded = false;
+    timerSec = timerMinutes * 60;
+    updateTimerText();
+    setPracticeControlsDisabled(true);
+    document.getElementById('timerBtn').textContent = '🥁 Getting ready…';
+    document.getElementById('switchChordText').textContent = '—';
+    document.getElementById('switchChordText').classList.remove('session-chord');
+    document.getElementById('switchChordInstruction').textContent = 'Get ready to switch when the chord card appears.';
+    document.getElementById('switchChordBars').hidden = true;
+    document.getElementById('switchChordBtn').textContent = '✅ Switched!';
+    setPracticeSessionPrompt('Ready?', 'Get set for two bars.');
+
+    metRunning = true;
+    const metButton = document.getElementById('metBtn');
+    metButton.textContent = '⏹ Stop Session';
+    metButton.className = 'action-btn btn-green';
+    try {
+        resumeAudio(getAudio()).catch(error => {
+            console.error('Could not start metronome audio:', error);
+            showToast('Sound could not start. Check your phone volume and try again.');
+        });
+    } catch (error) {
+        console.error('Could not create metronome audio:', error);
+        showToast('This browser could not start the metronome sound.');
+    }
+    runPracticeSessionBeat();
+    metInt = setInterval(runPracticeSessionBeat, (60 / bpm) * 1000);
+}
+
+function stopPracticeSession(completed = false) {
+    clearInterval(metInt);
+    metInt = null;
+    metRunning = false;
+    practiceSessionActive = false;
+    document.querySelectorAll('.met-beat').forEach(beat => beat.classList.remove('active', 'down'));
+
+    const metButton = document.getElementById('metBtn');
+    metButton.textContent = '▶ Start Beat';
+    metButton.className = 'action-btn btn-orange';
+    setPracticeControlsDisabled(false);
+    document.getElementById('timerBtn').textContent = '▶ Start Practice';
+    document.getElementById('timerBtn').className = 'action-btn btn-green';
+    document.getElementById('switchChordText').classList.remove('session-chord');
+    document.getElementById('switchChordBars').hidden = true;
+    document.getElementById('switchChordInstruction').textContent = completed
+        ? 'Practice complete! Great work following the chords.'
+        : 'Session stopped. Tap Start Beat when you are ready to try again.';
+    document.getElementById('switchChordBtn').textContent = '✅ Switched!';
+    document.getElementById('switchChordBtn').disabled = false;
+    setPracticeSessionPrompt(
+        completed ? 'Practice complete!' : 'Session stopped',
+        completed ? 'Great job, Luke! Your metronome and chord game are finished.' : 'Tap Start Beat to begin another session.'
+    );
+    if (!completed) {
+        if (timerRunning) clearInterval(timerInt);
+        timerInt = null;
+        timerRunning = false;
+        timerSec = timerMinutes * 60;
+        updateTimerText();
+    }
 }
 
 function toggleMetronome() {
-    const btn = document.getElementById('metBtn');
-    if (metRunning) {
-        clearInterval(metInt); metRunning = false;
-        btn.textContent = '▶ Start Beat'; btn.className = 'action-btn btn-orange';
-        document.querySelectorAll('.met-beat').forEach(b => b.classList.remove('active', 'down'));
-    } else {
-        try {
-            resumeAudio(getAudio()).catch(error => {
-                console.error('Could not start metronome audio:', error);
-                showToast('Sound could not start. Check your phone volume and try again.');
-            });
-        } catch (error) {
-            console.error('Could not create metronome audio:', error);
-            showToast('This browser could not start the metronome sound.');
-        }
-        metRunning = true; currentBeat = 0;
-        btn.textContent = '⏹ Stop Beat'; btn.className = 'action-btn btn-green';
-        const interval = (60 / bpm) * 1000;
-        metInt = setInterval(() => {
-            document.querySelectorAll('.met-beat').forEach(b => b.classList.remove('active', 'down'));
-            const bEl = document.getElementById('mb' + (currentBeat + 1));
-            bEl.classList.add('active');
-            if (currentBeat === 0) { bEl.classList.add('down'); playClickSound(1000); }
-            else { playClickSound(650); }
-            currentBeat = (currentBeat + 1) % 4;
-        }, interval);
-    }
+    if (practiceSessionActive) stopPracticeSession(false);
+    else startPracticeSession();
 }
 
 // ===== CHORD SWITCH GAME =====
@@ -1634,13 +1818,21 @@ const switchList = ['C', 'Am', 'F', 'G'];
 
 // PERSONALIZED CHALLENGE REWARD: encouragement each time Luke completes 10 chord switches.
 function nextSwitchChord() {
+    if (practiceSessionActive && (practiceSessionChordIndex < 0 || practiceSessionSwitchRecorded)) return;
+
     switchCount++;
     state.dailyProgress.chordSwitches++;
     saveState();
     updateDailyProgressUI();
     playClickSound(800);
-    const next = switchList[Math.floor(Math.random() * switchList.length)];
-    document.getElementById('switchChordText').textContent = next;
+    if (practiceSessionActive) {
+        practiceSessionSwitchRecorded = true;
+        document.getElementById('switchChordBtn').disabled = true;
+        document.getElementById('switchChordInstruction').textContent = `Nice switch! Stay on ${PRACTICE_CHORDS[practiceSessionChordIndex]} until the next card.`;
+    } else {
+        const next = switchList[Math.floor(Math.random() * switchList.length)];
+        document.getElementById('switchChordText').textContent = next;
+    }
     if (state.dailyProgress.chordSwitches === 10) {
         completeDailyGoal('switches', 'You finished 10 chord switches today, Luke! +10 bonus XP!');
     }

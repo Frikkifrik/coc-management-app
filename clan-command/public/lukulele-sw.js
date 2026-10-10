@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lukulele-page-v1';
+const CACHE_NAME = 'lukulele-page-v2';
 const PAGE_URL = new URL('./Lukulele.html', self.registration.scope);
 
 self.addEventListener('install', event => {

@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { existsSync } from 'node:fs';
 import { createServer } from 'node:http';
 import path from 'node:path';
 import express from 'express';
@@ -6,7 +7,7 @@ import { createServer as createViteServer } from 'vite';
 import { appDir, audit, cryptoId, db, makePassword, nowIso, runTransaction, verifyPassword } from './database.mjs';
 import { seedIfEmpty, getDemoRoles } from './seed.mjs';
 import { decryptSecret, encryptSecret, isAllowedDiscordWebhook } from './secrets.mjs';
-import { isSupercellConfigured, supercellLookup } from './supercell.mjs';
+import { isSupercellConfigured, supercellLookup, SUPERCELL_KINDS } from './supercell.mjs';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const demoMode = process.env.DEMO_MODE === 'true' || (!isProduction && process.env.DEMO_MODE !== 'false');
@@ -258,7 +259,15 @@ function publicRecruitProfile(member) {
   };
 }
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, app: 'clan-command', demoMode, storage: 'sqlite' }));
+app.get('/api/health', (_req, res) => res.json({
+  ok: true,
+  app: 'clan-command',
+  demoMode,
+  storage: 'sqlite',
+  // Feature flag consumed by the mobile Clash Command app so the browser can tell
+  // live lookups from the local dataset without ever seeing the API key itself.
+  supercell: isSupercellConfigured(),
+}));
 app.get('/api/auth/session', (req, res) => {
   const user = getSessionUser(req);
   if (!user) return res.json({ user: null, demoMode });
@@ -760,7 +769,9 @@ app.post('/api/integrations/discord/dispatch', requireRole('co_leader'), async (
 });
 
 app.get('/api/supercell/:kind/:tag', async (req, res) => {
-  if (!['player','clan'].includes(req.params.kind)) return publicError(res, 400, 'Choose a player or clan lookup.');
+  if (!SUPERCELL_KINDS.includes(req.params.kind)) {
+    return publicError(res, 400, `Choose one of: ${SUPERCELL_KINDS.join(', ')}.`);
+  }
   try {
     const result = await supercellLookup(req.params.kind, req.params.tag);
     if (!result.configured) return publicError(res, 503, 'Live Supercell lookup is not configured. Using local demo data.');
@@ -875,7 +886,13 @@ function safeHeroLevels(value) {
 }
 
 const sharedPublic = path.resolve(appDir, '../../public');
-app.get('/family-crest.png', (_req, res) => res.sendFile(path.join(sharedPublic, 'crest-100.png')));
+// The shared artwork folder is optional (it is not committed to this repository),
+// so both routes degrade to a 404 instead of throwing when it is absent.
+const familyCrest = path.join(sharedPublic, 'crest-100.png');
+app.get('/family-crest.png', (_req, res) => {
+  if (!existsSync(familyCrest)) return publicError(res, 404, 'Family crest artwork is not installed.');
+  return res.sendFile(familyCrest);
+});
 app.use('/game-assets', express.static(path.join(sharedPublic, 'clash-assets'), { maxAge: '7d', immutable: true, fallthrough: false }));
 
 const server = createServer(app);

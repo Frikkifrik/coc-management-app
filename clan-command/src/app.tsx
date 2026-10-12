@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, NavLink, Outlet, Route, Routes, useLocation, u
 import { Activity, Bell, Bot, Building2, ChevronDown, Crown, Gift, LayoutDashboard, LogOut, Menu, RefreshCw, Search, Shield, ShieldCheck, Swords, TrendingUp, Trophy, UsersRound, X, Zap } from 'lucide-react';
 import { WorkspaceProvider, useWorkspace } from './workspace-context';
 import { OperationsProvider } from './operations-context';
+import ClashApp from './clash/ClashApp';
 import { ApplicantsPage } from './pages/applicants';
 import { BaseBuilderPage } from './pages/base-builder';
 import { CWLRoomPage } from './pages/cwl-room';
@@ -154,6 +155,17 @@ function ToastStack() {
 
 function AppRoutes() {
   const { authChecking, user, data } = useWorkspace();
+  const location = useLocation();
+  // The mobile Clash Command experience is public and does not depend on the
+  // workspace session bootstrap, so it renders before the auth gate.
+  if (location.pathname === '/clash' || location.pathname.startsWith('/clash/')) {
+    return (
+      <>
+        <ClashApp />
+        <ToastStack />
+      </>
+    );
+  }
   if (authChecking || (user && !data)) return <LoadingScreen />;
   return <>
     <Routes>
@@ -181,7 +193,10 @@ function AppRoutes() {
         <Route path="settings" element={<ProtectedRoute minimum="leader"><SettingsPage /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Route>
-      <Route path="/" element={<Navigate to={user ? '/app/dashboard' : '/recruitment'} replace />} />
+      {/* The mobile Clash Command app is the primary entry point; the classic
+          workspace stays at /login and /app, public search at /recruitment. */}
+      <Route path="/clash" element={<ClashApp />} />
+      <Route path="/" element={<Navigate to="/clash" replace />} />
       <Route path="*" element={<Navigate to={user ? '/app/dashboard' : '/login'} replace />} />
     </Routes>
     <ToastStack />

@@ -1,0 +1,208 @@
+/* ============================================================
+   CLASH COMMAND · mobile design system
+   Scoped to `.clash-app` so the legacy bright workspace keeps
+   working untouched. Only Tailwind `utilities` are emitted by
+   the shared entry, so this file carries the scoped base layer
+   (preflight subset) plus the tokens the spec pins down.
+   ============================================================ */
+
+.clash-app *,
+.clash-app *::before,
+.clash-app *::after {
+  box-sizing: border-box;
+  /* Tailwind preflight border defaults, scoped. Without these the
+     `border` / `border-*` utilities render with style: none. */
+  border-width: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+}
+
+.clash-app {
+  --cc-black: #000000;
+  --cc-surface: #0f0f10;
+  --cc-surface-2: #121214;
+  --cc-surface-3: #18181a;
+  --cc-surface-4: #1f1f22;
+  --cc-line: #27272a;
+  --cc-red: #e52e2e;
+  --cc-red-deep: #d92626;
+  --cc-red-active: #3b1515;
+  --cc-green: #10b981;
+  --cc-mint: #00c29a;
+  --cc-blue-bg: #131926;
+
+  min-height: 100dvh;
+  width: 100%;
+  background: var(--cc-black);
+  color: #fff;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+.clash-app :where(h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd, ul, ol, fieldset, legend) {
+  margin: 0;
+  padding: 0;
+}
+
+.clash-app :where(ul, ol) {
+  list-style: none;
+}
+
+.clash-app button {
+  background: none;
+  border: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.clash-app button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.clash-app input,
+.clash-app select,
+.clash-app textarea {
+  font: inherit;
+  color: inherit;
+  background: none;
+}
+
+.clash-app img,
+.clash-app svg,
+.clash-app video,
+.clash-app canvas {
+  display: block;
+  max-width: 100%;
+}
+
+.clash-app a {
+  color: inherit;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.clash-app table {
+  border-collapse: collapse;
+}
+
+.clash-app :focus-visible {
+  outline: 2px solid var(--cc-red);
+  outline-offset: 2px;
+}
+
+.clash-app ::selection {
+  background: rgba(229, 46, 46, 0.35);
+  color: #fff;
+}
+
+/* ---------- scroll surfaces ---------- */
+.clash-app .cc-no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.clash-app .cc-no-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.clash-app ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.clash-app ::-webkit-scrollbar-track {
+  background: #0f0f10;
+}
+
+.clash-app ::-webkit-scrollbar-thumb {
+  background: #2c2c30;
+  border-radius: 99px;
+}
+
+/* ---------- header gradient ---------- */
+.clash-app .cc-header-gradient {
+  background:
+    radial-gradient(120% 80% at 12% 0%, rgba(229, 46, 46, 0.18), transparent 58%),
+    radial-gradient(90% 70% at 88% 4%, rgba(16, 185, 129, 0.1), transparent 60%),
+    linear-gradient(180deg, #141416 0%, #0b0b0c 62%, #000 100%);
+}
+
+/* ---------- war history card ---------- */
+.clash-app .cc-history-card {
+  background: linear-gradient(135deg, #1b1514 0%, #121214 48%, #0f0f10 100%);
+}
+
+/* ---------- progress ring ---------- */
+.clash-app .cc-ring {
+  transform: rotate(-90deg);
+}
+
+.clash-app .cc-ring__track {
+  stroke: #27272a;
+}
+
+/* ---------- safe areas (mobile chrome) ---------- */
+.clash-app .cc-safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+}
+
+.clash-app .cc-safe-top {
+  padding-top: max(env(safe-area-inset-top, 0px), 8px);
+}
+
+/* ---------- misc ---------- */
+.clash-app .cc-gantt-grid {
+  background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+}
+
+.clash-app .cc-tile-glyph {
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.02em;
+}
+
+.clash-app .cc-tap {
+  transition: transform 120ms ease, background-color 120ms ease, border-color 120ms ease, opacity 120ms ease;
+}
+
+.clash-app .cc-tap:active:not(:disabled) {
+  transform: scale(0.975);
+}
+
+.clash-app .cc-sheet-backdrop {
+  animation: cc-fade 140ms ease-out;
+}
+
+.clash-app .cc-sheet {
+  animation: cc-rise 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes cc-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cc-rise {
+  from { transform: translateY(14px); opacity: 0.4; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clash-app *,
+  .clash-app *::before,
+  .clash-app *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

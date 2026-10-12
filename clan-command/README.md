@@ -1,5 +1,52 @@
 # Misclicked Family · Clan Command
 
+Two experiences live in this one app:
+
+- **`/clash` — Clash Command (mobile, dark).** The player-centred progression, builder-schedule and war-tracking app described in the master specification. Black surfaces, red/teal accents, bottom pill navigation. **This is now the entry point** — `/` redirects here.
+- **`/app` — the classic workspace (bright village HUD).** Roster, applicant inspector, CWL war room, King of the Hill, base builder, rewards and settings. Reach it at `/login`; the public recruitment search stays at `/recruitment`. Nothing in the classic workspace changed except the root redirect.
+
+## Clash Command (mobile)
+
+A dark, thumb-first tracker built around one player and their clan.
+
+**Navigation**
+
+- Top bar: back arrow, player or clan title with `#TAG`, share, settings, info.
+- View selector: a full-width `#121214` dropdown switching Home Village → Builder Base → Calendar → Plan → Collection. The active row is `#3B1515` with a red check.
+- Bottom nav: a floating `#18181A` pill with Home / Profile / Clan / War; the active route is a `#28282B` pill.
+
+**Screens**
+
+- **Home Village & Builder Base** — an upgrade tracker listing Buildings, Defenses, Traps, Supercharge, Heroes, Guardians, Laboratory, Equipment, Pets and Walls (Builder Base shows only the six categories that exist there). Each row carries a completion pill: gold border and amber text at exactly 100%, red border and red text below it. Tapping a row opens a drill-down where you can set levels, toggle seasonal supercharges, edit wall segments, or push an item into the plan.
+- **Calendar** — a multi-slot Gantt: a date-range navigator over horizontally scrolling day columns, a fixed `Slot 1`–`Slot 5` axis, blue-tinted task cards (`#131926` on `border-blue-500/50`) showing asset, level and remaining time, plus a live "now" marker. Tasks can be moved between slots and shifted by day.
+- **Plan** — a prioritised upgrade queue with per-resource budgets, a catalog picker, and JSON export/import.
+- **Collection** — every asset in `grid-cols-5 gap-2.5` galleries with absolute bottom-right level badges (`bg-black/80`, `border-neutral-700`), searchable and filterable to maxed / still upgrading.
+- **War & CWL** — a dual-team comparison bar (green home, red opponent) for contested stars and destruction, the attack feed, CWL group standings ranked #1–#8, and gradient history cards with `3W 0T 4L` pills, stars and destruction.
+- **Clan** — clan header with the family switcher, war-readiness summary, and a sortable, searchable roster.
+
+**Design tokens** (implemented in `src/clash/clash.css`, scoped to `.clash-app` so the bright workspace is untouched): root `#000000`; cards `#0F0F10` with `border-[#27272A]/40` and `rounded-2xl`; inner surfaces `#18181A` / `#1F1F22`; popover `#121214`; accent red `#E52E2E` / `#D92626` with `#3B1515` active states; success `#10B981` / `#00C29A`; builder-schedule blue `#131926` with `border-blue-500/50`.
+
+**Data**
+
+- Level caps follow the public **Town Hall 17** reference sheet (heroes cap at BK/AQ 100, Minion Prince 90, Grand Warden 75, Royal Champion 50; walls 18 across 325 segments; equipment 18 common / 27 epic; Laboratory 15, Blacksmith 10, Hero Hall 11, Pet House 11). See `src/clash/catalog.ts`.
+- The seeded village is demo data held in `localStorage`. **Sync live** calls the Supercell player endpoint through this app's own server and maps heroes, guardians, equipment, pets and lab levels. Buildings, defences, traps, supercharge and walls are *not* in that API response, so they stay local or come from a JSON import — the UI states this instead of implying a full sync.
+- **JSON import/export** round-trips progression, plan, schedule, roster and linked tags.
+- In-game API tokens are stored as a fingerprint only; verification runs against whichever ClashKing / ClashOfStats endpoint you configure.
+
+**Artwork policy — no generated images.** Tiles render an official Supercell icon when an `iconUrl` is supplied by the live API or a JSON import; otherwise they show a neutral typographic mark with a category accent. Nothing in this app generates, simulates or guesses game artwork. Brand logos are used exactly as provided, without recolouring or cropping.
+
+**Checks**
+
+```bash
+npm run check     # tsc --noEmit
+npm run build     # vite build && tsc
+npm run smoke     # headless jsdom render of every screen (npm i --no-save jsdom)
+```
+
+`npm run smoke` mounts the real component tree, drives the bottom nav and the view selector through all four routes and five views, and asserts the completion maths on the seeded village. Add `--report` to print the category table.
+
+## Classic workspace
+
 A mobile-first Clash of Clans family-management workspace for **Misclicked Main**, **Misclicked Feeder** and **Misclicked Academy**. The interface uses a bright, game-inspired village HUD—grass, painted wood, parchment and gold—while keeping the roster, applicant checks and event tools comfortable on phones and tablets.
 
 ## Run the local preview
@@ -14,7 +61,7 @@ npm run dev
 
 Open `http://localhost:4173`. The Express API and Vite app are served from one origin and bind to `0.0.0.0`. The local SQLite database is created under `.data/` and seeded with fictional records on its first run. `.data/`, `.env` and build output are git-ignored.
 
-The root page opens the **public recruitment search**; it does not require a login. Visit `/login` to enter the private command center. In development, use **Sandbox access → Leader** (or Co-Leader, Elder and Member) to explore role-specific screens. Demo names, tags, stats and history are synthetic. Direct demo passwords are `Clash2026!` for `leader@clan.demo`, `coleader@clan.demo`, `elder@clan.demo` and `member@clan.demo`.
+The root page redirects to **`/clash`**, the mobile Clash Command app; it needs no login and runs entirely on seeded demo data until you configure an integration. Visit `/login` for the classic command center and `/recruitment` for the public search. In development, use **Sandbox access → Leader** (or Co-Leader, Elder and Member) to explore role-specific screens. Demo names, tags, stats and history are synthetic. Direct demo passwords are `Clash2026!` for `leader@clan.demo`, `coleader@clan.demo`, `elder@clan.demo` and `member@clan.demo`.
 
 ## Lukulele learning page
 
@@ -51,6 +98,8 @@ cp .env.example .env
 The optional Supercell client and derived profile scores do not invent actual game data: live Supercell profile fields are live when configured, while rush, lab and war-performance estimates remain clearly marked as estimates unless a data source supplies them.
 
 ## Production notes
+
+For the full go-live walkthrough — hosting choices, why `node:sqlite` rules out plain static hosting, the environment matrix, Supercell static-IP setup, Supabase RLS and a pre-launch checklist — see [`DEPLOYMENT.md`](./DEPLOYMENT.md).
 
 - Set `DEMO_MODE=false` and bootstrap the first Leader with `CLANCMD_ADMIN_EMAIL` and `CLANCMD_ADMIN_PASSWORD`.
 - Mount persistent storage for `.data`; back up the SQLite database and encryption key together. For multiple instances, move storage to a shared database.

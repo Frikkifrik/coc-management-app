@@ -29,6 +29,21 @@ export function isSupercellConfigured() {
   return Boolean(configuration());
 }
 
+/**
+ * Supported lookups. Only these Supercell resources are reachable through the
+ * proxy endpoint, so the browser can never ask the key holder for anything else.
+ */
+const RESOURCES = {
+  player: (tag) => `players/${tag}`,
+  clan: (tag) => `clans/${tag}`,
+  warlog: (tag) => `clans/${tag}/warlog`,
+  cwl: (tag) => `clans/${tag}/currentwar/leaguegroup`,
+  currentwar: (tag) => `clans/${tag}/currentwar`,
+  members: (tag) => `clans/${tag}/members`,
+};
+
+export const SUPERCELL_KINDS = Object.keys(RESOURCES);
+
 export async function supercellLookup(kind, rawTag) {
   const config = configuration();
   if (!config) return { configured: false, item: null };
@@ -36,10 +51,10 @@ export async function supercellLookup(kind, rawTag) {
   const tag = String(rawTag || '').trim().toUpperCase().replace(/^#?/, '#');
   if (!/^#[0-9A-Z]{3,16}$/.test(tag)) throw new Error('Enter a valid Supercell player or clan tag.');
 
-  const resource = kind === 'player' ? 'players' : kind === 'clan' ? 'clans' : null;
-  if (!resource) throw new Error('Unsupported Supercell resource.');
+  const build = RESOURCES[kind];
+  if (!build) throw new Error('Unsupported Supercell resource.');
 
-  const target = new URL(`${resource}/${encodeURIComponent(tag)}`, `${apiBase.replace(/\/$/, '')}/`);
+  const target = new URL(build(encodeURIComponent(tag)), `${apiBase.replace(/\/$/, '')}/`);
 
   let dispatcher;
   if (config.proxyUrl) {

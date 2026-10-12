@@ -78,6 +78,9 @@ globalThis.getComputedStyle = window.getComputedStyle.bind(window);
 globalThis.requestAnimationFrame = (cb) => setTimeout(() => cb(Date.now()), 0);
 globalThis.cancelAnimationFrame = (id) => clearTimeout(id);
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+/* The interface ships in Afrikaans; pin it so the assertions below are stable
+   regardless of whatever a previous run persisted. */
+window.localStorage.setItem('clash-command:lang:v1', 'af');
 window.matchMedia = window.matchMedia || (() => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
 
 const mod = await import(pathToFileURL(outfile).href);
@@ -111,9 +114,9 @@ const html = container.innerHTML;
 const expectations = [
   ['design system root class', /class="[^"]*clash-app/],
   ['top nav renders the player tag', /#2YL8V0JQ/],
-  ['view selector present', /Select view|Viewing/],
+  ['view selector present', /Kies aansig|Besig om te kyk|Select view|Viewing/],
   ['Home Village view label', /Home Village/],
-  ['upgrade tracker heading', /Upgrade tracker/],
+  ['upgrade tracker heading', /Opgraderingspoorsnyer|Upgrade tracker/],
   ['Buildings category row', /Buildings/],
   ['Defenses category row', /Defenses/],
   ['Supercharge category row', /Supercharge/],
@@ -121,13 +124,15 @@ const expectations = [
   ['Equipment category row', /Equipment/],
   ['Walls category row', /Walls/],
   ['maxed gold pill', /border-amber-500\/60/],
-  ['in-progress red pill', /border-red-500\/60/],
+  ['in-progress royal blue pill', /border-blue-500\/60/],
   ['progress ring svg', /<svg[^>]*cc-ring/],
   ['equipment grid uses 5 columns', /grid-cols-5/],
+  ['heroes grid is three across', /grid-cols-3/],
+  ['no red accent classes survive', /^(?!.*\b(?:border|bg|text)-red-\d)/s],
   ['level badge styling', /border-neutral-700 bg-black\/80/],
   ['bottom nav pill', /bg-\[#18181A\]\/95/],
-  ['bottom nav active highlight', /bg-\[#28282B\]/],
-  ['legend states the artwork policy', /no generated (artwork|images)/i],
+  ['bottom nav active highlight', /bg-\[#0F172A\][^"]*ring-\[#2563EB\]/],
+  ['legend states the artwork policy', /geen gegenereerde|no generated (artwork|images)/i],
 ];
 
 for (const [name, pattern] of expectations) check(name, () => pattern.test(html));
@@ -140,7 +145,7 @@ const byId = Object.fromEntries(summaries.map((row) => [row.id, row]));
 
 check('Defenses is exactly 100% (gold pill)', () => byId.defenses.percent === 100 && byId.defenses.maxed === true);
 check('Guardians is exactly 100% (gold pill)', () => byId.guardians.percent === 100 && byId.guardians.maxed === true);
-check('Equipment is partial (red pill)', () => byId.equipment.percent < 100 && byId.equipment.maxed === false);
+check('Equipment is partial (royal blue pill)', () => byId.equipment.percent < 100 && byId.equipment.maxed === false);
 check('Supercharge counts charged defences only', () => byId.supercharge.earned === 2 && byId.supercharge.total === 4);
 check('Walls use 325 TH17 segments', () => byId.walls.itemCount === 325);
 check('every category reports 10 tracker rows', () => summaries.length === 10);
@@ -244,21 +249,50 @@ const appRoot = createRoot(appHost);
 await React.act(async () => {
   appRoot.render(React.createElement(App));
 });
-check('route / renders the tracker', () => /Upgrade tracker/.test(appHost.innerHTML));
+check('route / renders the tracker', () => /Opgraderingspoorsnyer|Upgrade tracker/.test(appHost.innerHTML));
 check('classic workspace markup is gone', () => !/workspace-shell|sign-in-card|family-selector/.test(appHost.innerHTML));
 
 await React.act(async () => {
   window.history.pushState({}, '', '/login');
   window.dispatchEvent(new window.PopStateEvent('popstate', { state: {} }));
 });
-check('route /login renders the dark sign-in', () => /Sign in to run live Supercell lookups/.test(appHost.innerHTML));
-check('sign-in offers sandbox roles', () => /Sandbox access/.test(appHost.innerHTML));
+check('route /login renders the dark sign-in', () => /Meld aan om direkte Supercell-soektogte|Sign in to run live Supercell lookups/.test(appHost.innerHTML));
+check('sign-in offers sandbox roles', () => /Sandbox-toegang|Sandbox access/.test(appHost.innerHTML));
 
 await React.act(async () => {
   window.history.pushState({}, '', '/app/dashboard');
   window.dispatchEvent(new window.PopStateEvent('popstate', { state: {} }));
 });
-check('legacy /app/* redirects into the mobile app', () => /Upgrade tracker/.test(appHost.innerHTML));
+check('legacy /app/* redirects into the mobile app', () => /Opgraderingspoorsnyer|Upgrade tracker/.test(appHost.innerHTML));
+
+/* ---------------- language switch ---------------- */
+
+check('Afrikaans is the shipping default', () => /Opgraderingspoorsnyer/.test(appHost.innerHTML));
+
+await React.act(async () => {
+  window.history.pushState({}, '', '/');
+  window.dispatchEvent(new window.PopStateEvent('popstate', { state: {} }));
+});
+
+// Open Settings, flip to English, confirm the whole tree re-renders in English.
+await React.act(async () => {
+  const settingsButton = appHost.querySelector('button[aria-label="Instellings"]');
+  settingsButton.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+});
+check('settings sheet offers the language switch', () => /Afrikaans/.test(appHost.innerHTML) && /English/.test(appHost.innerHTML));
+
+await React.act(async () => {
+  const english = [...appHost.querySelectorAll('button')].find((node) => node.textContent.trim() === 'English');
+  english.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+});
+check('switching to English re-renders the UI', () => /Upgrade tracker/.test(appHost.innerHTML));
+check('language choice persists to localStorage', () => window.localStorage.getItem('clash-command:lang:v1') === 'en');
+
+await React.act(async () => {
+  const afrikaans = [...appHost.querySelectorAll('button')].find((node) => node.textContent.trim() === 'Afrikaans');
+  afrikaans.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+});
+check('switching back to Afrikaans works', () => /Opgraderingspoorsnyer/.test(appHost.innerHTML));
 
 let failures = 0;
 for (const result of results) {

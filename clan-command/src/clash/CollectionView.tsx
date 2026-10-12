@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useI18n } from './i18n';
 import { Check, Search, X } from 'lucide-react';
 import { BUILDER_CATALOG, CATALOG, CATEGORY_LABELS, type CategoryId } from './catalog';
 import { levelOf } from './demo';
@@ -19,6 +20,7 @@ const GALLERY_CATEGORIES: CategoryId[] = [
 ];
 
 export function CollectionView({ village }: { village: 'home' | 'builder' }) {
+  const { t } = useI18n();
   const { state } = useClash();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<CategoryId | 'all'>('all');
@@ -55,14 +57,14 @@ export function CollectionView({ village }: { village: 'home' | 'builder' }) {
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search every asset…"
-            aria-label="Search every asset"
-            className="w-full rounded-xl border border-[#27272A]/60 bg-[#18181A] py-2.5 pl-9 pr-9 text-[13px] text-white outline-none placeholder:text-neutral-600 focus:border-[#E52E2E]/60"
+            placeholder={t('Search every asset…')}
+            aria-label={t('Search every asset')}
+            className="w-full rounded-xl border border-[#27272A]/60 bg-[#18181A] py-2.5 pl-9 pr-9 text-[13px] text-white outline-none placeholder:text-neutral-600 focus:border-[#2563EB]/60"
           />
           {query ? (
             <button
               type="button"
-              aria-label="Clear search"
+              aria-label={t('Clear search')}
               onClick={() => setQuery('')}
               className="cc-tap absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-lg text-neutral-500 hover:text-white"
             >
@@ -73,7 +75,7 @@ export function CollectionView({ village }: { village: 'home' | 'builder' }) {
 
         <div className="cc-no-scrollbar mt-2.5 flex gap-1.5 overflow-x-auto pb-1">
           <Pill active={category === 'all'} onClick={() => setCategory('all')}>
-            All
+            {t('All')}
           </Pill>
           {GALLERY_CATEGORIES.map((id) => (
             <Pill key={id} active={category === id} onClick={() => setCategory(id)}>
@@ -90,7 +92,7 @@ export function CollectionView({ village }: { village: 'home' | 'builder' }) {
               onClick={() => setFilter(value)}
               className={`cc-tap flex-1 rounded-xl border px-2 py-1.5 text-[10px] font-bold uppercase tracking-[0.06em] transition-colors ${
                 filter === value
-                  ? 'border-[#E52E2E]/50 bg-[#3B1515] text-[#FF7A7A]'
+                  ? 'border-[#2563EB]/50 bg-[#0F172A] text-[#93C5FD]'
                   : 'border-[#27272A]/60 bg-[#18181A] text-neutral-400 hover:text-neutral-200'
               }`}
             >
@@ -102,8 +104,8 @@ export function CollectionView({ village }: { village: 'home' | 'builder' }) {
 
       {totalVisible === 0 ? (
         <EmptyState
-          title="No assets match"
-          detail="Try a different search term, or switch the filter back to Everything."
+          title={t('No assets match')}
+          detail={t('Try a different search term, or switch the filter back to Everything.')}
         />
       ) : (
         grouped.map((group) => {
@@ -112,7 +114,7 @@ export function CollectionView({ village }: { village: 'home' | 'builder' }) {
             <section key={group.id} className="flex flex-col gap-2.5">
               <SectionTitle
                 title={CATEGORY_LABELS[group.id]}
-                detail={`${maxed} of ${group.entries.length} maxed`}
+                detail={t('{0} of {1} maxed', maxed, group.entries.length)}
                 action={<Chip tone={maxed === group.entries.length ? 'amber' : 'neutral'}>{Math.round((maxed / group.entries.length) * 100)}%</Chip>}
               />
               <Card className="p-3">
@@ -124,7 +126,7 @@ export function CollectionView({ village }: { village: 'home' | 'builder' }) {
                       <div
                         key={entry.key}
                         className="relative rounded-2xl bg-[#18181A] p-2"
-                        title={`${entry.name} — level ${level}/${entry.max}`}
+                        title={t('{0} — level {1}/{2}', entry.name, level, entry.max)}
                       >
                         <AssetIcon
                           name={entry.name}
@@ -170,7 +172,7 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
       onClick={onClick}
       className={`cc-tap shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-tight transition-colors ${
         active
-          ? 'border-[#E52E2E]/50 bg-[#3B1515] text-[#FF7A7A]'
+          ? 'border-[#2563EB]/50 bg-[#0F172A] text-[#93C5FD]'
           : 'border-[#27272A]/60 bg-[#18181A] text-neutral-400 hover:text-neutral-200'
       }`}
     >

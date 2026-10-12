@@ -23,24 +23,42 @@ import {
 } from 'lucide-react';
 import { assetPathFor } from './assets';
 import { CATEGORY_ABBR, type CategoryId } from './catalog';
+import { useI18n } from './i18n';
 import { ROUTES, VIEWS, useClash } from './store';
 import type { RouteId, ViewId } from './types';
 
 /* ================================================================== */
+/* Accent set                                                          */
+/*                                                                     */
+/* Royal Blue replaced the previous red accent everywhere:             */
+/*   #2563EB primary · #1D4ED8 pressed · #3B82F6 highlight             */
+/*   #0F172A / #1E293B active tints                                    */
+/* Two colours are deliberately NOT part of that swap:                 */
+/*   gold  (#F5C451 / amber-300) marks a maxed or 100% state only, and */
+/*   green (#10B981) marks the home team only.                         */
+/* ================================================================== */
+
+export const ROYAL = '#2563EB';
+export const ROYAL_DEEP = '#1D4ED8';
+export const ROYAL_BRIGHT = '#3B82F6';
+export const GOLD = '#F5C451';
+export const HOME_GREEN = '#10B981';
+
+/* ================================================================== */
 /* Asset artwork                                                       */
 /*                                                                     */
-/* POLICY: no generated artwork. When an official icon URL is present  */
-/* (Supercell API `iconUrls`, or a JSON import) it is rendered as-is.  */
-/* Otherwise the tile shows a neutral typographic mark — never a       */
-/* simulated render of the game asset.                                 */
+/* POLICY: no generated artwork. Resolution order is local official    */
+/* PNG (public/clash-assets), then a live Supercell `iconUrls` value,  */
+/* then a neutral typographic mark — never a simulated render of the   */
+/* game asset.                                                         */
 /* ================================================================== */
 
 const CATEGORY_TONE: Record<CategoryId, string> = {
   buildings: '#7C8894',
-  defenses: '#E52E2E',
+  defenses: ROYAL_BRIGHT,
   traps: '#F59E0B',
   supercharge: '#00C29A',
-  heroes: '#F5C451',
+  heroes: GOLD,
   guardians: '#8B7CF6',
   laboratory: '#38BDF8',
   equipment: '#00C29A',
@@ -91,7 +109,7 @@ export function AssetIcon({
 
   return (
     <span
-      className={`relative grid shrink-0 place-items-center overflow-hidden bg-[#1F1F22] ${rounded} ${className}`}
+      className={`relative grid shrink-0 place-items-center overflow-hidden bg-[#1F1F22] ${rounded} ${className}`.trim()}
       style={{ width: size, height: size }}
       aria-hidden="true"
     >
@@ -165,10 +183,11 @@ export function SectionTitle({
 }
 
 /* ================================================================== */
-/* Completion pill — gold when maxed, red when still in progress       */
+/* Completion pill — gold when maxed, royal blue when still in work    */
 /* ================================================================== */
 
 export function CompletionPill({ percent, maxed, compact = false }: { percent: number; maxed?: boolean; compact?: boolean }) {
+  const { t } = useI18n();
   const done = maxed ?? percent >= 100;
   const label = `${percent >= 100 ? 100 : Math.round(percent)}%`;
   return (
@@ -178,9 +197,9 @@ export function CompletionPill({ percent, maxed, compact = false }: { percent: n
       } ${
         done
           ? 'border-amber-500/60 bg-[#18181A] text-amber-300'
-          : 'border-red-500/60 bg-[#18181A] text-red-400'
+          : 'border-blue-500/60 bg-[#18181A] text-blue-400'
       }`}
-      title={done ? 'Fully maxed' : `${label} complete`}
+      title={done ? t('Fully maxed') : t('{0} complete', label)}
     >
       {done ? <Check size={compact ? 10 : 11} strokeWidth={3} /> : null}
       {label}
@@ -189,7 +208,7 @@ export function CompletionPill({ percent, maxed, compact = false }: { percent: n
 }
 
 /* ================================================================== */
-/* Progress ring (accent red by default)                               */
+/* Progress ring — royal blue by default, gold once maxed              */
 /* ================================================================== */
 
 export function Ring({
@@ -209,7 +228,7 @@ export function Ring({
   const circumference = 2 * Math.PI * radius;
   const clamped = Math.max(0, Math.min(100, percent));
   const done = clamped >= 100;
-  const strokeColor = color ?? (done ? '#F5C451' : '#E52E2E');
+  const strokeColor = color ?? (done ? GOLD : ROYAL);
 
   return (
     <span className="relative grid place-items-center" style={{ width: size, height: size }}>
@@ -235,9 +254,23 @@ export function Ring({
   );
 }
 
-export function Bar({ percent, tone = 'red', className = '' }: { percent: number; tone?: 'red' | 'green' | 'blue' | 'amber'; className?: string }) {
+/**
+ * `tone` names the *meaning*, not a colour: `royal` is "still in progress",
+ * `green` is "home team / success", `amber` is "maxed", `blue` is informational.
+ */
+export function Bar({
+  percent,
+  tone = 'royal',
+  className = '',
+}: {
+  percent: number;
+  tone?: 'royal' | 'green' | 'blue' | 'amber';
+  className?: string;
+}) {
+  // Full literal class names — Tailwind scans source text, so these must not
+  // be built from the ROYAL/GOLD constants or no CSS is emitted for them.
   const colors = {
-    red: 'bg-[#E52E2E]',
+    royal: 'bg-[#2563EB]',
     green: 'bg-[#10B981]',
     blue: 'bg-[#38BDF8]',
     amber: 'bg-[#F5C451]',
@@ -275,11 +308,12 @@ export function TopBar({
   onInfo?: () => void;
   children?: ReactNode;
 }) {
+  const { t } = useI18n();
   return (
     <header className="cc-header-gradient cc-safe-top sticky top-0 z-30 border-b border-[#27272A]/40">
       <div className="flex items-center gap-1 px-3 pt-2 pb-3">
         {onBack ? (
-          <NavButton label="Go back" onClick={onBack}>
+          <NavButton label={t('Go back')} onClick={onBack}>
             <ChevronLeft size={20} />
           </NavButton>
         ) : (
@@ -296,17 +330,17 @@ export function TopBar({
 
         <div className="flex items-center gap-1">
           {onShare ? (
-            <NavButton label="Share" onClick={onShare}>
+            <NavButton label={t('Share')} onClick={onShare}>
               <Share2 size={17} />
             </NavButton>
           ) : null}
           {onSettings ? (
-            <NavButton label="Settings" onClick={onSettings}>
+            <NavButton label={t('Settings')} onClick={onSettings}>
               <Settings2 size={17} />
             </NavButton>
           ) : null}
           {onInfo ? (
-            <NavButton label="About this screen" onClick={onInfo}>
+            <NavButton label={t('About this screen')} onClick={onInfo}>
               <Info size={17} />
             </NavButton>
           ) : null}
@@ -336,7 +370,7 @@ export function NavButton({
       onClick={onClick}
       className={`cc-tap grid h-9 w-9 place-items-center rounded-xl border transition-colors ${
         active
-          ? 'border-[#E52E2E]/50 bg-[#3B1515] text-[#FF6B6B]'
+          ? 'border-[#2563EB]/50 bg-[#0F172A] text-[#60A5FA]'
           : 'border-[#27272A]/50 bg-[#18181A]/70 text-neutral-400 hover:text-white'
       }`}
     >
@@ -346,7 +380,7 @@ export function NavButton({
 }
 
 /* ================================================================== */
-/* View selector — full width, dark, red active state                  */
+/* View selector — full width, dark, royal blue active state           */
 /* ================================================================== */
 
 const ROUTE_ICONS: Record<RouteId, LucideIcon> = {
@@ -357,6 +391,7 @@ const ROUTE_ICONS: Record<RouteId, LucideIcon> = {
 };
 
 export function ViewSelector() {
+  const { t } = useI18n();
   const { view, setView } = useClash();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -390,8 +425,10 @@ export function ViewSelector() {
         className="cc-tap flex w-full items-center justify-between gap-3 rounded-2xl border border-[#27272A]/50 bg-[#121214] px-3.5 py-3 text-left"
       >
         <span className="min-w-0">
-          <span className="block text-[9px] font-bold uppercase tracking-[0.16em] text-neutral-500">Viewing</span>
-          <span className="mt-0.5 block truncate text-[15px] font-bold tracking-tight text-white">{current.label}</span>
+          <span className="block text-[9px] font-bold uppercase tracking-[0.16em] text-neutral-500">{t('Viewing')}</span>
+          <span className="mt-0.5 block truncate text-[15px] font-bold tracking-tight text-white">
+            {t(current.label)}
+          </span>
         </span>
         <span
           className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[#27272A]/60 bg-[#18181A] text-neutral-400 transition-transform ${
@@ -405,7 +442,7 @@ export function ViewSelector() {
       {open ? (
         <div
           role="listbox"
-          aria-label="Select view"
+          aria-label={t('Select view')}
           className="cc-sheet absolute left-0 right-0 top-[calc(100%+6px)] z-40 overflow-hidden rounded-2xl border border-[#27272A]/60 bg-[#0F0F10] p-1.5 shadow-[0_24px_60px_rgba(0,0,0,0.65)]"
         >
           {VIEWS.map((item) => {
@@ -421,17 +458,17 @@ export function ViewSelector() {
                   setOpen(false);
                 }}
                 className={`cc-tap flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${
-                  active ? 'bg-[#3B1515]' : 'hover:bg-[#18181A]'
+                  active ? 'bg-[#0F172A] ring-1 ring-inset ring-[#2563EB]/40' : 'hover:bg-[#18181A]'
                 }`}
               >
                 <span className="min-w-0">
                   <span className={`block text-[14px] font-bold tracking-tight ${active ? 'text-white' : 'text-neutral-200'}`}>
-                    {item.label}
+                    {t(item.label)}
                   </span>
-                  <span className="block truncate text-[11px] text-neutral-500">{item.hint}</span>
+                  <span className="block truncate text-[11px] text-neutral-500">{t(item.hint)}</span>
                 </span>
                 {active ? (
-                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#E52E2E] text-white">
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#2563EB] text-white">
                     <Check size={13} strokeWidth={3.5} />
                   </span>
                 ) : null}
@@ -445,14 +482,15 @@ export function ViewSelector() {
 }
 
 /* ================================================================== */
-/* Bottom navigation — floating pill                                   */
+/* Bottom navigation — floating pill with a royal-blue active state    */
 /* ================================================================== */
 
 export function BottomNav() {
+  const { t } = useI18n();
   const { route, setRoute } = useClash();
   return (
     <nav
-      aria-label="Primary"
+      aria-label={t('Primary')}
       className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-3"
       style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}
     >
@@ -466,12 +504,14 @@ export function BottomNav() {
               type="button"
               onClick={() => setRoute(item.id)}
               aria-current={active ? 'page' : undefined}
-              className={`cc-tap flex items-center gap-1.5 rounded-full py-2 text-[11px] font-bold transition-colors ${
-                active ? 'bg-[#28282B] px-3.5 text-white' : 'px-3 text-neutral-500 hover:text-neutral-300'
+              className={`cc-tap relative flex items-center gap-1.5 rounded-full py-2 text-[11px] font-bold transition-colors ${
+                active
+                  ? 'bg-[#0F172A] px-3.5 text-white ring-1 ring-inset ring-[#2563EB]/50'
+                  : 'px-3 text-neutral-500 hover:text-neutral-300'
               }`}
             >
-              <Icon size={16} strokeWidth={active ? 2.4 : 2} className={active ? 'text-[#FF5A5A]' : ''} />
-              {active ? <span>{item.label}</span> : <span className="sr-only">{item.label}</span>}
+              <Icon size={16} strokeWidth={active ? 2.4 : 2} className={active ? 'text-[#3B82F6]' : ''} />
+              {active ? <span>{t(item.label)}</span> : <span className="sr-only">{t(item.label)}</span>}
             </button>
           );
         })}
@@ -489,10 +529,10 @@ export function ActionButton({
   tone = 'neutral',
   className = '',
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { tone?: 'neutral' | 'red' | 'green' | 'ghost' }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & { tone?: 'neutral' | 'royal' | 'green' | 'ghost' }) {
   const tones = {
     neutral: 'border-[#27272A]/60 bg-[#18181A] text-neutral-100 hover:bg-[#1F1F22]',
-    red: 'border-[#E52E2E]/50 bg-[#3B1515] text-[#FF7A7A] hover:bg-[#4a1a1a]',
+    royal: 'border-[#2563EB]/50 bg-[#0F172A] text-[#93C5FD] hover:bg-[#1E293B]',
     green: 'border-[#10B981]/40 bg-[#0d2a22] text-[#34D399] hover:bg-[#10332a]',
     ghost: 'border-transparent bg-transparent text-neutral-400 hover:text-white',
   } as const;
@@ -520,6 +560,7 @@ export function Sheet({
   children: ReactNode;
   footer?: ReactNode;
 }) {
+  const { t } = useI18n();
   const labelId = useId();
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -555,7 +596,7 @@ export function Sheet({
             </h2>
             {detail ? <p className="mt-0.5 text-[11px] leading-snug text-neutral-500">{detail}</p> : null}
           </div>
-          <NavButton label="Close" onClick={onClose}>
+          <NavButton label={t('Close')} onClick={onClose}>
             <X size={17} />
           </NavButton>
         </header>
@@ -571,6 +612,7 @@ export function Sheet({
 /* ================================================================== */
 
 export function NoticeStack() {
+  const { t } = useI18n();
   const { notices, dismissNotice } = useClash();
   if (!notices.length) return null;
   return (
@@ -581,14 +623,19 @@ export function NoticeStack() {
           role="status"
           className={`cc-sheet pointer-events-auto flex w-full max-w-sm items-start gap-2 rounded-2xl border px-3.5 py-3 text-[12px] leading-snug shadow-[0_18px_44px_rgba(0,0,0,0.6)] ${
             notice.tone === 'error'
-              ? 'border-[#E52E2E]/40 bg-[#1a1011] text-[#FFB4B4]'
+              ? 'border-[#2563EB]/45 bg-[#0F172A] text-[#93C5FD]'
               : notice.tone === 'success'
                 ? 'border-[#10B981]/35 bg-[#0d1f19] text-[#86EFAC]'
                 : 'border-[#27272A]/60 bg-[#121214] text-neutral-200'
           }`}
         >
           <span className="flex-1">{notice.text}</span>
-          <button type="button" aria-label="Dismiss" onClick={() => dismissNotice(notice.id)} className="cc-tap text-neutral-500 hover:text-white">
+          <button
+            type="button"
+            aria-label={t('Dismiss')}
+            onClick={() => dismissNotice(notice.id)}
+            className="cc-tap text-neutral-500 hover:text-white"
+          >
             <X size={14} />
           </button>
         </div>
@@ -601,8 +648,9 @@ export function NoticeStack() {
 /* Small shared bits                                                   */
 /* ================================================================== */
 
-export function KeyValue({ label, value, tone }: { label: string; value: ReactNode; tone?: 'red' | 'green' | 'amber' }) {
-  const toneClass = tone === 'red' ? 'text-[#FF6B6B]' : tone === 'green' ? 'text-[#34D399]' : tone === 'amber' ? 'text-amber-300' : 'text-white';
+export function KeyValue({ label, value, tone }: { label: string; value: ReactNode; tone?: 'royal' | 'green' | 'amber' }) {
+  const toneClass =
+    tone === 'royal' ? 'text-[#60A5FA]' : tone === 'green' ? 'text-[#34D399]' : tone === 'amber' ? 'text-amber-300' : 'text-white';
   return (
     <div className="min-w-0">
       <span className="block text-[10px] font-medium uppercase tracking-[0.08em] text-neutral-500">{label}</span>
@@ -611,13 +659,21 @@ export function KeyValue({ label, value, tone }: { label: string; value: ReactNo
   );
 }
 
-export function Chip({ children, tone = 'neutral', className = '' }: { children: ReactNode; tone?: 'neutral' | 'red' | 'green' | 'amber' | 'blue'; className?: string }) {
+export function Chip({
+  children,
+  tone = 'neutral',
+  className = '',
+}: {
+  children: ReactNode;
+  tone?: 'neutral' | 'royal' | 'green' | 'amber' | 'blue';
+  className?: string;
+}) {
   const tones = {
     neutral: 'border-[#27272A]/60 bg-[#18181A] text-neutral-400',
-    red: 'border-[#E52E2E]/40 bg-[#3B1515] text-[#FF7A7A]',
+    royal: 'border-blue-500/60 bg-[#18181A] text-blue-400',
     green: 'border-[#10B981]/35 bg-[#0d2a22] text-[#34D399]',
-    amber: 'border-amber-500/40 bg-[#2a2210] text-amber-300',
-    blue: 'border-blue-500/40 bg-[#131926] text-[#7DB8FF]',
+    amber: 'border-amber-500/60 bg-[#18181A] text-amber-300',
+    blue: 'border-blue-500/40 bg-[#0F172A] text-[#7DB8FF]',
   } as const;
   return (
     <span

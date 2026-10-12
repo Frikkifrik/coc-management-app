@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useI18n } from './i18n';
 import {
   Download,
   ExternalLink,
@@ -46,7 +47,7 @@ const SCREEN_INFO: Record<string, { title: string; body: string[] }> = {
     title: 'Profile',
     body: [
       'The view selector switches between Home Village, Builder Base, Calendar, Plan and Collection without leaving the player.',
-      'Completion pills are gold at exactly 100% and red below it. Tap any category row to adjust levels or push an item into the plan.',
+      'Completion pills are gold at exactly 100% and royal blue below it. Tap any category row to adjust levels or push an item into the plan.',
       'Level caps follow the Town Hall 17 reference sheet, so a maxed row really means maxed for that hall.',
     ],
   },
@@ -60,13 +61,15 @@ const SCREEN_INFO: Record<string, { title: string; body: string[] }> = {
   war: {
     title: 'War & CWL',
     body: [
-      'The dual-team bar compares contested stars and destruction: green is your clan, red is the opponent.',
+      'The dual-team bar compares contested stars and destruction: green is your clan, royal blue is the opponent.',
       'History cards show the CWL group rank, the W-T-L record, stars and destruction for each round.',
     ],
   },
 };
 
 function Shell() {
+  const { t } = useI18n();
+  const { lang, setLang } = useI18n();
   const auth = useOptionalAuth();
   const { state, route, view, setRoute, syncLive, syncing, exportJson, importJson, resetDemo, linkTag, unlinkTag, verifyTag, setIntegrations, notify } = useClash();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -146,7 +149,7 @@ function Shell() {
 
       {/* ---------------- info ---------------- */}
       {infoOpen ? (
-        <Sheet title={info.title} detail="How this screen is built" onClose={() => setInfoOpen(false)}>
+        <Sheet title={info.title} detail={t('How this screen is built')} onClose={() => setInfoOpen(false)}>
           <div className="flex flex-col gap-3">
             <ul className="flex flex-col gap-2">
               {info.body.map((line) => (
@@ -159,24 +162,29 @@ function Shell() {
 
             <InnerBox className="px-3 py-3">
               <span className="mb-1.5 block text-[9px] font-bold uppercase tracking-[0.14em] text-neutral-500">
-                Artwork policy
+                {t('Artwork policy')}
               </span>
               <p className="text-[11px] leading-relaxed text-neutral-400">
-                This app renders <strong className="text-white">no generated artwork</strong>. Tiles show official
-                Supercell icons when an <span className="font-mono text-neutral-300">iconUrl</span> is supplied by the live
-                API or a JSON import; otherwise they show a neutral typographic mark. Clan badges and the ClashKing logo are
-                used exactly as provided, without recolouring or cropping.
+                {t('This app renders')} <strong className="text-white">{t('no generated artwork')}</strong>.{' '}
+                {t('Tiles show official Supercell icons when an')}{' '}
+                <span className="font-mono text-neutral-300">iconUrl</span>{' '}
+                {t('is supplied by the live API or a JSON import; otherwise they show a neutral typographic mark. Clan badges and the ClashKing logo are used exactly as provided, without recolouring or cropping.')}
               </p>
             </InnerBox>
 
             <InnerBox className="px-3 py-3">
               <span className="mb-1.5 block text-[9px] font-bold uppercase tracking-[0.14em] text-neutral-500">
-                Demo vs live
+                {t('Demo vs live')}
               </span>
               <p className="text-[11px] leading-relaxed text-neutral-400">
                 {player.live
-                  ? `This village was loaded from the Supercell API at ${new Date(player.syncedAt ?? Date.now()).toLocaleString('en-GB')}. Buildings, defences, traps and wall segments are still local — the player endpoint does not expose them.`
-                  : 'Every number on screen is seeded demo data held in this browser. Configure a Supercell API key or import a JSON payload to replace it.'}
+                  ? t(
+                      'This village was loaded from the Supercell API at {0}. Buildings, defences, traps and wall segments are still local — the player endpoint does not expose them.',
+                      new Date(player.syncedAt ?? Date.now()).toLocaleString('en-GB'),
+                    )
+                  : t(
+                      'Every number on screen is seeded demo data held in this browser. Configure a Supercell API key or import a JSON payload to replace it.',
+                    )}
               </p>
             </InnerBox>
           </div>
@@ -186,8 +194,8 @@ function Shell() {
       {/* ---------------- settings ---------------- */}
       {settingsOpen ? (
         <Sheet
-          title="Settings"
-          detail="Linked villages, integrations and data"
+          title={t('Settings')}
+          detail={t('Linked villages, integrations and data')}
           onClose={() => setSettingsOpen(false)}
           footer={
             <ActionButton tone="neutral" className="w-full" onClick={() => setSettingsOpen(false)}>
@@ -196,9 +204,37 @@ function Shell() {
           }
         >
           <div className="flex flex-col gap-4">
+            {/* language — the whole interface, not just this sheet */}
+            <section className="flex flex-col gap-2">
+              <SectionTitle
+                title={t('Language')}
+                detail={t('Game terms stay in English, as the game shows them.')}
+              />
+              <div className="flex items-center gap-2 rounded-xl border border-[#27272A]/40 bg-[#18181A] p-1.5">
+                {(['af', 'en'] as const).map((code) => {
+                  const active = lang === code;
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => setLang(code)}
+                      aria-pressed={active}
+                      className={`cc-tap flex-1 rounded-lg border px-3 py-2 text-[12px] font-bold tracking-tight transition-colors ${
+                        active
+                          ? 'border-[#2563EB]/50 bg-[#0F172A] text-[#93C5FD]'
+                          : 'border-transparent text-neutral-500 hover:text-neutral-200'
+                      }`}
+                    >
+                      {code === 'af' ? 'Afrikaans' : 'English'}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
             {/* linked tags */}
             <section className="flex flex-col gap-2">
-              <SectionTitle title="Linked player tags" detail="Verified with the in-game API token." />
+              <SectionTitle title={t('Linked player tags')} detail={t('Verified with the in-game API token.')} />
               {state.linkedTags.map((entry) => (
                 <div key={entry.tag} className="rounded-xl border border-[#27272A]/40 bg-[#18181A] p-3">
                   <div className="flex items-center gap-2.5">
@@ -207,7 +243,7 @@ function Shell() {
                       <span className="block truncate text-[13px] font-bold text-white">{entry.label}</span>
                       <span className="block truncate text-[10px] tabular-nums text-neutral-500">{entry.tag}</span>
                     </span>
-                    <Chip tone={entry.verified ? 'green' : 'red'}>{entry.verified ? 'Verified' : 'Unverified'}</Chip>
+                    <Chip tone={entry.verified ? 'green' : 'royal'}>{entry.verified ? 'Verified' : 'Unverified'}</Chip>
                   </div>
                   <div className="mt-2 flex items-center gap-2">
                     <span className="min-w-0 flex-1 truncate font-mono text-[9px] text-neutral-600">
@@ -237,27 +273,27 @@ function Shell() {
                     value={tagDraft}
                     onChange={(event) => setTagDraft(event.target.value)}
                     placeholder="#PLAYERTAG"
-                    aria-label="Player tag"
-                    className="w-full rounded-lg border border-[#27272A]/60 bg-[#121214] px-2.5 py-2 text-[12px] tabular-nums uppercase text-white outline-none focus:border-[#E52E2E]/60"
+                    aria-label={t('Player tag')}
+                    className="w-full rounded-lg border border-[#27272A]/60 bg-[#121214] px-2.5 py-2 text-[12px] tabular-nums uppercase text-white outline-none focus:border-[#2563EB]/60"
                   />
                   <input
                     value={labelDraft}
                     onChange={(event) => setLabelDraft(event.target.value)}
-                    placeholder="Label (Main, War alt…)"
-                    aria-label="Label"
-                    className="w-full rounded-lg border border-[#27272A]/60 bg-[#121214] px-2.5 py-2 text-[12px] text-white outline-none focus:border-[#E52E2E]/60"
+                    placeholder={t('Label (Main, War alt…)')}
+                    aria-label={t('Label')}
+                    className="w-full rounded-lg border border-[#27272A]/60 bg-[#121214] px-2.5 py-2 text-[12px] text-white outline-none focus:border-[#2563EB]/60"
                   />
                   <input
                     value={tokenDraft}
                     onChange={(event) => setTokenDraft(event.target.value)}
                     type="password"
-                    placeholder="In-game API token"
-                    aria-label="In-game API token"
+                    placeholder={t('In-game API token')}
+                    aria-label={t('In-game API token')}
                     autoComplete="off"
-                    className="w-full rounded-lg border border-[#27272A]/60 bg-[#121214] px-2.5 py-2 font-mono text-[11px] text-white outline-none focus:border-[#E52E2E]/60"
+                    className="w-full rounded-lg border border-[#27272A]/60 bg-[#121214] px-2.5 py-2 font-mono text-[11px] text-white outline-none focus:border-[#2563EB]/60"
                   />
                   <ActionButton
-                    tone="red"
+                    tone="royal"
                     className="w-full"
                     onClick={() => {
                       const tag = normaliseTag(tagDraft);
@@ -266,7 +302,7 @@ function Shell() {
                         return;
                       }
                       linkTag(tag, labelDraft, tokenDraft);
-                      notify(`${tag} linked. Run Verify to check ownership.`, 'success');
+                      notify(t('{0} linked. Run Verify to check ownership.', tag), 'success');
                       setTagDraft('');
                       setLabelDraft('');
                       setTokenDraft('');
@@ -275,7 +311,7 @@ function Shell() {
                     <Link2 size={12} /> Link village
                   </ActionButton>
                   <p className="text-[9px] leading-relaxed text-neutral-600">
-                    Only a fingerprint of the token is stored locally — never the token itself.
+                    {t('Only a fingerprint of the token is stored locally — never the token itself.')}
                   </p>
                 </div>
               </div>
@@ -284,10 +320,10 @@ function Shell() {
             {/* integrations */}
             <section className="flex flex-col gap-2">
               <SectionTitle
-                title="Integrations"
+                title={t('Integrations')}
                 detail={
                   auth?.user
-                    ? `Signed in as ${auth.user.displayName} · ${auth.user.role.replace('_', '-')}`
+                    ? t('Signed in as {0} · {1}', auth.user.displayName, auth.user.role.replace('_', '-'))
                     : 'Not signed in — live Supercell lookups need a session.'
                 }
               />
@@ -318,7 +354,7 @@ function Shell() {
                     value={state.integrations.clashkingEndpoint}
                     onChange={(event) => setIntegrations({ clashkingEndpoint: event.target.value })}
                     placeholder="https://bot.clashking.space/api/…"
-                    className="mt-1 w-full rounded-lg border border-[#27272A]/60 bg-[#121214] px-2.5 py-2 font-mono text-[11px] text-white outline-none focus:border-[#E52E2E]/60"
+                    className="mt-1 w-full rounded-lg border border-[#27272A]/60 bg-[#121214] px-2.5 py-2 font-mono text-[11px] text-white outline-none focus:border-[#2563EB]/60"
                   />
                 </label>
                 <label className="mt-2 block">
@@ -329,7 +365,7 @@ function Shell() {
                     value={state.integrations.clashofstatsEndpoint}
                     onChange={(event) => setIntegrations({ clashofstatsEndpoint: event.target.value })}
                     placeholder="https://www.clashofstats.com/api/…"
-                    className="mt-1 w-full rounded-lg border border-[#27272A]/60 bg-[#121214] px-2.5 py-2 font-mono text-[11px] text-white outline-none focus:border-[#E52E2E]/60"
+                    className="mt-1 w-full rounded-lg border border-[#27272A]/60 bg-[#121214] px-2.5 py-2 font-mono text-[11px] text-white outline-none focus:border-[#2563EB]/60"
                   />
                 </label>
                 <div className="mt-3 flex items-center gap-2">
@@ -355,7 +391,7 @@ function Shell() {
 
             {/* data */}
             <section className="flex flex-col gap-2">
-              <SectionTitle title="Data" detail="Everything in this workspace is yours to export." />
+              <SectionTitle title={t('Data')} detail={t('Everything in this workspace is yours to export.')} />
               <div className="rounded-xl border border-[#27272A]/40 bg-[#18181A] p-3">
                 <div className="grid grid-cols-2 gap-2">
                   <ActionButton tone="neutral" onClick={exportJson}>
@@ -366,8 +402,8 @@ function Shell() {
                   </ActionButton>
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-2">
-                  <Fact label="Progression entries" value={formatNumber(Object.keys(state.progression.levels).length)} />
-                  <Fact label="Scheduled / planned" value={`${state.tasks.length} / ${state.plan.length}`} />
+                  <Fact label={t('Progression entries')} value={formatNumber(Object.keys(state.progression.levels).length)} />
+                  <Fact label={t('Scheduled / planned')} value={`${state.tasks.length} / ${state.plan.length}`} />
                 </div>
                 <ActionButton tone="ghost" className="mt-2 w-full" onClick={resetDemo}>
                   <PlugZap size={12} /> Reset to the seeded demo village
@@ -377,9 +413,7 @@ function Shell() {
 
             <Card className="p-3">
               <p className="text-[10px] leading-relaxed text-neutral-500">
-                Clash Command stores this workspace in your browser’s local storage. Supabase, when configured, adds
-                server-side profiles and linked tags; the Supercell key and any Discord webhook stay on the server and are
-                never exposed to the client.
+                {t('Clash Command stores this workspace in your browser’s local storage. Supabase, when configured, adds server-side profiles and linked tags; the Supercell key and any Discord webhook stay on the server and are never exposed to the client.')}
               </p>
             </Card>
           </div>
@@ -389,8 +423,8 @@ function Shell() {
       {/* ---------------- import ---------------- */}
       {importOpen ? (
         <Sheet
-          title="Import JSON"
-          detail="Merges progression, plan and schedule from a payload."
+          title={t('Import JSON')}
+          detail={t('Merges progression, plan and schedule from a payload.')}
           onClose={() => setImportOpen(false)}
           footer={
             <div className="flex items-center gap-2">
@@ -398,7 +432,7 @@ function Shell() {
                 Cancel
               </ActionButton>
               <ActionButton
-                tone="red"
+                tone="royal"
                 className="flex-1"
                 onClick={async () => {
                   await importJson(importText);
@@ -417,8 +451,8 @@ function Shell() {
             rows={10}
             spellCheck={false}
             placeholder='{ "player": { "tag": "#2YL8V0JQ" }, "progression": { "levels": { … } } }'
-            aria-label="JSON payload"
-            className="w-full resize-y rounded-xl border border-[#27272A]/60 bg-[#18181A] px-3 py-2.5 font-mono text-[11px] leading-relaxed text-neutral-200 outline-none placeholder:text-neutral-700 focus:border-[#E52E2E]/60"
+            aria-label={t('JSON payload')}
+            className="w-full resize-y rounded-xl border border-[#27272A]/60 bg-[#18181A] px-3 py-2.5 font-mono text-[11px] leading-relaxed text-neutral-200 outline-none placeholder:text-neutral-700 focus:border-[#2563EB]/60"
           />
         </Sheet>
       ) : null}
@@ -429,7 +463,7 @@ function Shell() {
 function IntegrationRow({ label, ok, detail }: { label: string; ok: boolean; detail: string }) {
   return (
     <div className="flex items-start gap-2.5 py-1.5">
-      <span className={`mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full ${ok ? 'bg-[#10B981]' : 'bg-[#E52E2E]'}`} />
+      <span className={`mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full ${ok ? 'bg-[#10B981]' : 'bg-[#2563EB]'}`} />
       <span className="min-w-0">
         <span className="block text-[11px] font-bold text-neutral-200">{label}</span>
         <span className="block text-[10px] leading-snug text-neutral-500">{detail}</span>

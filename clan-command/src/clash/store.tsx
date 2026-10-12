@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { CATALOG, CATALOG_INDEX, entriesFor, slug, type CategoryId } from './catalog';
+import { tt, useI18n } from './i18n';
 import { STATE_VERSION, createDemoState, isoDay } from './demo';
 import type { ClashState, IntegrationSettings, PlanItem, UpgradeTask, ViewId, RouteId } from './types';
 
@@ -49,11 +50,13 @@ export function normaliseTag(value: string): string {
 
 export function hoursLabel(hours: number): string {
   if (hours <= 0) return '—';
+  // Afrikaans abbreviates uur as "u"; minutes and days match English.
+  const h = tt('h');
   if (hours < 1) return `${Math.max(1, Math.round(hours * 60))}m`;
-  if (hours < 24) return `${Math.round(hours)}h`;
+  if (hours < 24) return `${Math.round(hours)}${h}`;
   const days = Math.floor(hours / 24);
   const rest = Math.round(hours % 24);
-  return rest ? `${days}d ${rest}h` : `${days}d`;
+  return rest ? `${days}d ${rest}${h}` : `${days}d`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -133,6 +136,7 @@ interface ClashContextValue {
 const ClashContext = createContext<ClashContextValue | null>(null);
 
 export function ClashProvider({ children }: { children: ReactNode }) {
+  const { t } = useI18n();
   const [state, setState] = useState<ClashState>(() => load());
   const [view, setViewState] = useState<ViewId>(() => {
     try {
@@ -307,7 +311,7 @@ export function ClashProvider({ children }: { children: ReactNode }) {
           notify('Add a ClashKing or ClashOfStats endpoint first — in-game API token checks run against it.', 'error');
           return;
         }
-        notify(`Ownership check for ${normalised} sent to ${new URL(endpoint).host}.`, 'info');
+        notify(t('Ownership check for {0} sent to {1}.', normalised, new URL(endpoint).host), 'info');
         setState((draft) => ({
           ...draft,
           linkedTags: draft.linkedTags.map((entry) =>
@@ -436,7 +440,7 @@ export function ClashProvider({ children }: { children: ReactNode }) {
             };
           });
           const covered = ['heroes', 'guardians', 'equipment', 'pets', 'laboratory'];
-          notify(`Synced from the Supercell API — ${covered.join(', ')} updated.`, 'success');
+          notify(t('Synced from the Supercell API — {0} updated.', covered.join(', ')), 'success');
         } catch (error) {
           notify(error instanceof Error ? error.message : 'Live sync failed.', 'error');
         } finally {

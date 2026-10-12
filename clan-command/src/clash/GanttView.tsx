@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { useI18n } from './i18n';
 import { ArrowLeft, ArrowRight, CalendarDays, GripVertical, Plus, Trash2 } from 'lucide-react';
 import { CATEGORY_LABELS, CATALOG_INDEX } from './catalog';
 import { dayOffsetFrom, isoDay } from './demo';
@@ -24,6 +25,7 @@ function dayLabel(iso: string, offset: number): { primary: string; secondary: st
 }
 
 export function GanttView() {
+  const { t } = useI18n();
   const { state, moveTask, removeTask, addTask, notify } = useClash();
   const [windowStart, setWindowStart] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -75,7 +77,7 @@ export function GanttView() {
               <CalendarDays size={15} />
             </span>
             <div>
-              <h2 className="text-[14px] font-bold tracking-tight text-white">Builder schedule</h2>
+              <h2 className="text-[14px] font-bold tracking-tight text-white">{t('Builder schedule')}</h2>
               <p className="text-[10px] text-neutral-500">
                 {new Date(`${days[0].iso}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} —{' '}
                 {new Date(`${days[days.length - 1].iso}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
@@ -85,7 +87,7 @@ export function GanttView() {
           <div className="flex items-center gap-1">
             <button
               type="button"
-              aria-label="Earlier dates"
+              aria-label={t('Earlier dates')}
               onClick={() => setWindowStart((value) => value - 7)}
               className="cc-tap grid h-8 w-8 place-items-center rounded-xl border border-[#27272A]/50 bg-[#18181A] text-neutral-400 hover:text-white"
             >
@@ -103,7 +105,7 @@ export function GanttView() {
             </button>
             <button
               type="button"
-              aria-label="Later dates"
+              aria-label={t('Later dates')}
               onClick={() => setWindowStart((value) => value + 7)}
               className="cc-tap grid h-8 w-8 place-items-center rounded-xl border border-[#27272A]/50 bg-[#18181A] text-neutral-400 hover:text-white"
             >
@@ -113,10 +115,10 @@ export function GanttView() {
         </div>
 
         <div className="mt-3 grid grid-cols-3 gap-2">
-          <MiniFact label="Active slots" value={`${new Set(tasks.map((item) => item.slot)).size}/${SLOT_COUNT}`} />
-          <MiniFact label="Queued" value={String(tasks.length)} />
+          <MiniFact label={t('Active slots')} value={`${new Set(tasks.map((item) => item.slot)).size}/${SLOT_COUNT}`} />
+          <MiniFact label={t('Queued')} value={String(tasks.length)} />
           <MiniFact
-            label="Total time"
+            label={t('Total time')}
             value={hoursLabel(tasks.reduce((sum, item) => sum + item.hours, 0))}
           />
         </div>
@@ -152,13 +154,13 @@ export function GanttView() {
                   <div
                     key={day.iso}
                     className={`shrink-0 border-r border-[#27272A]/25 px-2 py-2 ${
-                      day.offset === 0 ? 'bg-[#3B1515]/45' : ''
+                      day.offset === 0 ? 'bg-[#0F172A]/45' : ''
                     }`}
                     style={{ width: DAY_WIDTH }}
                   >
                     <span
                       className={`block text-[11px] font-bold tracking-tight ${
-                        day.offset === 0 ? 'text-[#FF7A7A]' : 'text-neutral-200'
+                        day.offset === 0 ? 'text-[#93C5FD]' : 'text-neutral-200'
                       }`}
                     >
                       {day.primary}
@@ -177,11 +179,11 @@ export function GanttView() {
                 />
                 {nowProgress > 0 && nowProgress < WINDOW_DAYS * DAY_WIDTH ? (
                   <div
-                    className="pointer-events-none absolute inset-y-0 z-10 w-px bg-[#E52E2E]/70"
+                    className="pointer-events-none absolute inset-y-0 z-10 w-px bg-[#2563EB]/70"
                     style={{ left: nowProgress }}
                     aria-hidden="true"
                   >
-                    <span className="absolute -top-[1px] -left-[3px] h-[7px] w-[7px] rounded-full bg-[#E52E2E]" />
+                    <span className="absolute -top-[1px] -left-[3px] h-[7px] w-[7px] rounded-full bg-[#2563EB]" />
                   </div>
                 ) : null}
 
@@ -219,10 +221,10 @@ export function GanttView() {
       {/* -------- slot list (accessible fallback + quick actions) -------- */}
       <section className="flex flex-col gap-2.5">
         <SectionTitle
-          title="Scheduled upgrades"
-          detail="Ordered by slot, then start date."
+          title={t('Scheduled upgrades')}
+          detail={t('Ordered by slot, then start date.')}
           action={
-            <ActionButton tone="red" className="px-2.5 py-1.5 text-[11px]">
+            <ActionButton tone="royal" className="px-2.5 py-1.5 text-[11px]">
               <Plus size={12} /> Add
             </ActionButton>
           }
@@ -230,7 +232,7 @@ export function GanttView() {
         <div className="flex flex-col gap-2">
           {tasks.length === 0 ? (
             <InnerBox className="px-3 py-6 text-center text-[11px] text-neutral-500">
-              Nothing scheduled. Add an upgrade from the plan or the tracker.
+              {t('Nothing scheduled. Add an upgrade from the plan or the tracker.')}
             </InnerBox>
           ) : null}
           {tasks
@@ -241,11 +243,11 @@ export function GanttView() {
                 key={item.id}
                 type="button"
                 onClick={() => setSelected(item.id)}
-                className="cc-tap flex w-full items-center gap-3 rounded-xl border border-blue-500/50 bg-[#131926] px-3 py-2.5 text-left"
+                className="cc-tap flex w-full items-center gap-3 rounded-xl border border-blue-500/50 bg-[#0F172A] px-3 py-2.5 text-left"
               >
                 <AssetIcon name={item.name} category={item.category} assetKey={item.key} size={32} rounded="rounded-lg" />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] font-bold text-white">{item.name}</span>
+                  <span className="block truncate text-[13px] font-bold text-white">{t(item.name)}</span>
                   <span className="block text-[10px] tabular-nums text-[#7DB8FF]">
                     Slot {item.slot} · Level {item.toLevel} · {hoursLabel(item.hours)}
                   </span>
@@ -259,7 +261,7 @@ export function GanttView() {
       {/* -------- task sheet -------- */}
       {task ? (
         <Sheet
-          title={task.name}
+          title={t(task.name)}
           detail={`${CATEGORY_LABELS[task.category]} · Level ${task.fromLevel} → ${task.toLevel}`}
           onClose={() => setSelected(null)}
           footer={
@@ -270,7 +272,7 @@ export function GanttView() {
                 onClick={() => {
                   removeTask(task.id);
                   setSelected(null);
-                  notify(`${task.name} removed from the schedule.`, 'info');
+                  notify(t('{0} removed from the schedule.', task.name), 'info');
                 }}
               >
                 <Trash2 size={13} /> Remove
@@ -283,11 +285,11 @@ export function GanttView() {
         >
           <div className="flex flex-col gap-2.5">
             <div className="grid grid-cols-2 gap-2">
-              <Fact label="Duration" value={hoursLabel(task.hours)} />
-              <Fact label="Cost" value={`${compactNumber(task.cost)} ${task.resource}`} />
-              <Fact label="Slot" value={`Slot ${task.slot}`} />
+              <Fact label={t('Duration')} value={hoursLabel(task.hours)} />
+              <Fact label={t('Cost')} value={`${compactNumber(task.cost)} ${task.resource}`} />
+              <Fact label={t('Slot')} value={`Slot ${task.slot}`} />
               <Fact
-                label="Window"
+                label={t('Window')}
                 value={`${isoDay(task.startsAt + dayOffsetFrom(scheduleStart)).slice(5)} → ${isoDay(
                   task.endsAt + dayOffsetFrom(scheduleStart),
                 ).slice(5)}`}
@@ -295,7 +297,7 @@ export function GanttView() {
             </div>
 
             <div className="rounded-xl border border-[#27272A]/40 bg-[#18181A] p-3">
-              <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.1em] text-neutral-500">Move</span>
+              <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.1em] text-neutral-500">{t('Move')}</span>
               <div className="flex items-center justify-between gap-2">
                 <ActionButton
                   tone="neutral"
@@ -351,7 +353,7 @@ export function GanttView() {
                         startsAt: 0,
                         endsAt: Math.max(1, Math.round((48 + entry.max * 8) / 24)),
                       });
-                      notify(`${entry.name} scheduled in Slot ${freeSlot}.`);
+                      notify(t('{0} scheduled in Slot {1}.', entry.name, freeSlot));
                     }}
                     className="cc-tap flex shrink-0 items-center gap-1.5 rounded-full border border-[#27272A]/60 bg-[#121214] px-2.5 py-1.5 text-[10px] font-bold text-neutral-300 hover:text-white"
                   >
@@ -369,6 +371,7 @@ export function GanttView() {
 }
 
 function TaskCard({ task, windowStart, onSelect }: { task: UpgradeTask; windowStart: number; onSelect: () => void }) {
+  const { t } = useI18n();
   const left = (task.startsAt - windowStart) * DAY_WIDTH;
   const width = (task.endsAt - task.startsAt) * DAY_WIDTH;
   if (left + width <= 0 || left >= WINDOW_DAYS * DAY_WIDTH) return null;
@@ -383,21 +386,21 @@ function TaskCard({ task, windowStart, onSelect }: { task: UpgradeTask; windowSt
     <button
       type="button"
       onClick={onSelect}
-      className="cc-tap absolute z-10 overflow-hidden rounded-xl border border-blue-500/50 bg-[#131926] px-2 py-1.5 text-left shadow-[0_6px_18px_rgba(0,0,0,0.4)]"
+      className="cc-tap absolute z-10 overflow-hidden rounded-xl border border-blue-500/50 bg-[#0F172A] px-2 py-1.5 text-left shadow-[0_6px_18px_rgba(0,0,0,0.4)]"
       style={{
         left: Math.max(0, left) + 3,
         width: Math.max(66, Math.min(width, WINDOW_DAYS * DAY_WIDTH - Math.max(0, left)) - 6),
         top: 8,
         height: ROW_HEIGHT - 16,
       }}
-      title={`${task.name} — level ${task.toLevel}, ${remainingLabel} left`}
+      title={t('{0} — level {1}, {2} left', task.name, task.toLevel, remainingLabel)}
     >
       <span className="flex items-center gap-1.5">
         <AssetIcon name={task.name} category={task.category} assetKey={task.key} size={20} rounded="rounded-md" />
         <span className="min-w-0 flex-1 truncate text-[10px] font-bold leading-tight text-white">{task.name}</span>
       </span>
       <span className="mt-1 block truncate text-[9px] font-bold tabular-nums text-[#7DB8FF]">
-        Level {task.toLevel} · {remainingLabel}
+        {t('Level {0} · {1}', task.toLevel, remainingLabel)}
       </span>
       {active ? (
         <span className="absolute inset-x-0 bottom-0 h-[2px] bg-[#38BDF8]/70">

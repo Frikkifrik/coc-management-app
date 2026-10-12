@@ -24,12 +24,18 @@
   --cc-surface-3: #18181a;
   --cc-surface-4: #1f1f22;
   --cc-line: #27272a;
-  --cc-red: #e52e2e;
-  --cc-red-deep: #d92626;
-  --cc-red-active: #3b1515;
-  --cc-green: #10b981;
+  /* Royal Blue accent set. Gold stays for maxed/100% states and green stays
+     for the home team; every former red accent now resolves here. */
+  --cc-royal: #2563eb;        /* blue-600, primary accent  */
+  --cc-royal-deep: #1d4ed8;   /* blue-700, pressed/hover   */
+  --cc-royal-bright: #3b82f6; /* blue-500, highlights      */
+  --cc-royal-soft: #60a5fa;   /* blue-400, text on dark    */
+  --cc-royal-active: #0f172a; /* slate-900, active fill    */
+  --cc-royal-active-2: #1e293b; /* slate-800               */
+  --cc-gold: #fbbf24;         /* amber-400, maxed only     */
+  --cc-green: #10b981;        /* emerald, home team only   */
   --cc-mint: #00c29a;
-  --cc-blue-bg: #131926;
+  --cc-blue-bg: #0f172a;
 
   min-height: 100dvh;
   width: 100%;
@@ -94,12 +100,12 @@
 }
 
 .clash-app :focus-visible {
-  outline: 2px solid var(--cc-red);
+  outline: 2px solid var(--cc-royal);
   outline-offset: 2px;
 }
 
 .clash-app ::selection {
-  background: rgba(229, 46, 46, 0.35);
+  background: rgba(37, 99, 235, 0.4);
   color: #fff;
 }
 
@@ -132,14 +138,14 @@
 /* ---------- header gradient ---------- */
 .clash-app .cc-header-gradient {
   background:
-    radial-gradient(120% 80% at 12% 0%, rgba(229, 46, 46, 0.18), transparent 58%),
-    radial-gradient(90% 70% at 88% 4%, rgba(16, 185, 129, 0.1), transparent 60%),
-    linear-gradient(180deg, #141416 0%, #0b0b0c 62%, #000 100%);
+    radial-gradient(120% 80% at 12% 0%, rgba(37, 99, 235, 0.22), transparent 58%),
+    radial-gradient(90% 70% at 88% 4%, rgba(59, 130, 246, 0.1), transparent 60%),
+    linear-gradient(180deg, #0f172a 0%, #0b0f1a 62%, #000 100%);
 }
 
 /* ---------- war history card ---------- */
 .clash-app .cc-history-card {
-  background: linear-gradient(135deg, #1b1514 0%, #121214 48%, #0f0f10 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #121214 48%, #0f0f10 100%);
 }
 
 /* ---------- progress ring ---------- */

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useI18n } from './i18n';
 import { ChevronDown, Radar, Search, Shield, ShieldCheck, Swords, Users } from 'lucide-react';
 import { ActionButton, AssetIcon, Bar, Card, Chip, EmptyState, SectionTitle, Sheet } from './components';
 import { apiRequest } from '../api';
@@ -22,6 +23,7 @@ const SORTS = [
 type SortId = (typeof SORTS)[number]['id'];
 
 export function ClanView() {
+  const { t } = useI18n();
   const { state, setRoute } = useClash();
   const { clan, roster, player } = state;
   const [query, setQuery] = useState('');
@@ -52,7 +54,7 @@ export function ClanView() {
             {clan.badgeUrl ? (
               <img src={clan.badgeUrl} alt="" className="h-full w-full object-contain" />
             ) : (
-              <Shield size={22} className="text-[#E52E2E]" />
+              <Shield size={22} className="text-[#2563EB]" />
             )}
           </span>
           <div className="min-w-0 flex-1">
@@ -70,10 +72,10 @@ export function ClanView() {
           </div>
         </div>
         <div className="grid grid-cols-4 gap-px border-t border-[#27272A]/40 bg-[#27272A]/40">
-          <Cell label="Points" value={formatNumber(clan.points)} />
-          <Cell label="Versus" value={formatNumber(clan.versusPoints)} />
-          <Cell label="War wins" value={formatNumber(clan.warWins)} />
-          <Cell label="Streak" value={clan.warWinStreak} tone="amber" />
+          <Cell label={t('Points')} value={formatNumber(clan.points)} />
+          <Cell label={t('Versus')} value={formatNumber(clan.versusPoints)} />
+          <Cell label={t('War wins')} value={formatNumber(clan.warWins)} />
+          <Cell label={t('Streak')} value={clan.warWinStreak} tone="amber" />
         </div>
       </Card>
 
@@ -81,7 +83,7 @@ export function ClanView() {
       <Card className="p-3.5">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h3 className="text-[14px] font-bold tracking-tight text-white">War readiness</h3>
+            <h3 className="text-[14px] font-bold tracking-tight text-white">{t('War readiness')}</h3>
             <p className="text-[10px] text-neutral-500">
               {warReady} of {roster.length} listed members opted in
             </p>
@@ -94,17 +96,17 @@ export function ClanView() {
           <Bar percent={(warReady / Math.max(1, roster.length)) * 100} tone="green" className="h-2" />
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2">
-          <Cell label="Avg TH" value={avgTh.toFixed(1)} />
-          <Cell label="Donated" value={formatNumber(donations)} />
-          <Cell label="War stars" value={formatNumber(roster.reduce((sum, m) => sum + m.warStars, 0))} />
+          <Cell label={t('Avg TH')} value={avgTh.toFixed(1)} />
+          <Cell label={t('Donated')} value={formatNumber(donations)} />
+          <Cell label={t('War stars')} value={formatNumber(roster.reduce((sum, m) => sum + m.warStars, 0))} />
         </div>
       </Card>
 
       {/* -------- roster controls -------- */}
       <section className="flex flex-col gap-2.5">
         <SectionTitle
-          title="Roster"
-          detail={`${visible.length} members shown`}
+          title={t('Roster')}
+          detail={t('{0} members shown', visible.length)}
           action={
             <ActionButton tone="neutral" className="px-2.5 py-1.5 text-[11px]" onClick={() => setScoutOpen(true)}>
               <Radar size={12} /> Scout a tag
@@ -118,9 +120,9 @@ export function ClanView() {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search name or #TAG…"
-              aria-label="Search roster"
-              className="w-full rounded-xl border border-[#27272A]/60 bg-[#18181A] py-2.5 pl-9 pr-3 text-[13px] text-white outline-none placeholder:text-neutral-600 focus:border-[#E52E2E]/60"
+              placeholder={t('Search name or #TAG…')}
+              aria-label={t('Search roster')}
+              className="w-full rounded-xl border border-[#27272A]/60 bg-[#18181A] py-2.5 pl-9 pr-3 text-[13px] text-white outline-none placeholder:text-neutral-600 focus:border-[#2563EB]/60"
             />
           </div>
           <div className="cc-no-scrollbar mt-2.5 flex gap-1.5 overflow-x-auto pb-1">
@@ -131,7 +133,7 @@ export function ClanView() {
                 onClick={() => setSort(option.id)}
                 className={`cc-tap shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold transition-colors ${
                   sort === option.id
-                    ? 'border-[#E52E2E]/50 bg-[#3B1515] text-[#FF7A7A]'
+                    ? 'border-[#2563EB]/50 bg-[#0F172A] text-[#93C5FD]'
                     : 'border-[#27272A]/60 bg-[#18181A] text-neutral-400 hover:text-neutral-200'
                 }`}
               >
@@ -153,7 +155,7 @@ export function ClanView() {
         </Card>
 
         {visible.length === 0 ? (
-          <EmptyState title="No members match" detail="Clear the search or turn off the war opted-in filter." />
+          <EmptyState title={t('No members match')} detail={t('Clear the search or turn off the war opted-in filter.')} />
         ) : (
           <Card className="divide-y divide-[#27272A]/30 overflow-hidden">
             {visible.map((member, index) => {
@@ -171,7 +173,7 @@ export function ClanView() {
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1.5">
                       <span className="truncate text-[13px] font-bold text-white">{member.name}</span>
-                      {isYou ? <Chip tone="red">You</Chip> : null}
+                      {isYou ? <Chip tone="royal">{t('You')}</Chip> : null}
                       {member.role === 'leader' || member.role === 'coLeader' ? (
                         <ShieldCheck size={12} className="shrink-0 text-amber-400" />
                       ) : null}
@@ -218,16 +220,16 @@ export function ClanView() {
                   Level {selected.expLevel} · {selected.league}
                 </span>
               </div>
-              <Chip tone={selected.warOptIn ? 'green' : 'red'}>{selected.warOptIn ? 'War in' : 'War out'}</Chip>
+              <Chip tone={selected.warOptIn ? 'green' : 'royal'}>{selected.warOptIn ? 'War in' : 'War out'}</Chip>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <Stat label="Trophies" value={formatNumber(selected.trophies)} />
-              <Stat label="War stars" value={formatNumber(selected.warStars)} />
-              <Stat label="Donated" value={formatNumber(selected.donations)} />
-              <Stat label="Received" value={formatNumber(selected.donationsReceived)} />
+              <Stat label={t('War stars')} value={formatNumber(selected.warStars)} />
+              <Stat label={t('Donated')} value={formatNumber(selected.donations)} />
+              <Stat label={t('Received')} value={formatNumber(selected.donationsReceived)} />
             </div>
             <div className="rounded-xl bg-[#18181A] px-3 py-2.5">
-              <span className="block text-[9px] font-medium uppercase tracking-[0.08em] text-neutral-500">Last seen</span>
+              <span className="block text-[9px] font-medium uppercase tracking-[0.08em] text-neutral-500">{t('Last seen')}</span>
               <strong className="mt-0.5 block text-[13px] font-bold text-white">{selected.lastSeen}</strong>
             </div>
           </div>
@@ -239,8 +241,8 @@ export function ClanView() {
       {/* -------- family switcher -------- */}
       {familyOpen ? (
         <Sheet
-          title="Clan family"
-          detail="Switch the clan this workspace is tracking."
+          title={t('Clan family')}
+          detail={t('Switch the clan this workspace is tracking.')}
           onClose={() => setFamilyOpen(false)}
         >
           <div className="flex flex-col gap-2">
@@ -252,11 +254,11 @@ export function ClanView() {
                   type="button"
                   onClick={() => setFamilyOpen(false)}
                   className={`cc-tap flex items-center gap-3 rounded-xl border px-3 py-3 text-left ${
-                    active ? 'border-[#E52E2E]/50 bg-[#3B1515]' : 'border-[#27272A]/50 bg-[#18181A]'
+                    active ? 'border-[#2563EB]/50 bg-[#0F172A]' : 'border-[#27272A]/50 bg-[#18181A]'
                   }`}
                 >
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-[#27272A]/50 bg-[#121214]">
-                    <Shield size={16} className={active ? 'text-[#FF7A7A]' : 'text-neutral-500'} />
+                    <Shield size={16} className={active ? 'text-[#93C5FD]' : 'text-neutral-500'} />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13px] font-bold text-white">{entry.name}</span>
@@ -264,13 +266,12 @@ export function ClanView() {
                       {entry.tag} · {entry.role} · {entry.members} members
                     </span>
                   </span>
-                  {active ? <Chip tone="red">Active</Chip> : null}
+                  {active ? <Chip tone="royal">{t('Active')}</Chip> : null}
                 </button>
               );
             })}
             <p className="text-[10px] leading-relaxed text-neutral-500">
-              Switching clans re-points the tracker, calendar and war room at that clan's tag. Roster records for the other
-              family clans load from the same Supercell key or JSON import.
+              {t("Switching clans re-points the tracker, calendar and war room at that clan's tag. Roster records for the other family clans load from the same Supercell key or JSON import.")}
             </p>
           </div>
         </Sheet>
@@ -327,6 +328,7 @@ interface SearchReply {
 }
 
 function ScoutSheet({ onClose }: { onClose: () => void }) {
+  const { t } = useI18n();
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<SearchReply | null>(null);
   const [busy, setBusy] = useState(false);
@@ -354,8 +356,8 @@ function ScoutSheet({ onClose }: { onClose: () => void }) {
 
   return (
     <Sheet
-      title="Scout a tag"
-      detail="Public player and clan lookup — no sign-in needed."
+      title={t('Scout a tag')}
+      detail={t('Public player and clan lookup — no sign-in needed.')}
       onClose={onClose}
       footer={
         <ActionButton tone="neutral" className="w-full" onClick={onClose}>
@@ -377,18 +379,18 @@ function ScoutSheet({ onClose }: { onClose: () => void }) {
               value={query}
               onChange={(event) => setQuery(event.target.value.toUpperCase())}
               placeholder="#PLAYERTAG or #CLANTAG"
-              aria-label="Player or clan tag"
+              aria-label={t('Player or clan tag')}
               autoComplete="off"
-              className="w-full rounded-xl border border-[#27272A]/60 bg-[#18181A] py-2.5 pl-9 pr-3 text-[12px] tabular-nums uppercase text-white outline-none placeholder:text-neutral-600 focus:border-[#E52E2E]/60"
+              className="w-full rounded-xl border border-[#27272A]/60 bg-[#18181A] py-2.5 pl-9 pr-3 text-[12px] tabular-nums uppercase text-white outline-none placeholder:text-neutral-600 focus:border-[#2563EB]/60"
             />
           </div>
-          <ActionButton tone="red" type="submit" disabled={busy} className="px-3">
+          <ActionButton tone="royal" type="submit" disabled={busy} className="px-3">
             {busy ? 'Searching' : 'Search'}
           </ActionButton>
         </form>
 
         {error ? (
-          <p role="alert" className="rounded-xl border border-[#E52E2E]/40 bg-[#1a1011] px-3 py-2 text-[11px] text-[#FFB4B4]">
+          <p role="alert" className="rounded-xl border border-[#2563EB]/40 bg-[#0F172A] px-3 py-2 text-[11px] text-[#93C5FD]">
             {error}
           </p>
         ) : null}
@@ -417,8 +419,8 @@ function ScoutSheet({ onClose }: { onClose: () => void }) {
                   <Chip tone={profile.active ? 'green' : 'neutral'}>{profile.active ? 'Active' : 'Former'}</Chip>
                 </div>
                 <div className="mt-2.5 grid grid-cols-3 gap-2">
-                  <Metric label="Rush est." value={`${profile.rushPercent}%`} percent={profile.rushPercent} tone={profile.rushPercent < 15 ? 'green' : 'red'} />
-                  <Metric label="Lab purity" value={`${profile.labPurity}%`} percent={profile.labPurity} tone="green" />
+                  <Metric label={t('Rush est.')} value={`${profile.rushPercent}%`} percent={profile.rushPercent} tone={profile.rushPercent < 15 ? 'green' : 'royal'} />
+                  <Metric label={t('Lab purity')} value={`${profile.labPurity}%`} percent={profile.labPurity} tone="green" />
                   <Metric label="War 3★" value={`${profile.threeStarRate}%`} percent={profile.threeStarRate} tone="blue" />
                 </div>
                 {profile.heroEquipment?.length ? (
@@ -441,7 +443,7 @@ function ScoutSheet({ onClose }: { onClose: () => void }) {
         ) : null}
 
         {result?.kind === 'none' ? (
-          <EmptyState title="No match" detail="Check the tag and try again. Search takes a player #PLAYERTAG or a clan #CLANTAG." />
+          <EmptyState title={t('No match')} detail={t('Check the tag and try again. Search takes a player #PLAYERTAG or a clan #CLANTAG.')} />
         ) : null}
 
         {!result && !busy ? (
@@ -455,7 +457,7 @@ function ScoutSheet({ onClose }: { onClose: () => void }) {
   );
 }
 
-function Metric({ label, value, percent, tone }: { label: string; value: string; percent: number; tone: 'green' | 'red' | 'blue' }) {
+function Metric({ label, value, percent, tone }: { label: string; value: string; percent: number; tone: 'green' | 'royal' | 'blue' }) {
   return (
     <div className="rounded-lg bg-[#121214] px-2 py-1.5">
       <span className="block text-[8px] font-medium uppercase tracking-[0.06em] text-neutral-500">{label}</span>

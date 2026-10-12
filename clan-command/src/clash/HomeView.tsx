@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useI18n } from './i18n';
 import { ArrowRight, CalendarDays, Flame, ListChecks, RefreshCw, Shield, Swords, TrendingUp, Trophy } from 'lucide-react';
 import { CATEGORY_LABELS } from './catalog';
 import { categoryRows } from './demo';
@@ -6,6 +7,7 @@ import { ActionButton, Bar, Card, Chip, CompletionPill, InnerBox, Ring, SectionT
 import { formatNumber, useClash } from './store';
 
 export function HomeView() {
+  const { t } = useI18n();
   const { state, setRoute, setView, syncLive, syncing } = useClash();
   const { player, clan, currentWar, warLog, progression, plan, tasks } = state;
 
@@ -42,12 +44,12 @@ export function HomeView() {
         </div>
         <div className="grid grid-cols-4 gap-px border-t border-[#27272A]/40 bg-[#27272A]/40">
           <Cell label="Trophies" value={formatNumber(player.trophies)} />
-          <Cell label="War stars" value={formatNumber(player.warStars)} />
-          <Cell label="Attacks" value={formatNumber(player.attacksWon)} />
-          <Cell label="Donated" value={formatNumber(player.donations)} />
+          <Cell label={t('War stars')} value={formatNumber(player.warStars)} />
+          <Cell label={t('Attacks')} value={formatNumber(player.attacksWon)} />
+          <Cell label={t('Donated')} value={formatNumber(player.donations)} />
         </div>
         <div className="flex items-center gap-2 border-t border-[#27272A]/40 px-3 py-2.5">
-          <ActionButton tone="red" className="flex-1" onClick={() => void syncLive()} disabled={syncing}>
+          <ActionButton tone="royal" className="flex-1" onClick={() => void syncLive()} disabled={syncing}>
             <RefreshCw size={13} className={syncing ? 'animate-spin' : ''} /> {syncing ? 'Syncing…' : 'Sync live'}
           </ActionButton>
           <ActionButton tone="neutral" className="flex-1" onClick={() => { setRoute('profile'); setView('home-village'); }}>
@@ -64,7 +66,7 @@ export function HomeView() {
       >
         <div className="flex items-center justify-between gap-3">
           <span className="flex items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-xl border border-[#E52E2E]/40 bg-[#3B1515] text-[#FF7A7A]">
+            <span className="grid h-8 w-8 place-items-center rounded-xl border border-[#2563EB]/40 bg-[#0F172A] text-[#93C5FD]">
               <Swords size={15} />
             </span>
             <span>
@@ -81,8 +83,8 @@ export function HomeView() {
           <strong className="text-right text-[20px] font-bold tabular-nums leading-none text-[#34D399]">
             {currentWar.stars}
           </strong>
-          <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-neutral-600">Stars</span>
-          <strong className="text-[20px] font-bold tabular-nums leading-none text-[#FF6B6B]">
+          <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-neutral-600">{t('Stars')}</span>
+          <strong className="text-[20px] font-bold tabular-nums leading-none text-[#60A5FA]">
             {currentWar.opponentStars}
           </strong>
         </div>
@@ -92,13 +94,13 @@ export function HomeView() {
             style={{ width: `${(currentWar.stars / Math.max(1, currentWar.stars + currentWar.opponentStars)) * 100}%` }}
           />
           <span
-            className="ml-auto h-full bg-[#E52E2E]"
+            className="ml-auto h-full bg-[#2563EB]"
             style={{ width: `${(currentWar.opponentStars / Math.max(1, currentWar.stars + currentWar.opponentStars)) * 100}%` }}
           />
         </div>
         <div className="mt-2 flex items-center justify-between text-[10px] tabular-nums text-neutral-500">
           <span className="text-[#34D399]">{currentWar.destruction.toFixed(1)}%</span>
-          <span className="text-[#FF6B6B]">{currentWar.opponentDestruction.toFixed(1)}%</span>
+          <span className="text-[#60A5FA]">{currentWar.opponentDestruction.toFixed(1)}%</span>
         </div>
       </button>
 
@@ -106,14 +108,14 @@ export function HomeView() {
       <div className="grid grid-cols-2 gap-2.5">
         <QuickCard
           icon={CalendarDays}
-          title="Calendar"
-          detail={`${tasks.length} scheduled · ${new Set(tasks.map((t) => t.slot)).size} slots busy`}
+          title={t('Calendar')}
+          detail={t('{0} scheduled · {1} slots busy', tasks.length, new Set(tasks.map((task) => task.slot)).size)}
           onClick={() => { setRoute('profile'); setView('calendar'); }}
         />
         <QuickCard
           icon={ListChecks}
-          title="Plan"
-          detail={`${plan.length} queued upgrades`}
+          title={t('Plan')}
+          detail={t('{0} queued upgrades', plan.length)}
           onClick={() => { setRoute('profile'); setView('plan'); }}
         />
         <QuickCard
@@ -133,8 +135,8 @@ export function HomeView() {
       {/* -------- progression snapshot -------- */}
       <section className="flex flex-col gap-2.5">
         <SectionTitle
-          title="Progression snapshot"
-          detail="Closest categories to a gold pill."
+          title={t('Progression snapshot')}
+          detail={t('Closest categories to a gold pill.')}
           action={
             <ActionButton tone="ghost" className="px-2 py-1 text-[11px]" onClick={() => { setRoute('profile'); setView('home-village'); }}>
               Open
@@ -153,7 +155,7 @@ export function HomeView() {
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[13px] font-bold text-white">{CATEGORY_LABELS[row.id]}</span>
                 <span className="mt-1 block">
-                  <Bar percent={row.percent} tone="red" className="max-w-[160px]" />
+                  <Bar percent={row.percent} tone="royal" className="max-w-[160px]" />
                 </span>
               </span>
               <CompletionPill percent={row.percent} compact />
@@ -162,7 +164,7 @@ export function HomeView() {
           {rows.filter((row) => row.maxed).length ? (
             <div className="flex items-center gap-2 px-3.5 py-2.5">
               <Chip tone="amber">
-                <Flame size={10} /> {rows.filter((row) => row.maxed).length} categories maxed
+                <Flame size={10} /> {t('{0} categories maxed', rows.filter((row) => row.maxed).length)}
               </Chip>
             </div>
           ) : null}
@@ -171,19 +173,19 @@ export function HomeView() {
 
       {/* -------- data sources -------- */}
       <InnerBox className="px-3 py-3">
-        <span className="mb-1.5 block text-[9px] font-bold uppercase tracking-[0.14em] text-neutral-500">Data sources</span>
+        <span className="mb-1.5 block text-[9px] font-bold uppercase tracking-[0.14em] text-neutral-500">{t('Data sources')}</span>
         <ul className="flex flex-col gap-1.5">
           <SourceRow
             label="Supercell API"
             detail={
               state.integrations.supercellConfigured
-                ? `Connected · last sync ${player.syncedAt ? new Date(player.syncedAt).toLocaleString('en-GB') : '—'}`
+                ? t('Connected · last sync {0}', player.syncedAt ? new Date(player.syncedAt).toLocaleString('en-GB') : '—')
                 : 'Not configured — heroes, equipment, pets and lab levels come from the local dataset.'
             }
             ok={state.integrations.supercellConfigured}
           />
           <SourceRow
-            label="ClashKing / ClashOfStats"
+            label={t('ClashKing / ClashOfStats')}
             detail={
               state.integrations.clashkingEndpoint || state.integrations.clashofstatsEndpoint
                 ? state.integrations.clashkingEndpoint || state.integrations.clashofstatsEndpoint
@@ -223,7 +225,7 @@ function QuickCard({
       onClick={onClick}
       className="cc-tap rounded-2xl border border-[#27272A]/40 bg-[#0F0F10] p-3.5 text-left"
     >
-      <span className="grid h-8 w-8 place-items-center rounded-xl border border-[#27272A]/50 bg-[#18181A] text-[#FF7A7A]">
+      <span className="grid h-8 w-8 place-items-center rounded-xl border border-[#27272A]/50 bg-[#18181A] text-[#93C5FD]">
         <Icon size={15} />
       </span>
       <span className="mt-2 block text-[13px] font-bold tracking-tight text-white">{title}</span>
@@ -244,7 +246,7 @@ function Cell({ label, value }: { label: string; value: string }) {
 function SourceRow({ label, detail, ok }: { label: string; detail: string; ok: boolean }) {
   return (
     <li className="flex items-start gap-2.5">
-      <span className={`mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full ${ok ? 'bg-[#10B981]' : 'bg-[#E52E2E]'}`} />
+      <span className={`mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full ${ok ? 'bg-[#10B981]' : 'bg-[#2563EB]'}`} />
       <span className="min-w-0">
         <span className="block text-[11px] font-bold text-neutral-200">{label}</span>
         <span className="block text-[10px] leading-snug text-neutral-500">{detail}</span>

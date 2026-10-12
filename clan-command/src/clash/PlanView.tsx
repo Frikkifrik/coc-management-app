@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useI18n } from './i18n';
 import { ArrowDown, ArrowUp, Download, ListChecks, Plus, Trash2, Upload } from 'lucide-react';
 import { CATALOG_INDEX, CATEGORY_LABELS, type CategoryId } from './catalog';
 import {
@@ -14,13 +15,14 @@ import {
 } from './components';
 import { compactNumber, formatNumber, hoursLabel, useClash } from './store';
 
-const PRIORITY_META: Record<1 | 2 | 3, { label: string; tone: 'red' | 'amber' | 'neutral' }> = {
-  1: { label: 'Now', tone: 'red' },
+const PRIORITY_META: Record<1 | 2 | 3, { label: string; tone: 'royal' | 'amber' | 'neutral' }> = {
+  1: { label: 'Now', tone: 'royal' },
   2: { label: 'Next', tone: 'amber' },
   3: { label: 'Later', tone: 'neutral' },
 };
 
 export function PlanView() {
+  const { t } = useI18n();
   const { state, removePlanItem, setPlanPriority, addPlanItem, exportJson, importJson, notify } = useClash();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -63,7 +65,7 @@ export function PlanView() {
             <ListChecks size={16} />
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className="text-[14px] font-bold tracking-tight text-white">Upgrade plan</h2>
+            <h2 className="text-[14px] font-bold tracking-tight text-white">{t('Upgrade plan')}</h2>
             <p className="text-[10px] text-neutral-500">{totals.count} queued upgrades</p>
           </div>
           <Chip tone="blue">{hoursLabel(totals.hours)}</Chip>
@@ -81,7 +83,7 @@ export function PlanView() {
           ))}
         </div>
         <div className="flex items-center gap-2 border-t border-[#27272A]/40 px-3 py-2.5">
-          <ActionButton tone="red" className="flex-1" onClick={() => setPickerOpen(true)}>
+          <ActionButton tone="royal" className="flex-1" onClick={() => setPickerOpen(true)}>
             <Plus size={13} /> Add upgrade
           </ActionButton>
           <ActionButton tone="neutral" onClick={exportJson}>
@@ -96,17 +98,17 @@ export function PlanView() {
       {/* -------- plan list -------- */}
       {plan.length === 0 ? (
         <EmptyState
-          title="Nothing planned yet"
+          title={t('Nothing planned yet')}
           detail="Add upgrades from the tracker drill-down, or pick them here. Plans export to JSON so you can share the queue with your co-leaders."
           action={
-            <ActionButton tone="red" onClick={() => setPickerOpen(true)}>
+            <ActionButton tone="royal" onClick={() => setPickerOpen(true)}>
               <Plus size={13} /> Add your first upgrade
             </ActionButton>
           }
         />
       ) : (
         <section className="flex flex-col gap-2.5">
-          <SectionTitle title="Queue" detail="Sorted by priority, then longest upgrade first." />
+          <SectionTitle title={t('Queue')} detail={t('Sorted by priority, then longest upgrade first.')} />
           <div className="flex flex-col gap-2">
             {plan.map((item, index) => {
               const meta = PRIORITY_META[item.priority];
@@ -117,12 +119,12 @@ export function PlanView() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <h3 className="truncate text-[14px] font-bold tracking-tight text-white">{item.name}</h3>
+                          <h3 className="truncate text-[14px] font-bold tracking-tight text-white">{t(item.name)}</h3>
                           <p className="mt-0.5 text-[10px] tabular-nums text-neutral-500">
                             {CATEGORY_LABELS[item.category]} · Level {item.fromLevel} → {item.toLevel}
                           </p>
                         </div>
-                        <Chip tone={meta.tone}>{meta.label}</Chip>
+                        <Chip tone={meta.tone}>{t(meta.label)}</Chip>
                       </div>
 
                       <div className="mt-2 flex items-center gap-2">
@@ -162,7 +164,7 @@ export function PlanView() {
                           className="px-2 py-1 text-[10px]"
                           onClick={() => {
                             removePlanItem(item.id);
-                            notify(`${item.name} removed from the plan.`, 'info');
+                            notify(t('{0} removed from the plan.', item.name), 'info');
                           }}
                         >
                           <Trash2 size={11} /> Remove
@@ -180,16 +182,15 @@ export function PlanView() {
 
       <InnerBox className="px-3 py-2.5">
         <p className="text-[10px] leading-relaxed text-neutral-500">
-          Costs and times in this queue are planning estimates. Export the plan as JSON, or replace it with a payload from
-          your own tracking sheet — imports merge progression, plan and schedule.
+          {t('Costs and times in this queue are planning estimates. Export the plan as JSON, or replace it with a payload from your own tracking sheet — imports merge progression, plan and schedule.')}
         </p>
       </InnerBox>
 
       {/* -------- picker -------- */}
       {pickerOpen ? (
         <Sheet
-          title="Add an upgrade"
-          detail="Only items below their Town Hall 17 cap are listed."
+          title={t('Add an upgrade')}
+          detail={t('Only items below their Town Hall 17 cap are listed.')}
           onClose={() => setPickerOpen(false)}
         >
           <div className="flex flex-col gap-3">
@@ -197,13 +198,13 @@ export function PlanView() {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search the catalog…"
-              aria-label="Search the catalog"
-              className="w-full rounded-xl border border-[#27272A]/60 bg-[#18181A] px-3 py-2.5 text-[13px] text-white outline-none placeholder:text-neutral-600 focus:border-[#E52E2E]/60"
+              placeholder={t('Search the catalog…')}
+              aria-label={t('Search the catalog')}
+              className="w-full rounded-xl border border-[#27272A]/60 bg-[#18181A] px-3 py-2.5 text-[13px] text-white outline-none placeholder:text-neutral-600 focus:border-[#2563EB]/60"
             />
             <div className="cc-no-scrollbar flex gap-1.5 overflow-x-auto pb-1">
               <FilterChip active={categoryFilter === 'all'} onClick={() => setCategoryFilter('all')}>
-                All
+                {t('All')}
               </FilterChip>
               {(Object.keys(CATEGORY_LABELS) as CategoryId[])
                 .filter((id) => id !== 'supercharge' && id !== 'walls')
@@ -232,9 +233,9 @@ export function PlanView() {
                           cost: Math.round(entry.max * (entry.category === 'defenses' ? 1_100_000 : 700_000)),
                           priority: 2,
                         });
-                        notify(`${entry.name} added to the plan.`);
+                        notify(t('{0} added to the plan.', entry.name));
                       }}
-                      className="cc-tap flex w-full items-center gap-2.5 rounded-xl border border-[#27272A]/40 bg-[#18181A] px-2.5 py-2 text-left hover:border-[#E52E2E]/40"
+                      className="cc-tap flex w-full items-center gap-2.5 rounded-xl border border-[#27272A]/40 bg-[#18181A] px-2.5 py-2 text-left hover:border-[#2563EB]/40"
                     >
                       <AssetIcon name={entry.name} category={entry.category} assetKey={entry.key} size={30} rounded="rounded-lg" />
                       <span className="min-w-0 flex-1">
@@ -250,7 +251,7 @@ export function PlanView() {
               })}
               {candidates.length === 0 ? (
                 <li className="rounded-xl bg-[#18181A] px-3 py-6 text-center text-[11px] text-neutral-500">
-                  Everything matching that filter is already maxed.
+                  {t('Everything matching that filter is already maxed.')}
                 </li>
               ) : null}
             </ul>
@@ -261,8 +262,8 @@ export function PlanView() {
       {/* -------- import -------- */}
       {importOpen ? (
         <Sheet
-          title="Import JSON payload"
-          detail="Paste a clash-command export or your own progression payload."
+          title={t('Import JSON payload')}
+          detail={t('Paste a clash-command export or your own progression payload.')}
           onClose={() => setImportOpen(false)}
           footer={
             <div className="flex items-center gap-2">
@@ -277,7 +278,7 @@ export function PlanView() {
                 Cancel
               </ActionButton>
               <ActionButton
-                tone="red"
+                tone="royal"
                 className="flex-1"
                 onClick={async () => {
                   await importJson(importText);
@@ -297,15 +298,15 @@ export function PlanView() {
               rows={10}
               spellCheck={false}
               placeholder='{ "player": { "tag": "#2YL8V0JQ" }, "progression": { "levels": { … } } }'
-              aria-label="JSON payload"
-              className="w-full resize-y rounded-xl border border-[#27272A]/60 bg-[#18181A] px-3 py-2.5 font-mono text-[11px] leading-relaxed text-neutral-200 outline-none placeholder:text-neutral-700 focus:border-[#E52E2E]/60"
+              aria-label={t('JSON payload')}
+              className="w-full resize-y rounded-xl border border-[#27272A]/60 bg-[#18181A] px-3 py-2.5 font-mono text-[11px] leading-relaxed text-neutral-200 outline-none placeholder:text-neutral-700 focus:border-[#2563EB]/60"
             />
             <p className="text-[10px] leading-relaxed text-neutral-500">
               Expected shape: <span className="font-mono text-neutral-400">{`{ version, player, progression, tasks, plan }`}</span>.
-              Unknown keys are ignored, and the demo record fills anything you omit.
+              {t('Unknown keys are ignored, and the demo record fills anything you omit.')}
             </p>
             <ActionButton tone="neutral" onClick={exportJson}>
-              <Download size={13} /> Export the current state first
+              <Download size={13} /> {t('Export the current state first')}
             </ActionButton>
           </div>
         </Sheet>
@@ -321,7 +322,7 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
       onClick={onClick}
       className={`cc-tap shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-tight transition-colors ${
         active
-          ? 'border-[#E52E2E]/50 bg-[#3B1515] text-[#FF7A7A]'
+          ? 'border-[#2563EB]/50 bg-[#0F172A] text-[#93C5FD]'
           : 'border-[#27272A]/60 bg-[#18181A] text-neutral-400 hover:text-neutral-200'
       }`}
     >

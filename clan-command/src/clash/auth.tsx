@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useI18n } from './i18n';
 import { ArrowRight, KeyRound, Loader2, Lock, ShieldCheck } from 'lucide-react';
 import { apiRequest, jsonBody, setApiSessionToken } from '../api';
 
@@ -106,6 +107,7 @@ export function useOptionalAuth(): AuthValue | null {
 /* ------------------------------------------------------------------ */
 
 export function SignInScreen({ onDone }: { onDone: () => void }) {
+  const { t } = useI18n();
   const { signIn, signInDemo, demoMode } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -143,11 +145,11 @@ export function SignInScreen({ onDone }: { onDone: () => void }) {
     <div className="clash-app">
       <div className="cc-header-gradient mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center bg-black px-5 py-10">
         <div className="mb-7 text-center">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-[#E52E2E]/40 bg-[#3B1515] text-[#FF6B6B]">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-[#2563EB]/40 bg-[#0F172A] text-[#60A5FA]">
             <ShieldCheck size={26} />
           </span>
           <h1 className="mt-4 text-[22px] font-bold leading-tight tracking-tight text-white">Clash Command</h1>
-          <p className="mt-1 text-[12px] text-neutral-500">Sign in to run live Supercell lookups.</p>
+          <p className="mt-1 text-[12px] text-neutral-500">{t('Sign in to run live Supercell lookups.')}</p>
         </div>
 
         <form
@@ -155,7 +157,7 @@ export function SignInScreen({ onDone }: { onDone: () => void }) {
           className="flex flex-col gap-3 rounded-2xl border border-[#27272A]/40 bg-[#0F0F10] p-4"
         >
           <label className="flex flex-col gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-neutral-500">Email</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-neutral-500">{t('Email')}</span>
             <input
               type="email"
               value={email}
@@ -163,11 +165,11 @@ export function SignInScreen({ onDone }: { onDone: () => void }) {
               autoComplete="username"
               required
               placeholder="leader@yourclan.com"
-              className="rounded-xl border border-[#27272A]/60 bg-[#18181A] px-3 py-2.5 text-[13px] text-white outline-none placeholder:text-neutral-600 focus:border-[#E52E2E]/60"
+              className="rounded-xl border border-[#27272A]/60 bg-[#18181A] px-3 py-2.5 text-[13px] text-white outline-none placeholder:text-neutral-600 focus:border-[#2563EB]/60"
             />
           </label>
           <label className="flex flex-col gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-neutral-500">Password</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-neutral-500">{t('Password')}</span>
             <input
               type="password"
               value={password}
@@ -175,12 +177,12 @@ export function SignInScreen({ onDone }: { onDone: () => void }) {
               autoComplete="current-password"
               required
               placeholder="••••••••"
-              className="rounded-xl border border-[#27272A]/60 bg-[#18181A] px-3 py-2.5 text-[13px] text-white outline-none placeholder:text-neutral-600 focus:border-[#E52E2E]/60"
+              className="rounded-xl border border-[#27272A]/60 bg-[#18181A] px-3 py-2.5 text-[13px] text-white outline-none placeholder:text-neutral-600 focus:border-[#2563EB]/60"
             />
           </label>
 
           {error ? (
-            <p role="alert" className="rounded-xl border border-[#E52E2E]/40 bg-[#1a1011] px-3 py-2 text-[11px] text-[#FFB4B4]">
+            <p role="alert" className="rounded-xl border border-[#2563EB]/40 bg-[#0F172A] px-3 py-2 text-[11px] text-[#93C5FD]">
               {error}
             </p>
           ) : null}
@@ -188,7 +190,7 @@ export function SignInScreen({ onDone }: { onDone: () => void }) {
           <button
             type="submit"
             disabled={busy}
-            className="cc-tap mt-1 inline-flex items-center justify-center gap-2 rounded-xl border border-[#E52E2E]/50 bg-[#3B1515] px-3 py-2.5 text-[13px] font-bold text-[#FF7A7A] disabled:opacity-50"
+            className="cc-tap mt-1 inline-flex items-center justify-center gap-2 rounded-xl border border-[#2563EB]/50 bg-[#0F172A] px-3 py-2.5 text-[13px] font-bold text-[#93C5FD] disabled:opacity-50"
           >
             {busy ? <Loader2 size={14} className="animate-spin" /> : <KeyRound size={14} />}
             {busy ? 'Checking access…' : 'Sign in'}
@@ -198,8 +200,8 @@ export function SignInScreen({ onDone }: { onDone: () => void }) {
         {demoMode ? (
           <div className="mt-4">
             <div className="mb-2 flex items-baseline justify-between px-1">
-              <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-neutral-500">Sandbox access</span>
-              <span className="text-[10px] text-neutral-600">Fictional demo data</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-neutral-500">{t('Sandbox access')}</span>
+              <span className="text-[10px] text-neutral-600">{t('Fictional demo data')}</span>
             </div>
             <div className="grid grid-cols-2 gap-2">
               {(Object.keys(ROLE_COPY) as SessionRole[]).map((role) => (

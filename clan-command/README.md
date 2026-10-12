@@ -87,6 +87,31 @@ Tiles resolve in this order:
 
 Brand logos are used exactly as provided, without recolouring or cropping.
 
+The intended upstream is the **`100% Afrikaans Clan Family / Arsenaal Assets`**
+Google Drive folder, opened **strictly read-only** — nothing there is ever
+created, edited, moved or deleted. A full audit of that tree, the folder IDs and
+the reason no bytes are installed yet are in
+[`public/clash-assets/DRIVE_SOURCE.md`](public/clash-assets/DRIVE_SOURCE.md).
+Short version: every categorised asset folder is empty and the artwork sits
+inside multi-part ~73 MB ZIP archives, so extraction happens on your machine and
+the PNGs get dropped into `clash-assets/` by hand.
+
+## Language
+
+The interface ships in **Afrikaans**, with a switch back to **English** at the
+top of Settings (`Instellings` → `Taal`). The choice persists in `localStorage`
+under `clash-command:lang:v1`.
+
+Clash of Clans game vocabulary stays in English in both languages, exactly as
+the game shows it: Clan, Hero/Heroes, Attack/War/CWL, Home Village, Builder
+Base, Buildings, Defenses, Traps, Supercharge, Laboratory, Equipment, Pets,
+Walls, Guardians, Builder/Builders, Pass, Trophies, Stars, Destruction, and
+every asset name (P.E.K.K.A, Inferno Tower, Barbarian King, Town Hall, …).
+
+Translation is keyed on the **English source string** — `t('Remaining')` — so a
+string with no Afrikaans entry renders its English source instead of a blank or
+a raw key. See `src/clash/i18n.tsx`.
+
 ## Data notes
 
 The seeded village, plan, schedule, war log and roster are demo data held in this browser's `localStorage`. Progression, plan and schedule round-trip through JSON export/import. Rush, lab-purity and war-performance figures surfaced by Scout are **demo estimates** unless a data source supplies them.

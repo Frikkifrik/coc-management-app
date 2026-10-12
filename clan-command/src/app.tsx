@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import ClashApp from './clash/ClashApp';
 import { AuthProvider, SignInScreen } from './clash/auth';
+import { LanguageProvider } from './clash/i18n';
 
 /**
  * The dark mobile app is the whole product now. The previous bright workspace
@@ -18,17 +19,19 @@ function SignInRoute() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<SignInRoute />} />
-          {/* Old entry points keep resolving to the same app. */}
-          <Route path="/clash" element={<Navigate to="/" replace />} />
-          <Route path="/app/*" element={<Navigate to="/" replace />} />
-          <Route path="/recruitment" element={<Navigate to="/" replace />} />
-          <Route path="*" element={<ClashApp />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<SignInRoute />} />
+            {/* Old entry points keep resolving to the same app. */}
+            <Route path="/clash" element={<Navigate to="/" replace />} />
+            <Route path="/app/*" element={<Navigate to="/" replace />} />
+            <Route path="/recruitment" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<ClashApp />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }

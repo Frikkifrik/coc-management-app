@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useI18n } from './i18n';
 import { Clock, Crown, Flame, Shield, Star, Swords, Target, Trophy } from 'lucide-react';
 import { ActionButton, AssetIcon, Bar, Card, Chip, InnerBox, SectionTitle, Sheet } from './components';
 import { formatNumber, useClash } from './store';
@@ -13,6 +14,7 @@ function countdown(iso: string): string {
 }
 
 export function WarView() {
+  const { t } = useI18n();
   const { state, setRoute } = useClash();
   const { currentWar, warLog, clan, player } = state;
   const [selected, setSelected] = useState<WarRound | null>(null);
@@ -45,7 +47,7 @@ export function WarView() {
       <Card className="overflow-hidden">
         <div className="flex items-center justify-between gap-3 border-b border-[#27272A]/40 px-4 py-3">
           <div className="flex items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-xl border border-[#E52E2E]/40 bg-[#3B1515] text-[#FF7A7A]">
+            <span className="grid h-8 w-8 place-items-center rounded-xl border border-[#2563EB]/40 bg-[#0F172A] text-[#93C5FD]">
               <Swords size={16} />
             </span>
             <div>
@@ -86,14 +88,14 @@ export function WarView() {
             <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em] text-neutral-500">
               <Star size={11} className="text-amber-400" /> Stars
             </span>
-            <strong className="text-[22px] font-bold tabular-nums leading-none text-[#FF6B6B]">
+            <strong className="text-[22px] font-bold tabular-nums leading-none text-[#60A5FA]">
               {currentWar.opponentStars}
             </strong>
           </div>
 
           <div className="mt-2 flex h-2.5 w-full overflow-hidden rounded-full bg-[#1F1F22]" role="img" aria-label={`Stars: ${currentWar.stars} to ${currentWar.opponentStars}`}>
             <span className="h-full bg-[#10B981]" style={{ width: `${homeStarPct}%`, transition: 'width 420ms ease' }} />
-            <span className="ml-auto h-full bg-[#E52E2E]" style={{ width: `${awayStarPct}%`, transition: 'width 420ms ease' }} />
+            <span className="ml-auto h-full bg-[#2563EB]" style={{ width: `${awayStarPct}%`, transition: 'width 420ms ease' }} />
           </div>
           <div className="mt-1 flex justify-between text-[10px] tabular-nums text-neutral-500">
             <span>{Math.round(homeStarPct)}% of contested stars</span>
@@ -106,21 +108,21 @@ export function WarView() {
               {currentWar.destruction.toFixed(2)}%
             </strong>
             <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em] text-neutral-500">
-              <Flame size={11} className="text-[#FF7A7A]" /> Dmg
+              <Flame size={11} className="text-[#93C5FD]" /> Dmg
             </span>
-            <strong className="text-[15px] font-bold tabular-nums text-[#FF6B6B]">
+            <strong className="text-[15px] font-bold tabular-nums text-[#60A5FA]">
               {currentWar.opponentDestruction.toFixed(2)}%
             </strong>
           </div>
           <div className="mt-2 flex h-2 w-full overflow-hidden rounded-full bg-[#1F1F22]">
             <span className="h-full bg-[#10B981]/85" style={{ width: `${currentWar.destruction}%` }} />
-            <span className="ml-auto h-full bg-[#E52E2E]/85" style={{ width: `${currentWar.opponentDestruction}%` }} />
+            <span className="ml-auto h-full bg-[#2563EB]/85" style={{ width: `${currentWar.opponentDestruction}%` }} />
           </div>
 
           <div className="mt-4 grid grid-cols-3 gap-2">
-            <Fact label="Attacks used" value={`${currentWar.attacksUsed}/${currentWar.attacksAvailable}`} />
-            <Fact label="Avg stars" value={(currentWar.stars / Math.max(1, currentWar.attacksUsed)).toFixed(2)} />
-            <Fact label="Max possible" value={String(currentWar.size * 3)} />
+            <Fact label={t('Attacks used')} value={`${currentWar.attacksUsed}/${currentWar.attacksAvailable}`} />
+            <Fact label={t('Avg stars')} value={(currentWar.stars / Math.max(1, currentWar.attacksUsed)).toFixed(2)} />
+            <Fact label={t('Max possible')} value={String(currentWar.size * 3)} />
           </div>
         </div>
       </Card>
@@ -128,8 +130,8 @@ export function WarView() {
       {/* -------- attack feed -------- */}
       <section className="flex flex-col gap-2.5">
         <SectionTitle
-          title="Attack feed"
-          detail={`${currentWar.attacks.length} recorded attacks`}
+          title={t('Attack feed')}
+          detail={t('{0} recorded attacks', currentWar.attacks.length)}
           action={
             <ActionButton tone="neutral" className="px-2.5 py-1.5 text-[11px]" onClick={() => setRoute('clan')}>
               Roster
@@ -157,7 +159,7 @@ export function WarView() {
 
       {/* -------- CWL group -------- */}
       <section className="flex flex-col gap-2.5">
-        <SectionTitle title="CWL group standings" detail="Current group · ranks #1–#8" />
+        <SectionTitle title={t('CWL group standings')} detail={t('Current group · ranks #1–#8')} />
         <Card className="p-3">
           <div className="flex flex-col gap-1">
             {groupStandings.map((round) => {
@@ -200,8 +202,8 @@ export function WarView() {
       {/* -------- history cards -------- */}
       <section className="flex flex-col gap-2.5">
         <SectionTitle
-          title="War history"
-          detail={`${totals.wins}W ${totals.ties}T ${totals.losses}L · ${totals.destruction.toFixed(1)}% average destruction`}
+          title={t('War history')}
+          detail={t('{0}W {1}T {2}L · {3}% average destruction', totals.wins, totals.ties, totals.losses, totals.destruction.toFixed(1))}
         />
         <div className="flex flex-col gap-2.5">
           {warLog.map((round) => {
@@ -235,7 +237,7 @@ export function WarView() {
                         ? 'border-[#10B981]/40 bg-[#0d2a22] text-[#34D399]'
                         : drawn
                           ? 'border-[#27272A]/60 bg-[#18181A] text-neutral-400'
-                          : 'border-[#E52E2E]/40 bg-[#3B1515] text-[#FF7A7A]'
+                          : 'border-[#2563EB]/40 bg-[#0F172A] text-[#93C5FD]'
                     }`}
                   >
                     {round.wins}W {round.ties}T {round.losses}L
@@ -247,7 +249,7 @@ export function WarView() {
                   <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.1em] text-neutral-600">
                     <Target size={10} /> Stars
                   </span>
-                  <span className="text-[16px] font-bold tabular-nums text-[#FF6B6B]">{round.opponentStars}</span>
+                  <span className="text-[16px] font-bold tabular-nums text-[#60A5FA]">{round.opponentStars}</span>
                 </div>
 
                 <div className="mt-1.5 flex h-1.5 w-full overflow-hidden rounded-full bg-[#1F1F22]">
@@ -256,14 +258,14 @@ export function WarView() {
                     style={{ width: `${(round.stars / Math.max(1, round.stars + round.opponentStars)) * 100}%` }}
                   />
                   <span
-                    className="ml-auto h-full bg-[#E52E2E]"
+                    className="ml-auto h-full bg-[#2563EB]"
                     style={{ width: `${(round.opponentStars / Math.max(1, round.stars + round.opponentStars)) * 100}%` }}
                   />
                 </div>
 
                 <div className="mt-2.5 flex items-center justify-between text-[10px] tabular-nums text-neutral-500">
                   <span className="text-[#34D399]">{round.destruction.toFixed(1)}% destruction</span>
-                  <span className="text-[#FF6B6B]">{round.opponentDestruction.toFixed(1)}% opponent</span>
+                  <span className="text-[#60A5FA]">{round.opponentDestruction.toFixed(1)}% opponent</span>
                 </div>
               </button>
             );
@@ -288,9 +290,9 @@ export function WarView() {
           </Chip>
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2">
-          <Fact label="Wins" value={formatNumber(clan.warWins)} />
-          <Fact label="Losses" value={formatNumber(clan.warLosses)} />
-          <Fact label="Ties" value={formatNumber(clan.warTies)} />
+          <Fact label={t('Wins')} value={formatNumber(clan.warWins)} />
+          <Fact label={t('Losses')} value={formatNumber(clan.warLosses)} />
+          <Fact label={t('Ties')} value={formatNumber(clan.warTies)} />
         </div>
         <div className="mt-2">
           <Bar
@@ -314,29 +316,29 @@ export function WarView() {
         >
           <div className="flex flex-col gap-2.5">
             <div className="grid grid-cols-2 gap-2">
-              <Fact label="Group rank" value={`#${selected.rank}`} />
-              <Fact label="War size" value={`${selected.size} v ${selected.size}`} />
-              <Fact label="Stars" value={`${selected.stars} — ${selected.opponentStars}`} />
-              <Fact label="Destruction" value={`${selected.destruction.toFixed(1)}%`} />
+              <Fact label={t('Group rank')} value={`#${selected.rank}`} />
+              <Fact label={t('War size')} value={`${selected.size} v ${selected.size}`} />
+              <Fact label={t('Stars')} value={`${selected.stars} — ${selected.opponentStars}`} />
+              <Fact label={t('Destruction')} value={`${selected.destruction.toFixed(1)}%`} />
             </div>
             <InnerBox className="flex items-center gap-2.5 px-3 py-3">
               <Shield size={14} className="shrink-0 text-[#00C29A]" />
               <p className="text-[11px] leading-relaxed text-neutral-400">
                 {selected.stars > selected.opponentStars
-                  ? `Group won on stars against ${selected.opponent}.`
+                  ? t('Group won on stars against {0}.', selected.opponent)
                   : selected.stars === selected.opponentStars
-                    ? `Tied on stars — destruction decides the round.`
-                    : `Lost the round to ${selected.opponent} on stars.`}
+                    ? t('Tied on stars — destruction decides the round.')
+                    : t('Lost the round to {0} on stars.', selected.opponent)}
               </p>
             </InnerBox>
             <div className="rounded-xl bg-[#18181A] px-3 py-3">
               <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.1em] text-neutral-500">
-                Round record
+                {t('Round record')}
               </span>
               <div className="flex items-center gap-2">
-                <Chip tone="green">{selected.wins} wins</Chip>
-                <Chip>{selected.ties} ties</Chip>
-                <Chip tone="red">{selected.losses} losses</Chip>
+                <Chip tone="green">{t('{0} wins', selected.wins)}</Chip>
+                <Chip>{t('{0} ties', selected.ties)}</Chip>
+                <Chip tone="royal">{t('{0} losses', selected.losses)}</Chip>
               </div>
             </div>
             <div className="flex items-center gap-2.5 rounded-xl bg-[#18181A] px-3 py-3">

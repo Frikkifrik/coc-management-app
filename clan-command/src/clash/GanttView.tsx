@@ -243,7 +243,7 @@ export function GanttView() {
                 onClick={() => setSelected(item.id)}
                 className="cc-tap flex w-full items-center gap-3 rounded-xl border border-blue-500/50 bg-[#131926] px-3 py-2.5 text-left"
               >
-                <AssetIcon name={item.name} category={item.category} size={32} rounded="rounded-lg" />
+                <AssetIcon name={item.name} category={item.category} assetKey={item.key} size={32} rounded="rounded-lg" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13px] font-bold text-white">{item.name}</span>
                   <span className="block text-[10px] tabular-nums text-[#7DB8FF]">
@@ -393,7 +393,7 @@ function TaskCard({ task, windowStart, onSelect }: { task: UpgradeTask; windowSt
       title={`${task.name} — level ${task.toLevel}, ${remainingLabel} left`}
     >
       <span className="flex items-center gap-1.5">
-        <AssetIcon name={task.name} category={task.category} size={20} rounded="rounded-md" />
+        <AssetIcon name={task.name} category={task.category} assetKey={task.key} size={20} rounded="rounded-md" />
         <span className="min-w-0 flex-1 truncate text-[10px] font-bold leading-tight text-white">{task.name}</span>
       </span>
       <span className="mt-1 block truncate text-[9px] font-bold tabular-nums text-[#7DB8FF]">

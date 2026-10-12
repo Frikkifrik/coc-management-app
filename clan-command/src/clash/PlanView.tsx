@@ -113,7 +113,7 @@ export function PlanView() {
               return (
                 <Card key={item.id} className="p-3">
                   <div className="flex items-start gap-3">
-                    <AssetIcon name={item.name} category={item.category} size={36} rounded="rounded-lg" />
+                    <AssetIcon name={item.name} category={item.category} assetKey={item.key} size={36} rounded="rounded-lg" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
@@ -236,7 +236,7 @@ export function PlanView() {
                       }}
                       className="cc-tap flex w-full items-center gap-2.5 rounded-xl border border-[#27272A]/40 bg-[#18181A] px-2.5 py-2 text-left hover:border-[#E52E2E]/40"
                     >
-                      <AssetIcon name={entry.name} category={entry.category} size={30} rounded="rounded-lg" />
+                      <AssetIcon name={entry.name} category={entry.category} assetKey={entry.key} size={30} rounded="rounded-lg" />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[13px] font-bold text-white">{entry.name}</span>
                         <span className="block text-[10px] tabular-nums text-neutral-500">

@@ -30,6 +30,7 @@ import {
   TopBar,
   ViewSelector,
 } from './components';
+import { useOptionalAuth } from './auth';
 import { ClashProvider, formatNumber, normaliseTag, useClash } from './store';
 import './clash.css';
 
@@ -66,6 +67,7 @@ const SCREEN_INFO: Record<string, { title: string; body: string[] }> = {
 };
 
 function Shell() {
+  const auth = useOptionalAuth();
   const { state, route, view, setRoute, syncLive, syncing, exportJson, importJson, resetDemo, linkTag, unlinkTag, verifyTag, setIntegrations, notify } = useClash();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
@@ -281,7 +283,14 @@ function Shell() {
 
             {/* integrations */}
             <section className="flex flex-col gap-2">
-              <SectionTitle title="Integrations" detail="Keys stay on the server; endpoints are stored locally." />
+              <SectionTitle
+                title="Integrations"
+                detail={
+                  auth?.user
+                    ? `Signed in as ${auth.user.displayName} · ${auth.user.role.replace('_', '-')}`
+                    : 'Not signed in — live Supercell lookups need a session.'
+                }
+              />
               <div className="rounded-xl border border-[#27272A]/40 bg-[#18181A] p-3">
                 <IntegrationRow
                   label="Supercell API"
@@ -327,12 +336,19 @@ function Shell() {
                   <ActionButton tone="neutral" className="flex-1" onClick={() => void syncLive()} disabled={syncing}>
                     <RefreshCw size={12} className={syncing ? 'animate-spin' : ''} /> {syncing ? 'Syncing…' : 'Sync now'}
                   </ActionButton>
-                  <a
-                    href="/login"
-                    className="cc-tap inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#27272A]/60 bg-[#121214] px-3 py-2 text-[12px] font-bold text-neutral-300 hover:text-white"
+                  <ActionButton
+                    tone="neutral"
+                    className="flex-1"
+                    onClick={() => {
+                      if (auth?.user) {
+                        void auth.signOut().then(() => notify('Signed out.', 'info'));
+                      } else {
+                        window.location.assign('/login');
+                      }
+                    }}
                   >
-                    <ExternalLink size={12} /> Classic workspace
-                  </a>
+                    <ExternalLink size={12} /> {auth?.user ? 'Sign out' : 'Sign in'}
+                  </ActionButton>
                 </div>
               </div>
             </section>

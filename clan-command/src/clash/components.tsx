@@ -1,6 +1,7 @@
 import {
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
   type ButtonHTMLAttributes,
@@ -20,6 +21,7 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
+import { assetPathFor } from './assets';
 import { CATEGORY_ABBR, type CategoryId } from './catalog';
 import { ROUTES, VIEWS, useClash } from './store';
 import type { RouteId, ViewId } from './types';
@@ -57,20 +59,35 @@ export function AssetIcon({
   name,
   category,
   iconUrl,
+  assetKey,
   size = 34,
   className = '',
   rounded = 'rounded-lg',
 }: {
   name: string;
   category: CategoryId;
+  /** Live Supercell `iconUrls` value, when a sync or import supplied one. */
   iconUrl?: string;
+  /** Catalog key (or `category:<id>`) used to resolve local official artwork. */
+  assetKey?: string;
   size?: number;
   className?: string;
   rounded?: string;
 }) {
-  const [failed, setFailed] = useState(false);
+  const [skipped, setSkipped] = useState(0);
+  const local = assetPathFor(assetKey);
+
+  // Local official artwork wins, then the live API icon, then the mark.
+  const candidates = useMemo(
+    () => [local, iconUrl].filter((value): value is string => Boolean(value)),
+    [local, iconUrl],
+  );
+
+  useEffect(() => setSkipped(0), [assetKey, name]);
+
   const tone = CATEGORY_TONE[category] ?? '#7C8894';
-  const showImage = Boolean(iconUrl) && !failed;
+  const src = candidates[skipped];
+  const showImage = Boolean(src);
 
   return (
     <span
@@ -80,12 +97,12 @@ export function AssetIcon({
     >
       {showImage ? (
         <img
-          src={iconUrl}
+          src={src}
           alt=""
           loading="lazy"
           decoding="async"
           className="h-full w-full object-contain"
-          onError={() => setFailed(true)}
+          onError={() => setSkipped((value) => value + 1)}
         />
       ) : (
         <>

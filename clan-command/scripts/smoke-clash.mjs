@@ -31,8 +31,10 @@ const entry = `
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import ClashApp from './src/clash/ClashApp';
+import App from './src/app';
 import { createDemoState, categoryRows } from './src/clash/demo';
-export { React, createRoot, ClashApp, createDemoState, categoryRows };
+import { assetPathFor, expectedAssetPaths } from './src/clash/assets';
+export { React, createRoot, ClashApp, App, createDemoState, categoryRows, assetPathFor, expectedAssetPaths };
 `;
 
 await build({
@@ -79,7 +81,7 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 window.matchMedia = window.matchMedia || (() => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
 
 const mod = await import(pathToFileURL(outfile).href);
-const { React, createRoot, ClashApp, createDemoState, categoryRows } = mod;
+const { React, createRoot, ClashApp, App, createDemoState, categoryRows, assetPathFor, expectedAssetPaths } = mod;
 
 const results = [];
 function check(name, fn) {
@@ -151,7 +153,18 @@ check('schedule derives from the tracker levels', () =>
   }),
 );
 
-/* 4. route + view switching drives every core screen */
+/* 4. local artwork resolver */
+
+check('catalog key resolves to a clash-assets path', () => assetPathFor('defenses:inferno-tower') === '/clash-assets/defenses/inferno-tower.png');
+check('builder-base key is namespaced', () => assetPathFor('defenses:bb-bomb-tower') === '/clash-assets/defenses/bomb-tower.png');
+check('category key resolves under categories/', () => assetPathFor('category:equipment') === '/clash-assets/categories/equipment.png');
+check('unknown key resolves to nothing', () => assetPathFor('nope:nope') === undefined);
+check('every catalog entry has an expected path', () => {
+  const all = expectedAssetPaths();
+  return all.length > 200 && all.every((item) => item.path.startsWith('/clash-assets/'));
+});
+
+/* 5. route + view switching drives every core screen */
 
 function clickElement(target, label) {
   if (!target) throw new Error(`no control labelled "${label}"`);
@@ -190,6 +203,8 @@ async function screen(name, steps, pattern) {
 
 await screen('bottom nav → War screen', [() => clickByText('War')], /War history/);
 await screen('bottom nav → Clan screen', [() => clickByText('Clan')], /Roster/);
+await screen('clan → scout sheet opens', [() => clickByText('Scout a tag')], /Public player and clan lookup/);
+await screen('clan → scout sheet closes', [() => clickByText('Close')], /Roster/);
 await screen('bottom nav → Home screen', [() => clickByText('Home')], /Progression snapshot/);
 await screen('bottom nav → back to Profile', [() => clickByText('Profile')], /Upgrade tracker/);
 
@@ -220,6 +235,30 @@ if (process.argv.includes('--report')) {
   console.log('\nBuilder Base');
   for (const row of builderRows) console.log(' ', row.id.padEnd(14), `${row.percent.toFixed(1)}%`);
 }
+
+/* 6. routing: the dark app is the whole product */
+
+const appHost = window.document.createElement('div');
+window.document.body.appendChild(appHost);
+const appRoot = createRoot(appHost);
+await React.act(async () => {
+  appRoot.render(React.createElement(App));
+});
+check('route / renders the tracker', () => /Upgrade tracker/.test(appHost.innerHTML));
+check('classic workspace markup is gone', () => !/workspace-shell|sign-in-card|family-selector/.test(appHost.innerHTML));
+
+await React.act(async () => {
+  window.history.pushState({}, '', '/login');
+  window.dispatchEvent(new window.PopStateEvent('popstate', { state: {} }));
+});
+check('route /login renders the dark sign-in', () => /Sign in to run live Supercell lookups/.test(appHost.innerHTML));
+check('sign-in offers sandbox roles', () => /Sandbox access/.test(appHost.innerHTML));
+
+await React.act(async () => {
+  window.history.pushState({}, '', '/app/dashboard');
+  window.dispatchEvent(new window.PopStateEvent('popstate', { state: {} }));
+});
+check('legacy /app/* redirects into the mobile app', () => /Upgrade tracker/.test(appHost.innerHTML));
 
 let failures = 0;
 for (const result of results) {

@@ -129,6 +129,7 @@ export function CollectionView({ village }: { village: 'home' | 'builder' }) {
                         <AssetIcon
                           name={entry.name}
                           category={entry.category}
+                          assetKey={entry.key}
                           iconUrl={entry.iconUrl}
                           size={38}
                           className="mx-auto"

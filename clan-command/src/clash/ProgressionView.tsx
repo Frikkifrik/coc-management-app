@@ -131,7 +131,7 @@ export function ProgressionView({ village }: { village: 'home' | 'builder' }) {
                     onClick={() => setOpenCategory(entry.category)}
                     className="cc-tap group relative overflow-hidden rounded-2xl border border-[#27272A]/40 bg-[#18181A] p-2 text-left"
                   >
-                    <AssetIcon name={entry.name} category={entry.category} iconUrl={entry.iconUrl} size={38} className="mx-auto" rounded="rounded-xl" />
+                    <AssetIcon name={entry.name} category={entry.category} assetKey={entry.key} iconUrl={entry.iconUrl} size={38} className="mx-auto" rounded="rounded-xl" />
                     <span className="mt-1.5 block truncate text-center text-[9px] font-bold leading-tight text-neutral-300">
                       {HERO_NAMES[entry.hero ?? ''] ?? entry.name}
                     </span>
@@ -166,7 +166,7 @@ export function ProgressionView({ village }: { village: 'home' | 'builder' }) {
                 const complete = level >= entry.max;
                 return (
                   <div key={entry.key} className="relative rounded-2xl border border-[#27272A]/40 bg-[#18181A] p-2">
-                    <AssetIcon name={entry.name} category="pets" iconUrl={entry.iconUrl} size={34} className="mx-auto" rounded="rounded-xl" />
+                    <AssetIcon name={entry.name} category="pets" assetKey={entry.key} iconUrl={entry.iconUrl} size={34} className="mx-auto" rounded="rounded-xl" />
                     <span className="mt-1 block truncate text-center text-[8px] font-bold leading-tight text-neutral-400">
                       {entry.name}
                     </span>
@@ -224,7 +224,7 @@ export function ProgressionView({ village }: { village: 'home' | 'builder' }) {
                     }`}
                   >
                     <span className="flex items-center gap-2.5">
-                      <AssetIcon name={name} category="supercharge" size={30} rounded="rounded-lg" />
+                      <AssetIcon name={name} category="supercharge" assetKey={`supercharge:${name.toLowerCase().replace(/\s+/g, '-')}`} size={30} rounded="rounded-lg" />
                       <span className="text-[13px] font-bold capitalize text-white">{name}</span>
                     </span>
                     <span className={`text-[11px] font-bold ${on ? 'text-[#34D399]' : 'text-neutral-500'}`}>
@@ -241,7 +241,7 @@ export function ProgressionView({ village }: { village: 'home' | 'builder' }) {
               {drilldown.map(({ entry, level, complete }) => (
                 <li key={entry.key} className="rounded-xl border border-[#27272A]/40 bg-[#18181A] p-2.5">
                   <div className="flex items-center gap-2.5">
-                    <AssetIcon name={entry.name} category={entry.category} iconUrl={entry.iconUrl} size={32} rounded="rounded-lg" />
+                    <AssetIcon name={entry.name} category={entry.category} assetKey={entry.key} iconUrl={entry.iconUrl} size={32} rounded="rounded-lg" />
                     <div className="min-w-0 flex-1">
                       <span className="block truncate text-[13px] font-bold text-white">{entry.name}</span>
                       <span className="block text-[10px] tabular-nums text-neutral-500">
@@ -299,7 +299,7 @@ function TrackerRow({ row, onOpen }: { row: CategorySummary; onOpen: () => void 
   const label = CATEGORY_LABELS[row.id];
   return (
     <button type="button" onClick={onOpen} className="cc-tap flex w-full items-center gap-3 px-3.5 py-3 text-left hover:bg-[#121214]">
-      <AssetIcon name={label} category={row.id} size={34} rounded="rounded-lg" />
+      <AssetIcon name={label} category={row.id} assetKey={`category:${row.id}`} size={34} rounded="rounded-lg" />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
           <span className="truncate text-[14px] font-bold tracking-tight text-white">{label}</span>
@@ -375,6 +375,7 @@ export function EquipmentGrid({
                 <AssetIcon
                   name={entry.name}
                   category="equipment"
+                  assetKey={entry.key}
                   iconUrl={entry.iconUrl}
                   size={38}
                   className="mx-auto"

@@ -1,9 +1,8 @@
 # Misclicked Family · Clan Command
 
-Two experiences live in this one app:
+A dark, mobile-first Clash of Clans tracker: player progression, a multi-slot builder calendar, an upgrade plan, the full asset collection, war and CWL comparison, and the clan roster. Black surfaces, red/teal accents, bottom pill navigation.
 
-- **`/clash` — Clash Command (mobile, dark).** The player-centred progression, builder-schedule and war-tracking app described in the master specification. Black surfaces, red/teal accents, bottom pill navigation. **This is now the entry point** — `/` redirects here.
-- **`/app` — the classic workspace (bright village HUD).** Roster, applicant inspector, CWL war room, King of the Hill, base builder, rewards and settings. Reach it at `/login`; the public recruitment search stays at `/recruitment`. Nothing in the classic workspace changed except the root redirect.
+`/` **is** the app. `/clash`, `/app/*` and `/recruitment` all resolve into it, so old links keep working. `/login` raises a session — only needed for live Supercell lookups, which go through a session-gated server route.
 
 ## Clash Command (mobile)
 
@@ -45,9 +44,16 @@ npm run smoke     # headless jsdom render of every screen (npm i --no-save jsdom
 
 `npm run smoke` mounts the real component tree, drives the bottom nav and the view selector through all four routes and five views, and asserts the completion maths on the seeded village. Add `--report` to print the category table.
 
-## Classic workspace
+## Retired: the bright workspace
 
-A mobile-first Clash of Clans family-management workspace for **Misclicked Main**, **Misclicked Feeder** and **Misclicked Academy**. The interface uses a bright, game-inspired village HUD—grass, painted wood, parchment and gold—while keeping the roster, applicant checks and event tools comfortable on phones and tablets.
+The earlier sidebar workspace (dashboard, family hub, applicant inspector, CWL war room, King of the Hill, base builder, ranked, rewards, alerts, Discord settings) has been removed in favour of this app. Its last state is commit `4227041` if a screen needs reviving.
+
+Two things from it were worth keeping and now live inside the mobile shell:
+
+- **Public player/clan search** — Clan screen → **Scout a tag**. Same `/api/public-search` endpoint, same public-only fields.
+- **Sign-in and sandbox roles** — the dark sign-in at `/login`, using the same `/api/auth/*` routes.
+
+The Express API, SQLite store, Supercell proxy and Discord webhook encryption are unchanged.
 
 ## Run the local preview
 
@@ -61,7 +67,7 @@ npm run dev
 
 Open `http://localhost:4173`. The Express API and Vite app are served from one origin and bind to `0.0.0.0`. The local SQLite database is created under `.data/` and seeded with fictional records on its first run. `.data/`, `.env` and build output are git-ignored.
 
-The root page redirects to **`/clash`**, the mobile Clash Command app; it needs no login and runs entirely on seeded demo data until you configure an integration. Visit `/login` for the classic command center and `/recruitment` for the public search. In development, use **Sandbox access → Leader** (or Co-Leader, Elder and Member) to explore role-specific screens. Demo names, tags, stats and history are synthetic. Direct demo passwords are `Clash2026!` for `leader@clan.demo`, `coleader@clan.demo`, `elder@clan.demo` and `member@clan.demo`.
+Open `http://localhost:4173` — the app is there, needs no login, and runs on seeded demo data until you configure an integration. Visit `/login` only to raise a session for live Supercell lookups; in development use **Sandbox access → Leader** (or Co-Leader, Elder, Member). Direct demo password is `Clash2026!` for `leader@clan.demo`, `coleader@clan.demo`, `elder@clan.demo` and `member@clan.demo`. Demo names, tags, stats and history are synthetic.
 
 ## Lukulele learning page
 
@@ -71,17 +77,19 @@ The metronome-led practice session counts in for two bars with **Ready?**, then 
 
 The live microphone tuner needs a secure page (`https://` or `localhost`) and microphone permission. Opening the HTML directly as a `file://` page does not provide microphone or offline-cache support. Open the page once while online before trying to reopen it offline.
 
-## Modules
+## Official artwork
 
-- **Family Hub** — totals across the three clans, live war status, clan tabs, member search, join/leave dates, former-member flags, account history, profile drawer and a registration form for a phone number, main tag and linked alt/baby tags. Phone numbers are kept only in this browser's local demo state; they are not returned by the public API.
-- **Applicant Inspector** — cross-check a join-request tag against active and former family records, saved name/clan changes and account history. A secure Discord dispatch is available when a leader has configured a webhook. If not, the generated summary is copied locally.
-- **CWL War Room** — random score-card draw, Town Hall and hero levels, estimated equipment levels, saved 3-star rate, co-leader placement suggestions for the three clans, and a Leader-only lock with a formatted roster message.
-- **King of the Hill** — create and schedule events, accept/decline RSVPs, view the seeded live leaderboard, record stars and outcomes, and follow match progress.
-- **Public Recruitment** — `/recruitment` or `/`; no sign-in is needed. Search a player or clan tag for rush estimate, lab purity, hero equipment, war 3-star rate and clan mobility timeline.
-- **Base Builder** — Town Hall and War/Trophy/Farm filters, generated base diagrams, text-overlay preview, downloadable SVG image and copyable in-game deep-link format.
-- Existing roster, war history/readiness, progression, ranked, alerts, rewards, Discord and account-management screens remain available in the workspace.
+Tiles resolve in this order:
 
-The CWL draft, event RSVP/scoring and contact-number demo state are saved to browser `localStorage` and synchronize across tabs. Main roster and clan records continue to use the full-stack SQLite API. Base layouts, equipment levels and non-Supercell progression metrics are **demo estimates**. Base-gallery link identifiers are samples, not verified Supercell layouts; substitute a real share code before importing into the game.
+1. **Local files** in `clan-command/public/clash-assets/` — drop an official Clash of Clans PNG at the path the app expects and it is used on the next load. Run `npm run assets:list` to regenerate `public/clash-assets/EXPECTED.md`, the full checklist of 226 paths (`categories/defenses.png`, `heroes/barbarian-king.png`, `equipment/eternal-tome.png`, …). Filenames are slugified asset names, so `P.E.K.K.A` → `p-e-k-k-a.png`.
+2. **Live Supercell `iconUrls`** returned by a sync or supplied in a JSON import.
+3. **A neutral typographic mark** — never a generated or approximated render of the asset.
+
+Brand logos are used exactly as provided, without recolouring or cropping.
+
+## Data notes
+
+The seeded village, plan, schedule, war log and roster are demo data held in this browser's `localStorage`. Progression, plan and schedule round-trip through JSON export/import. Rush, lab-purity and war-performance figures surfaced by Scout are **demo estimates** unless a data source supplies them.
 
 ## Optional integrations
 
@@ -110,6 +118,10 @@ For the full go-live walkthrough — hosting choices, why `node:sqlite` rules ou
 ## Checks
 
 ```bash
-npm run check
-npm run build
+npm run check        # tsc --noEmit
+npm run build        # vite build && tsc
+npm run smoke        # headless jsdom render of every screen (npm i --no-save jsdom)
+npm run assets:list  # regenerate public/clash-assets/EXPECTED.md
 ```
+
+`npm run smoke` mounts the real component tree in jsdom, drives the bottom nav through all four routes and the view selector through all five views, opens the settings, info and scout sheets, asserts the completion maths on the seeded village, checks the artwork resolver, and confirms `/`, `/login` and `/app/*` route correctly. Add `--report` to print the category table.

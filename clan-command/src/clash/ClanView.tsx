@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { ChevronDown, Search, Shield, ShieldCheck, Swords, Users } from 'lucide-react';
+import { ChevronDown, Radar, Search, Shield, ShieldCheck, Swords, Users } from 'lucide-react';
 import { ActionButton, AssetIcon, Bar, Card, Chip, EmptyState, SectionTitle, Sheet } from './components';
+import { apiRequest } from '../api';
 import { formatNumber, useClash } from './store';
 import type { ClanMemberRow } from './types';
 
@@ -28,6 +29,7 @@ export function ClanView() {
   const [warOnly, setWarOnly] = useState(false);
   const [selected, setSelected] = useState<ClanMemberRow | null>(null);
   const [familyOpen, setFamilyOpen] = useState(false);
+  const [scoutOpen, setScoutOpen] = useState(false);
 
   const visible = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -100,7 +102,15 @@ export function ClanView() {
 
       {/* -------- roster controls -------- */}
       <section className="flex flex-col gap-2.5">
-        <SectionTitle title="Roster" detail={`${visible.length} members shown`} />
+        <SectionTitle
+          title="Roster"
+          detail={`${visible.length} members shown`}
+          action={
+            <ActionButton tone="neutral" className="px-2.5 py-1.5 text-[11px]" onClick={() => setScoutOpen(true)}>
+              <Radar size={12} /> Scout a tag
+            </ActionButton>
+          }
+        />
         <Card className="p-3">
           <div className="relative">
             <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600" />
@@ -224,6 +234,8 @@ export function ClanView() {
         </Sheet>
       ) : null}
 
+      {scoutOpen ? <ScoutSheet onClose={() => setScoutOpen(false)} /> : null}
+
       {/* -------- family switcher -------- */}
       {familyOpen ? (
         <Sheet
@@ -283,6 +295,172 @@ function Stat({ label, value }: { label: string; value: string }) {
     <div className="rounded-xl bg-[#18181A] px-3 py-2.5">
       <span className="block text-[9px] font-medium uppercase tracking-[0.08em] text-neutral-500">{label}</span>
       <strong className="mt-0.5 block truncate text-[13px] font-bold tabular-nums text-white">{value}</strong>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Public scout search — the retired recruitment page, folded in       */
+/* ------------------------------------------------------------------ */
+
+interface PublicProfile {
+  tag: string;
+  name: string;
+  townHall: number;
+  trophies: number;
+  clanName: string;
+  clanTag: string;
+  active: boolean;
+  rushPercent: number;
+  labPurity: number;
+  threeStarRate: number;
+  warStars: number;
+  heroEquipment: Array<{ name: string; level: number }>;
+  mockMetrics?: boolean;
+}
+
+interface SearchReply {
+  kind: 'player' | 'clan' | 'none';
+  query: string;
+  clan?: { name: string; tag: string; clanLevel: number; league: string; trophies: number };
+  items: PublicProfile[];
+}
+
+function ScoutSheet({ onClose }: { onClose: () => void }) {
+  const [query, setQuery] = useState('');
+  const [result, setResult] = useState<SearchReply | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function run(value: string) {
+    const normalised = value.trim().toUpperCase();
+    if (!normalised) {
+      setError('Enter a player or clan tag.');
+      return;
+    }
+    const tag = normalised.startsWith('#') ? normalised : `#${normalised}`;
+    setQuery(tag);
+    setBusy(true);
+    setError('');
+    setResult(null);
+    try {
+      setResult(await apiRequest<SearchReply>(`/api/public-search?q=${encodeURIComponent(tag)}`));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Public search is unavailable.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Sheet
+      title="Scout a tag"
+      detail="Public player and clan lookup — no sign-in needed."
+      onClose={onClose}
+      footer={
+        <ActionButton tone="neutral" className="w-full" onClick={onClose}>
+          Close
+        </ActionButton>
+      }
+    >
+      <div className="flex flex-col gap-3">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void run(query);
+          }}
+          className="flex gap-2"
+        >
+          <div className="relative flex-1">
+            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value.toUpperCase())}
+              placeholder="#PLAYERTAG or #CLANTAG"
+              aria-label="Player or clan tag"
+              autoComplete="off"
+              className="w-full rounded-xl border border-[#27272A]/60 bg-[#18181A] py-2.5 pl-9 pr-3 text-[12px] tabular-nums uppercase text-white outline-none placeholder:text-neutral-600 focus:border-[#E52E2E]/60"
+            />
+          </div>
+          <ActionButton tone="red" type="submit" disabled={busy} className="px-3">
+            {busy ? 'Searching' : 'Search'}
+          </ActionButton>
+        </form>
+
+        {error ? (
+          <p role="alert" className="rounded-xl border border-[#E52E2E]/40 bg-[#1a1011] px-3 py-2 text-[11px] text-[#FFB4B4]">
+            {error}
+          </p>
+        ) : null}
+
+        {result?.kind === 'clan' && result.clan ? (
+          <div className="rounded-xl bg-[#18181A] px-3 py-2.5">
+            <span className="block text-[13px] font-bold text-white">{result.clan.name}</span>
+            <span className="block text-[10px] tabular-nums text-neutral-500">
+              {result.clan.tag} · Level {result.clan.clanLevel} · {result.clan.league}
+            </span>
+          </div>
+        ) : null}
+
+        {result?.items.length ? (
+          <ul className="flex flex-col gap-2">
+            {result.items.map((profile) => (
+              <li key={profile.tag} className="rounded-xl border border-[#27272A]/40 bg-[#18181A] p-3">
+                <div className="flex items-center gap-2.5">
+                  <AssetIcon name={profile.name} category="heroes" size={34} rounded="rounded-lg" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px] font-bold text-white">{profile.name}</span>
+                    <span className="block truncate text-[10px] tabular-nums text-neutral-500">
+                      {profile.tag} · TH{profile.townHall} · {profile.clanName}
+                    </span>
+                  </span>
+                  <Chip tone={profile.active ? 'green' : 'neutral'}>{profile.active ? 'Active' : 'Former'}</Chip>
+                </div>
+                <div className="mt-2.5 grid grid-cols-3 gap-2">
+                  <Metric label="Rush est." value={`${profile.rushPercent}%`} percent={profile.rushPercent} tone={profile.rushPercent < 15 ? 'green' : 'red'} />
+                  <Metric label="Lab purity" value={`${profile.labPurity}%`} percent={profile.labPurity} tone="green" />
+                  <Metric label="War 3★" value={`${profile.threeStarRate}%`} percent={profile.threeStarRate} tone="blue" />
+                </div>
+                {profile.heroEquipment?.length ? (
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                    {profile.heroEquipment.slice(0, 6).map((item) => (
+                      <Chip key={item.name}>
+                        {item.name} · {item.level}
+                      </Chip>
+                    ))}
+                  </div>
+                ) : null}
+                <p className="mt-2 text-[9px] text-neutral-600">
+                  {profile.mockMetrics
+                    ? 'Rush, lab and war figures are demo estimates, not live game data.'
+                    : 'Figures from the stored game profile.'}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {result?.kind === 'none' ? (
+          <EmptyState title="No match" detail="Check the tag and try again. Search takes a player #PLAYERTAG or a clan #CLANTAG." />
+        ) : null}
+
+        {!result && !busy ? (
+          <p className="text-[10px] leading-relaxed text-neutral-500">
+            Uses the public search endpoint: game-profile fields and membership milestones only. Contact details and
+            leadership notes are never returned.
+          </p>
+        ) : null}
+      </div>
+    </Sheet>
+  );
+}
+
+function Metric({ label, value, percent, tone }: { label: string; value: string; percent: number; tone: 'green' | 'red' | 'blue' }) {
+  return (
+    <div className="rounded-lg bg-[#121214] px-2 py-1.5">
+      <span className="block text-[8px] font-medium uppercase tracking-[0.06em] text-neutral-500">{label}</span>
+      <strong className="block text-[12px] font-bold tabular-nums text-white">{value}</strong>
+      <Bar percent={percent} tone={tone} className="mt-1 h-1" />
     </div>
   );
 }

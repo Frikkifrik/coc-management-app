@@ -60,7 +60,6 @@ export const AF: Record<string, string> = {
 
   // ---- home ----
   'Progression snapshot': 'Vorderingsmomentopname',
-  'Data sources': 'Databronne',
   'Sync live': 'Sink direk',
   'Syncing…': 'Sink tans…',
   'Sync now': 'Sink nou',
@@ -78,15 +77,8 @@ export const AF: Record<string, string> = {
   'War stars (season)': 'War-sterre (seisoen)',
   'Donated': 'Geskenk',
   'Received': 'Ontvang',
-  'No endpoint set — in-game API token ownership checks stay local.':
-    'Geen eindpunt gestel nie — eienaarskapkontroles van die in-game API token bly plaaslik.',
   'Connected — profiles and stored tags persist server-side.':
     'Gekoppel — profiele en gestoorde tags bly op die bediener.',
-  'Connected — profiles and linked tags persist server-side.':
-    'Gekoppel — profiele en gekoppelde tags bly op die bediener.',
-  'Not configured — this workspace stores your data in this browser.':
-    'Nie opgestel nie — hierdie werkruimte stoor jou data in hierdie blaaier.',
-  'ClashKing / ClashOfStats': 'ClashKing / ClashOfStats',
 
   // ---- progression ----
   'Upgrade tracker': 'Opgraderingspoorsnyer',
@@ -402,7 +394,6 @@ export const AF: Record<string, string> = {
   '{0} members shown': '{0} lede gewys',
   '{0} queued upgrades': '{0} opgraderings in tou',
   '{0} scheduled · {1} slots busy': '{0} geskeduleer · {1} slots besig',
-  'Connected · last sync {0}': 'Gekoppel · laaste sink {0}',
   '{0} removed from the schedule.': '{0} uit die skedule verwyder.',
   '{0} scheduled in Slot {1}.': '{0} in Slot {1} geskeduleer.',
   '{0} removed from the plan.': '{0} uit die plan verwyder.',
@@ -453,6 +444,11 @@ export const AF: Record<string, string> = {
   'Continue without signing in': 'Gaan voort sonder om aan te meld',
   'Demo password is': 'Demo-wagwoord is',
   'Fan content': 'Ondersteunersinhoud',
+
+
+  // ---- global tag search ----
+  'Search by #playertag or #clantag...': 'Soek op #playertag of #clantag...',
+  'Former': 'Voormalig',
 
   /* `Clan`, `War`, `Home Village` and `Builder Base` map to themselves on
      purpose: they are Clash of Clans game terms and must stay verbatim in the

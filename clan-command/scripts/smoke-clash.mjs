@@ -34,8 +34,8 @@ import ClashApp from './src/clash/ClashApp';
 import App from './src/app';
 import { createDemoState, categoryRows } from './src/clash/demo';
 import { assetPathFor, expectedAssetPaths } from './src/clash/assets';
-import { signInWithDiscord, signInWithEmail, signInWithMagicLink, FAN_CONTENT_NOTICE } from './src/clash/auth-probe';
-export { React, createRoot, ClashApp, App, createDemoState, categoryRows, assetPathFor, expectedAssetPaths, signInWithDiscord, signInWithEmail, signInWithMagicLink, FAN_CONTENT_NOTICE };
+import { signInWithDiscord, signInWithEmail, signInWithMagicLink, FAN_CONTENT_NOTICE, normaliseSearchTag } from './src/clash/auth-probe';
+export { React, createRoot, ClashApp, App, createDemoState, categoryRows, assetPathFor, expectedAssetPaths, signInWithDiscord, signInWithEmail, signInWithMagicLink, FAN_CONTENT_NOTICE, normaliseSearchTag };
 `;
 
 await build({
@@ -85,7 +85,7 @@ window.localStorage.setItem('clash-command:lang:v1', 'af');
 window.matchMedia = window.matchMedia || (() => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
 
 const mod = await import(pathToFileURL(outfile).href);
-const { React, createRoot, ClashApp, App, createDemoState, categoryRows, assetPathFor, expectedAssetPaths, signInWithDiscord, signInWithEmail, signInWithMagicLink, FAN_CONTENT_NOTICE } = mod;
+const { React, createRoot, ClashApp, App, createDemoState, categoryRows, assetPathFor, expectedAssetPaths, signInWithDiscord, signInWithEmail, signInWithMagicLink, FAN_CONTENT_NOTICE, normaliseSearchTag } = mod;
 
 const results = [];
 function check(name, fn) {
@@ -374,10 +374,74 @@ check('switching back to Afrikaans works', () => /Opgraderingspoorsnyer/.test(ap
 
 /* ---------------- Supercell fan content policy ---------------- */
 
-check('the fan content disclaimer is shown in the app', () =>
-  /This material is unofficial and is not endorsed by Supercell/.test(appHost.innerHTML));
+const DISCLAIMER = /This material is unofficial and is not endorsed by Supercell/;
+
+// The per-screen footer block is gone: the notice belongs in exactly two places.
+check('the disclaimer is NOT repeated in the screen footer', () =>
+  DISCLAIMER.test(appHost.innerHTML) ? 'still rendered on the tracker screen' : true);
+
+await React.act(async () => {
+  const info = appHost.querySelector('button[aria-label="Oor hierdie skerm"], button[aria-label="About this screen"]');
+  info.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+});
+check('the info sheet carries the full disclaimer', () =>
+  DISCLAIMER.test(appHost.innerHTML) ? true : 'missing from the info sheet');
 check('the disclaimer links the official policy page', () =>
   /www\.supercell\.com\/fan-content-policy/.test(appHost.innerHTML));
+
+await React.act(async () => {
+  const close = appHost.querySelector('[role="dialog"] button[aria-label="Maak toe"], [role="dialog"] button[aria-label="Close"]');
+  close.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+});
+check('closing the info sheet removes the disclaimer again', () =>
+  DISCLAIMER.test(appHost.innerHTML) ? 'still present after closing' : true);
+
+/* ---------------- Data Sources removed ---------------- */
+
+check('the Data Sources section is gone from the UI', () =>
+  /Data sources|Databronne/.test(appHost.innerHTML) ? 'still rendered' : true);
+
+/* ---------------- global tag search ---------------- */
+
+// The normaliser is pure, so assert it directly rather than through the DOM.
+check('normaliseSearchTag prepends a missing #', () => normaliseSearchTag('2q0p2ylrg') === '#2Q0P2YLRG');
+check('normaliseSearchTag keeps an existing #', () => normaliseSearchTag('#2Q0P2YLRG') === '#2Q0P2YLRG');
+check('normaliseSearchTag uppercases', () => normaliseSearchTag('#abc123') === '#ABC123');
+check('normaliseSearchTag strips spaces', () => normaliseSearchTag('# 2Q0P 2YLRG') === '#2Q0P2YLRG');
+check('normaliseSearchTag strips zero-width copy artefacts', () =>
+  normaliseSearchTag('\u200b#2Q0P2YLRG\u200b') === '#2Q0P2YLRG');
+check('normaliseSearchTag rejects empty input', () => normaliseSearchTag('   ') === null);
+
+
+check('a search bar is pinned under the header', () => {
+  const header = appHost.querySelector('header');
+  const input = header?.querySelector('input[type="search"]');
+  return input ? true : 'no search input inside <header>';
+});
+check('the search placeholder is the Afrikaans prompt', () => {
+  const input = appHost.querySelector('header input[type="search"]');
+  return input?.getAttribute('placeholder') === 'Soek op #playertag of #clantag...'
+    ? true
+    : `placeholder=${input?.getAttribute('placeholder')}`;
+});
+
+// Typing a bare tag and submitting must normalise it and run the lookup.
+const searchInput = appHost.querySelector('header input[type="search"]');
+await React.act(async () => {
+  const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+  setter.call(searchInput, '2q0p2ylrg');
+  searchInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+});
+check('the search field accepts a tag without a leading #', () =>
+  searchInput.value === '2q0p2ylrg' ? true : `value=${searchInput.value}`);
+
+await React.act(async () => {
+  searchInput.closest('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+});
+// The fetch is not available in jsdom, so the bar must surface an error rather
+// than throw — and it must have normalised the tag to upper case with a '#'.
+check('submitting normalises the tag and handles a failed lookup gracefully', () =>
+  searchInput.value === '#2Q0P2YLRG' ? true : `normalised to ${searchInput.value}`);
 
 /* ---------------- login screen ---------------- */
 

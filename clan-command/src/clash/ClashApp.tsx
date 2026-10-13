@@ -34,6 +34,7 @@ import {
   ViewSelector,
 } from './components';
 import { useOptionalAuth } from './auth';
+import { GlobalSearchBar, ScoutDrawer } from './search';
 import { ClashProvider, formatNumber, normaliseTag, useClash } from './store';
 import './clash.css';
 
@@ -74,6 +75,7 @@ function Shell() {
   const auth = useOptionalAuth();
   const { state, route, view, setRoute, syncLive, syncing, exportJson, importJson, resetDemo, linkTag, unlinkTag, verifyTag, setIntegrations, notify } = useClash();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [scoutTag, setScoutTag] = useState<string | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState('');
@@ -122,8 +124,16 @@ function Shell() {
           onSettings={() => setSettingsOpen(true)}
           onInfo={() => setInfoOpen(true)}
         >
-          {route === 'profile' ? <ViewSelector /> : null}
+          {/* Pinned tag search, available on every screen. Sits inside the
+              sticky header so it stays reachable while scrolling. */}
+          <GlobalSearchBar
+            onResult={(reply) => setRoute(reply.kind === 'clan' ? 'clan' : 'profile')}
+            onOpenProfile={(tag) => setScoutTag(tag)}
+          />
+          {route === 'profile' ? <div className="mt-2.5"><ViewSelector /></div> : null}
         </TopBar>
+
+        {scoutTag ? <ScoutDrawer tag={scoutTag} onClose={() => setScoutTag(null)} /> : null}
 
         <main className="flex-1 px-3 pb-28 pt-3.5">
           {route === 'home' ? <HomeView /> : null}
@@ -142,9 +152,6 @@ function Shell() {
             </>
           ) : null}
 
-          {/* Every screen shows official Supercell artwork, so the disclaimer
-              travels with it rather than hiding behind the info sheet. */}
-          <FanContentNotice />
         </main>
 
         <BottomNav />

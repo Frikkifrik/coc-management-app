@@ -126,13 +126,29 @@ Walls, Guardians, Builder/Builders, Pass, Trophies, Stars, Destruction, and
 every asset name (P.E.K.K.A, Inferno Tower, Barbarian King, Town Hall, …).
 
 The switch is a compact **AF / EN pill in the top-right header**, next to the
-share, settings and info icons. It only mutates the i18n context, so the whole
+share, settings and info icons. The active side is a royal-blue chip
+(`bg-[#2563EB] text-white font-bold`); the inactive side stays dim
+(`text-neutral-400`) and lights on hover. It only mutates the i18n context, so the whole
 tree re-renders in place — no reload, no route change, no lost scroll position.
 Settings carries the same pill so the setting stays discoverable.
 
 Translation is keyed on the **English source string** — `t('Remaining')` — so a
 string with no Afrikaans entry renders its English source instead of a blank or
 a raw key. See `src/clash/i18n.tsx`.
+
+## Tag search
+
+A search field is pinned inside the sticky header on every screen, so a tag can
+be looked up from anywhere without hunting for the right screen first.
+
+- Placeholder `Soek op #playertag of #clantag...` (`Search by #playertag or #clantag...` in English).
+- Input is normalised before use: a missing `#` is prepended, letters are
+  uppercased, spaces and the zero-width characters Clash tags pick up when copied
+  in-game are stripped. `normaliseSearchTag()` is unit-tested in the smoke suite.
+- Submits against `/api/public-search`, which is public by design and returns
+  game-profile fields and membership milestones only.
+- On a hit the app routes to the matching screen — Clan for a clan tag, the
+  player tracker for a player tag — and opens the profile drawer already loaded.
 
 ## Sign-in
 
@@ -161,17 +177,19 @@ redirect. `npm run smoke` asserts this end to end.
 
 ## Supercell Fan Content Policy
 
-Every screen renders official Supercell artwork, so the disclaimer Supercell
-asks fan content to carry appears in the app footer, in the info sheet, and on
-the sign-in screen, quoted verbatim from
+Supercell asks fan content to carry a specific disclaimer. It appears in exactly
+two places — the **info sheet** (the ℹ️ icon in the header) and the **`/login`
+footer** — quoted verbatim from
 [supercell.com/en/fan-content-policy](https://supercell.com/en/fan-content-policy):
 
 > This material is unofficial and is not endorsed by Supercell. For more
 > information see Supercell's Fan Content Policy:
 > www.supercell.com/fan-content-policy.
 
-The exact string lives in `FAN_CONTENT_NOTICE` (`src/clash/components.tsx`) and
-the smoke suite fails if the wording drifts.
+It was briefly rendered in the footer of every screen as well; that repetition
+cluttered the UI and was removed. The exact string lives in `FAN_CONTENT_NOTICE`
+(`src/clash/components.tsx`), and the smoke suite fails both if the wording
+drifts and if the notice reappears on a normal screen.
 
 ## Data notes
 

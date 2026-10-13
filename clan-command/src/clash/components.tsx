@@ -712,10 +712,10 @@ export function LangToggle({ className = '' }: { className?: string }) {
             aria-pressed={active}
             aria-label={code === 'af' ? 'Afrikaans' : 'English'}
             title={code === 'af' ? 'Afrikaans' : 'English'}
-            className={`cc-tap rounded-full px-2 py-1 text-[9px] font-bold uppercase leading-none tracking-[0.08em] transition-colors ${
+            className={`cc-tap text-[10px] uppercase leading-none tracking-[0.08em] transition-colors ${
               active
-                ? 'bg-[#2563EB] text-white'
-                : 'text-neutral-500 hover:text-neutral-200'
+                ? 'bg-[#2563EB] text-white font-bold px-2 py-0.5 rounded-md'
+                : 'text-neutral-400 font-normal hover:text-white px-2 py-0.5'
             }`}
           >
             {code}

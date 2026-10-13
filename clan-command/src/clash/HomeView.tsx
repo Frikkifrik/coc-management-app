@@ -3,7 +3,7 @@ import { useI18n } from './i18n';
 import { ArrowRight, CalendarDays, Flame, ListChecks, RefreshCw, Shield, Swords, TrendingUp, Trophy } from 'lucide-react';
 import { CATEGORY_LABELS } from './catalog';
 import { categoryRows } from './demo';
-import { ActionButton, Bar, Card, Chip, CompletionPill, InnerBox, Ring, SectionTitle } from './components';
+import { ActionButton, Bar, Card, Chip, CompletionPill, Ring, SectionTitle } from './components';
 import { formatNumber, useClash } from './store';
 
 export function HomeView() {
@@ -171,39 +171,6 @@ export function HomeView() {
         </Card>
       </section>
 
-      {/* -------- data sources -------- */}
-      <InnerBox className="px-3 py-3">
-        <span className="mb-1.5 block text-[9px] font-bold uppercase tracking-[0.14em] text-neutral-500">{t('Data sources')}</span>
-        <ul className="flex flex-col gap-1.5">
-          <SourceRow
-            label="Supercell API"
-            detail={
-              state.integrations.supercellConfigured
-                ? t('Connected · last sync {0}', player.syncedAt ? new Date(player.syncedAt).toLocaleString('en-GB') : '—')
-                : 'Not configured — heroes, equipment, pets and lab levels come from the local dataset.'
-            }
-            ok={state.integrations.supercellConfigured}
-          />
-          <SourceRow
-            label={t('ClashKing / ClashOfStats')}
-            detail={
-              state.integrations.clashkingEndpoint || state.integrations.clashofstatsEndpoint
-                ? state.integrations.clashkingEndpoint || state.integrations.clashofstatsEndpoint
-                : 'No endpoint set — in-game API token ownership checks stay local.'
-            }
-            ok={Boolean(state.integrations.clashkingEndpoint || state.integrations.clashofstatsEndpoint)}
-          />
-          <SourceRow
-            label="Supabase"
-            detail={
-              state.integrations.supabaseConfigured
-                ? 'Connected — profiles and linked tags persist server-side.'
-                : 'Not configured — this workspace stores your data in this browser.'
-            }
-            ok={state.integrations.supabaseConfigured}
-          />
-        </ul>
-      </InnerBox>
     </div>
   );
 }
@@ -243,14 +210,3 @@ function Cell({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SourceRow({ label, detail, ok }: { label: string; detail: string; ok: boolean }) {
-  return (
-    <li className="flex items-start gap-2.5">
-      <span className={`mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full ${ok ? 'bg-[#10B981]' : 'bg-[#2563EB]'}`} />
-      <span className="min-w-0">
-        <span className="block text-[11px] font-bold text-neutral-200">{label}</span>
-        <span className="block text-[10px] leading-snug text-neutral-500">{detail}</span>
-      </span>
-    </li>
-  );
-}

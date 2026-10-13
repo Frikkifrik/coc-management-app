@@ -10,6 +10,7 @@
  * when it is not installed so `npm run build` stays dependency-light.
  */
 import { build } from 'esbuild';
+import { readFileSync } from 'node:fs';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -400,6 +401,32 @@ check('closing the info sheet removes the disclaimer again', () =>
 
 check('the Data Sources section is gone from the UI', () =>
   /Data sources|Databronne/.test(appHost.innerHTML) ? 'still rendered' : true);
+
+/* ---------------- CSS cascade guard ---------------- */
+
+// `npm run smoke` cannot see the cascade, so guard the source invariant that
+// the royal-blue language pill depends on: no button reset may outrank a
+// single-class utility. `.clash-app button` is (0,1,1) and beats `bg-[#2563EB]`
+// (0,1,0); wrapping it in :where() drops it to zero. See
+// scripts/verify-lang-toggle.mjs for the real cascade check.
+const clashCss = readFileSync(path.join(root, 'src/clash/clash.css'), 'utf8');
+check('the button reset cannot outrank utility backgrounds', () => {
+  const offenders = [];
+  for (const m of clashCss.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+    const sel = m[1].trim();
+    if (!/(^|[\s,])button([\s,:.[]|$)/.test(sel)) continue;
+    if (sel.includes(':where(')) continue;               // zero specificity — safe
+    if (!/background/.test(m[2])) continue;
+    offenders.push(sel);
+  }
+  return offenders.length ? `outranks utilities: ${offenders.join(', ')}` : true;
+});
+check('the language pill uses the royal-blue active utility', () => {
+  const src = readFileSync(path.join(root, 'src/clash/components.tsx'), 'utf8');
+  const pill = src.slice(src.indexOf('export function LangToggle'), src.indexOf('export function LangToggle') + 2200);
+  return pill.includes("'bg-[#2563EB] text-white font-bold px-2.5 py-1 rounded-md transition-colors shadow-sm'")
+    ? true : 'active class string drifted';
+});
 
 /* ---------------- global tag search ---------------- */
 

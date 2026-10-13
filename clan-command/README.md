@@ -128,7 +128,15 @@ every asset name (P.E.K.K.A, Inferno Tower, Barbarian King, Town Hall, …).
 The switch is a compact **AF / EN pill in the top-right header**, next to the
 share, settings and info icons. The active side is a royal-blue chip
 (`bg-[#2563EB] text-white font-bold`); the inactive side stays dim
-(`text-neutral-400`) and lights on hover. It only mutates the i18n context, so the whole
+(`text-neutral-400`) and lights on hover.
+
+**CSS gotcha worth knowing:** this project pulls in `@tailwind utilities` only —
+there is no Tailwind preflight — so `clash.css` resets button chrome by hand.
+That reset must stay wrapped in `:where(.clash-app button)`. The plain
+`.clash-app button` selector is specificity (0,1,1), which outranks every
+single-class `bg-*` utility (0,1,0), so writing it unwrapped silently wipes the
+background of all nine buttons in the app that rely on one. `npm run verify:lang`
+loads the built stylesheet into jsdom and asserts the highlight actually paints. It only mutates the i18n context, so the whole
 tree re-renders in place — no reload, no route change, no lost scroll position.
 Settings carries the same pill so the setting stays discoverable.
 
@@ -228,6 +236,13 @@ npm run smoke          # headless jsdom render of every screen (npm i --no-save 
 npm run assets:map     # rebuild src/clash/asset-map.json from the Arsenaal index
 npm run assets:list    # regenerate public/clash-assets/EXPECTED.md
 npm run assets:verify  # assert every mapped artwork path exists on disk
+npm run verify:lang    # real-cascade check that the AF/EN highlight paints
+                       #   (needs `npm run build` first, and jsdom)
 ```
+
+`verify:lang` exists because `npm run smoke` renders the React tree without a
+stylesheet, so it can confirm the right class names are present but not that
+anything is visible. It reads `getComputedStyle().backgroundColor` off the
+mounted buttons and asserts the royal blue moves between AF and EN on click.
 
 `npm run smoke` mounts the real component tree in jsdom, drives the bottom nav through all four routes and the view selector through all five views, opens the settings, info and scout sheets, and asserts the completion maths on the seeded village. It also proves the things that are easy to regress silently: every `<img>` the app paints points at a file that exists, the header AF/EN pill re-renders the tree in both languages and persists the choice, the Supabase auth entry points guard an unconfigured build instead of throwing, the linked player tag survives a sign-in redirect, and the fan-content disclaimer still matches Supercell's official wording. Add `--report` to print the category table.

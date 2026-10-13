@@ -14,7 +14,8 @@
     "assets:map": "node scripts/build-asset-map.mjs",
     "assets:list": "node scripts/list-assets.mjs",
     "assets:verify": "node scripts/verify-assets.mjs",
-    "start": "NODE_ENV=production node server/run.mjs"
+    "start": "NODE_ENV=production node server/run.mjs",
+    "verify:lang": "node scripts/verify-lang-toggle.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",

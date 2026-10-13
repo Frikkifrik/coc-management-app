@@ -693,6 +693,11 @@ export function Chip({
  * Compact AF/EN pill for the top-right header cluster. Switching language only
  * mutates the i18n context, so the whole tree re-renders in place — no reload,
  * no route change, no loss of scroll position or open sheets.
+ *
+ * The active side is read straight off the i18n context (`lang`), so the blue
+ * chip moves on the same render that changes the language. The royal-blue
+ * background only paints because the button reset in clash.css is kept at zero
+ * specificity — see the note on `:where(.clash-app button)` there.
  */
 export function LangToggle({ className = '' }: { className?: string }) {
   const { lang, setLang } = useI18n();
@@ -700,7 +705,7 @@ export function LangToggle({ className = '' }: { className?: string }) {
     <div
       role="group"
       aria-label="Language / Taal"
-      className={`flex items-center gap-0.5 rounded-full border border-[#27272A]/60 bg-[#18181A]/80 p-0.5 ${className}`.trim()}
+      className={`flex items-center bg-[#18181A] p-1 rounded-lg border border-neutral-800 ${className}`.trim()}
     >
       {(['af', 'en'] as const).map((code) => {
         const active = lang === code;
@@ -712,10 +717,10 @@ export function LangToggle({ className = '' }: { className?: string }) {
             aria-pressed={active}
             aria-label={code === 'af' ? 'Afrikaans' : 'English'}
             title={code === 'af' ? 'Afrikaans' : 'English'}
-            className={`cc-tap text-[10px] uppercase leading-none tracking-[0.08em] transition-colors ${
+            className={`cc-lang-pill text-xs uppercase leading-none tracking-[0.08em] ${
               active
-                ? 'bg-[#2563EB] text-white font-bold px-2 py-0.5 rounded-md'
-                : 'text-neutral-400 font-normal hover:text-white px-2 py-0.5'
+                ? 'bg-[#2563EB] text-white font-bold px-2.5 py-1 rounded-md transition-colors shadow-sm'
+                : 'text-neutral-400 font-medium px-2.5 py-1 rounded-md hover:text-white transition-colors bg-transparent'
             }`}
           >
             {code}

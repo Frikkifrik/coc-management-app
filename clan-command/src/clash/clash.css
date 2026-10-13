@@ -59,7 +59,17 @@
   list-style: none;
 }
 
-.clash-app button {
+/* Button reset. There is no Tailwind preflight here (src/tailwind.css pulls in
+   utilities only), so UA chrome has to be cleared by hand.
+
+   Wrapped in :where() to keep this at zero specificity. A reset must not outrank
+   utilities: the plain `.clash-app button` selector this replaced is (0,1,1),
+   which beat every single-class `bg-*` utility (0,1,0) and silently wiped the
+   background of all nine buttons in the app that rely on one — including the
+   AF/EN language pill, whose active royal-blue highlight therefore never
+   painted. Zero specificity is also order-independent, which matters because
+   clash.css is imported after tailwind.css. */
+:where(.clash-app button) {
   background: none;
   border: none;
   font: inherit;
@@ -182,6 +192,12 @@
 
 .clash-app .cc-tap:active:not(:disabled) {
   transform: scale(0.975);
+}
+
+/* Press feedback for the AF/EN pill. Zero specificity via :where() so the
+   transform can never outrank a utility such as `bg-[#2563EB]`. */
+:where(.clash-app .cc-lang-pill):active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .clash-app .cc-sheet-backdrop {

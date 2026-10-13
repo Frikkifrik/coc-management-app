@@ -5,4 +5,4 @@
  */
 export { signInWithDiscord, signInWithEmail, signInWithMagicLink } from './supabase-auth';
 export { FAN_CONTENT_NOTICE } from './components';
-export { normaliseSearchTag } from './search';
+export { normaliseSearchTag, SEARCH_TAG_SHAPE } from './search';

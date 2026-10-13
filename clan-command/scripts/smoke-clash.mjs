@@ -35,8 +35,8 @@ import ClashApp from './src/clash/ClashApp';
 import App from './src/app';
 import { createDemoState, categoryRows } from './src/clash/demo';
 import { assetPathFor, expectedAssetPaths } from './src/clash/assets';
-import { signInWithDiscord, signInWithEmail, signInWithMagicLink, FAN_CONTENT_NOTICE, normaliseSearchTag } from './src/clash/auth-probe';
-export { React, createRoot, ClashApp, App, createDemoState, categoryRows, assetPathFor, expectedAssetPaths, signInWithDiscord, signInWithEmail, signInWithMagicLink, FAN_CONTENT_NOTICE, normaliseSearchTag };
+import { signInWithDiscord, signInWithEmail, signInWithMagicLink, FAN_CONTENT_NOTICE, normaliseSearchTag, SEARCH_TAG_SHAPE } from './src/clash/auth-probe';
+export { React, createRoot, ClashApp, App, createDemoState, categoryRows, assetPathFor, expectedAssetPaths, signInWithDiscord, signInWithEmail, signInWithMagicLink, FAN_CONTENT_NOTICE, normaliseSearchTag, SEARCH_TAG_SHAPE };
 `;
 
 await build({
@@ -86,7 +86,7 @@ window.localStorage.setItem('clash-command:lang:v1', 'af');
 window.matchMedia = window.matchMedia || (() => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
 
 const mod = await import(pathToFileURL(outfile).href);
-const { React, createRoot, ClashApp, App, createDemoState, categoryRows, assetPathFor, expectedAssetPaths, signInWithDiscord, signInWithEmail, signInWithMagicLink, FAN_CONTENT_NOTICE, normaliseSearchTag } = mod;
+const { React, createRoot, ClashApp, App, createDemoState, categoryRows, assetPathFor, expectedAssetPaths, signInWithDiscord, signInWithEmail, signInWithMagicLink, FAN_CONTENT_NOTICE, normaliseSearchTag, SEARCH_TAG_SHAPE } = mod;
 
 const results = [];
 function check(name, fn) {
@@ -439,6 +439,22 @@ check('normaliseSearchTag strips zero-width copy artefacts', () =>
   normaliseSearchTag('\u200b#2Q0P2YLRG\u200b') === '#2Q0P2YLRG');
 check('normaliseSearchTag rejects empty input', () => normaliseSearchTag('   ') === null);
 
+// Tag shape validation: a malformed tag must be rejected client-side rather
+// than spending a request that cannot match.
+check('SEARCH_TAG_SHAPE accepts a real clan tag', () => SEARCH_TAG_SHAPE.test('#2Q0P2YLRG') === true);
+check('SEARCH_TAG_SHAPE accepts a real player tag', () => SEARCH_TAG_SHAPE.test('#PPL0GJVCU') === true);
+check('SEARCH_TAG_SHAPE rejects a too-short tag', () => SEARCH_TAG_SHAPE.test('#2Q') === false);
+check('SEARCH_TAG_SHAPE rejects a tag missing the #', () => SEARCH_TAG_SHAPE.test('2Q0P2YLRG') === false);
+check('a not-found reply explains what was searched', () => {
+  const af = readFileSync(path.join(root, 'src/clash/i18n.tsx'), 'utf8');
+  return af.includes("'No match in the stored clan roster, and live Supercell lookup is not configured on the server.'")
+    ? true : 'no Afrikaans entry for the not-in-roster message';
+});
+check('a failed lookup closes a stale drawer', () => {
+  const app = readFileSync(path.join(root, 'src/clash/ClashApp.tsx'), 'utf8');
+  return app.includes('onNoResult={() => setScoutTag(null)}') ? true : 'onNoResult is not wired to clear the drawer';
+});
+
 
 check('a search bar is pinned under the header', () => {
   const header = appHost.querySelector('header');
@@ -461,6 +477,15 @@ await React.act(async () => {
 });
 check('the search field accepts a tag without a leading #', () =>
   searchInput.value === '2q0p2ylrg' ? true : `value=${searchInput.value}`);
+// Asserting the DOM value alone is vacuous — this script just wrote it. The
+// clear button renders only when React's own state is non-empty, so it proves
+// onChange actually reached the component.
+check('typing reaches React state, not just the DOM', () => {
+  const clear = appHost.querySelector(
+    'header button[aria-label="Maak soektog skoon"], header button[aria-label="Clear search"]',
+  );
+  return clear ? true : 'clear button absent, so onChange never fired';
+});
 
 await React.act(async () => {
   searchInput.closest('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));

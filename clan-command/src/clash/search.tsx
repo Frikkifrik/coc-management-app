@@ -39,7 +39,14 @@ export interface SearchReply {
   query: string;
   clan?: { name: string; tag: string; clanLevel: number; league: string; trophies: number };
   items: PublicProfile[];
+  /** Present on a miss: why nothing matched. */
+  reason?: 'invalid' | 'not_in_roster';
+  /** Whether the server can reach the live Supercell API at all. */
+  liveLookup?: boolean;
 }
+
+/** The shape the game actually issues: `#` plus 3–16 tag characters. */
+export const SEARCH_TAG_SHAPE = /^#[0-9A-Z]{3,16}$/;
 
 /**
  * Normalise whatever the user typed into a canonical tag. Returns null when
@@ -163,11 +170,14 @@ function ScoutMetric({
 export function GlobalSearchBar({
   onResult,
   onOpenProfile,
+  onNoResult,
 }: {
   /** Fired with the reply so the caller can route to the right screen. */
   onResult: (reply: SearchReply) => void;
   /** Opens the profile drawer for the searched tag. */
   onOpenProfile: (tag: string) => void;
+  /** Fired on any miss, so a stale drawer from the last search is closed. */
+  onNoResult: () => void;
 }) {
   const { t } = useI18n();
   const [value, setValue] = useState('');
@@ -179,21 +189,39 @@ export function GlobalSearchBar({
     const tag = normaliseSearchTag(value);
     if (!tag) {
       setError(t('Enter a player or clan tag.'));
+      onNoResult();
       return;
     }
     setValue(tag);
+    // Catch a malformed tag here rather than spending a request that cannot
+    // match, so the message points at the typing instead of at the data.
+    if (!SEARCH_TAG_SHAPE.test(tag)) {
+      setBusy(false);
+      setError(t('Check the tag and try again. Search takes a player #PLAYERTAG or a clan #CLANTAG.'));
+      onNoResult();
+      return;
+    }
     setBusy(true);
     setError('');
     try {
       const reply = await searchTag(tag);
       if (reply.kind === 'none') {
-        setError(t('No match'));
+        // Say what was actually searched. A bare "No match" reads as "that tag
+        // does not exist", which is misleading when the only source consulted
+        // was this clan's stored roster.
+        setError(
+          reply.liveLookup === false
+            ? t('No match in the stored clan roster, and live Supercell lookup is not configured on the server.')
+            : t('No match'),
+        );
+        onNoResult();
         return;
       }
       onResult(reply);
       onOpenProfile(tag);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : t('Public search is unavailable.'));
+      onNoResult();
     } finally {
       setBusy(false);
     }

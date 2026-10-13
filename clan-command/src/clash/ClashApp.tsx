@@ -129,6 +129,7 @@ function Shell() {
           <GlobalSearchBar
             onResult={(reply) => setRoute(reply.kind === 'clan' ? 'clan' : 'profile')}
             onOpenProfile={(tag) => setScoutTag(tag)}
+            onNoResult={() => setScoutTag(null)}
           />
           {route === 'profile' ? <div className="mt-2.5"><ViewSelector /></div> : null}
         </TopBar>

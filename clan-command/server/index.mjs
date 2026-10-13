@@ -315,19 +315,25 @@ app.post('/api/auth/logout', (req, res) => {
 
 app.get('/api/public-search', (req, res) => {
   const query = String(req.query.q || req.query.tag || '').trim().toUpperCase();
-  if (!query || query.length > 40) return res.json({ kind: 'none', query, items: [] });
+  // This endpoint only ever matches rows already stored here. Callers need to
+  // know that, because "not found" otherwise reads as "that tag does not exist"
+  // when the real answer is "live Supercell lookup is not wired up".
+  const liveLookup = isSupercellConfigured();
+  if (!query || query.length > 40) return res.json({ kind: 'none', query, items: [], reason: 'invalid', liveLookup });
   const tagQuery = query.startsWith('#') ? query : `#${query}`;
   const clan = /^#[0-9A-Z]{3,16}$/.test(tagQuery) ? allClans().find((item) => item.tag.toUpperCase() === tagQuery) : null;
   if (clan) {
     const members = allMembers().filter((member) => member.clanId === clan.id).map(publicRecruitProfile);
-    return res.json({ kind: 'clan', query, clan, items: members });
+    return res.json({ kind: 'clan', query, clan, items: members, liveLookup });
   }
   const all = allMembers();
   let members = /^#[0-9A-Z]{3,16}$/.test(tagQuery)
     ? all.filter((member) => member.tag.toUpperCase() === tagQuery)
     : all.filter((member) => member.name.toUpperCase().includes(query) || member.clanName.toUpperCase().includes(query));
   members = members.slice(0, 12).map(publicRecruitProfile);
-  return res.json({ kind: members.length ? 'player' : 'none', query, items: members });
+  return members.length
+    ? res.json({ kind: 'player', query, items: members, liveLookup })
+    : res.json({ kind: 'none', query, items: [], reason: 'not_in_roster', liveLookup });
 });
 
 app.use('/api', requireSession);

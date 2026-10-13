@@ -212,6 +212,8 @@ export const AF: Record<string, string> = {
   'Rush est.': 'Rush-bepaling',
   'Lab purity': 'Lab-suiwerheid',
   'No match': 'Geen resultaat',
+  'No match in the stored clan roster, and live Supercell lookup is not configured on the server.':
+    'Geen resultaat in die gestoorde spandata nie, en lewendige Supercell-opsoek is nie op die bediener opgestel nie.',
   'Town Hall': 'Town Hall',
   'War in': 'War in',
   'War out': 'War uit',

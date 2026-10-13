@@ -87,14 +87,31 @@ Tiles resolve in this order:
 
 Brand logos are used exactly as provided, without recolouring or cropping.
 
-The intended upstream is the **`100% Afrikaans Clan Family / Arsenaal Assets`**
-Google Drive folder, opened **strictly read-only** — nothing there is ever
-created, edited, moved or deleted. A full audit of that tree, the folder IDs and
-the reason no bytes are installed yet are in
+The artwork in this repo came from the **`100% Afrikaans Clan Family / Arsenaal
+Assets`** Google Drive folder, read **strictly read-only** — nothing there was
+ever created, edited, moved or deleted. Provenance, folder IDs and the read-only
+policy are in
 [`public/clash-assets/DRIVE_SOURCE.md`](public/clash-assets/DRIVE_SOURCE.md).
-Short version: every categorised asset folder is empty and the artwork sits
-inside multi-part ~73 MB ZIP archives, so extraction happens on your machine and
-the PNGs get dropped into `clash-assets/` by hand.
+
+The drop keeps the Drive's own layout (`heroes/archer_queen/icon.webp`,
+`buildings/home-village/inferno_tower/level_11.webp`,
+`equipment/eternal_tome.webp`), so nothing is renamed. Instead
+`npm run assets:map` matches catalog keys against `arsenaal-index.json` by
+normalised name and writes `src/clash/asset-map.json`, which the resolver reads
+first. **208 of 226** catalog paths resolve to a real file today; the 18 that do
+not — Home Village and Builder Base traps, plus Helper Hut, Builder Hut, Inferno
+Artillery, Eclipse Tower, Firewall and Portal Pendant — are simply absent from
+the drop and fall through to the live `iconUrl` or the typographic mark.
+
+```bash
+npm run assets:map      # rebuild src/clash/asset-map.json after a drop
+npm run assets:list     # rewrite EXPECTED.md with installed counts
+npm run assets:verify   # assert every mapped path exists on disk
+```
+
+To override a single tile, drop a PNG at the flat path instead
+(`<category>/<slug>.png`) — the hand drop wins over nothing, and the Arsenaal map
+wins over the guess, so both conventions coexist.
 
 ## Language
 

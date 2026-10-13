@@ -64,26 +64,54 @@ and the two `Official Supercell Blog/Announcements PNG` part sets. Each part is
 
 ## What that means for this repo
 
-`EXPECTED.md` still lists all 226 target paths and reports how many are
-installed. Zero are installed, and that is accurate — no artwork has been
-copied in, and none has been generated.
+The package has since been extracted and committed to
+`clan-command/public/clash-assets/` in the Drive's own layout — 2 374 files,
+56.7 MB, catalogued by `arsenaal-index.json`. **208 of the app's 226 catalog
+paths now resolve to a real file.** No artwork was generated at any point.
 
-Resolution order is unchanged and degrades cleanly:
+Because the drop keeps the Drive's folder names (`heroes/archer_queen/icon.webp`,
+`buildings/home-village/inferno_tower/level_11.webp`), nothing is renamed.
+`npm run assets:map` matches catalog keys to those paths by normalised name and
+writes `src/clash/asset-map.json`; the resolver consults that map first, then the
+flat hand-drop path, then the live `iconUrl`, then the typographic mark.
 
-1. local official PNG at `public/clash-assets/<category>/<slug>.png`
-2. live Supercell `iconUrl` from the API or a JSON import
-3. neutral typographic monogram
+The 18 unresolved paths are genuinely absent from the package — Home Village
+traps (Bomb, Spring Trap, Giant Bomb, Seeking Air Mine, Skeleton Trap, Tornado
+Trap, Giga Bomb), Builder Base traps (Push Trap, Mine, Mega Mine, Spring Trap),
+and Helper Hut, Builder Hut, Inferno Artillery, Eclipse Tower, Firewall and
+Portal Pendant. The index contains no path matching `trap` at all. `EXPECTED.md`
+lists each one.
+
+Resolution order, and it degrades cleanly at every step:
+
+1. the Arsenaal map — `src/clash/asset-map.json`, pointing at files verified
+   present in this repo
+2. a hand drop at `public/clash-assets/<category>/<slug>.png`
+3. live Supercell `iconUrl` from the API or a JSON import
+4. neutral typographic monogram
 
 **No AI-generated imagery is used, anywhere, ever.**
 
-## Installing the artwork
+## Adding or replacing artwork
 
-Extract any of the ZIPs above on your own machine, then drop the PNGs into the
-matching category folder using the slug rule in `EXPECTED.md`
-(`P.E.K.K.A` → `p-e-k-k-a.png`, `L.A.S.S.I` → `l-a-s-s-i.png`,
-`Inferno Tower` → `inferno-tower.png`). Builder Base entries that share a name
-with a Home Village entry live under the plain name; the `bb-` prefix exists
-only in the catalog key, not in the filename.
+Two routes, and they can be mixed.
+
+**Extend the drop.** Unpack more of the ZIPs into `clash-assets/`, add the new
+files to `arsenaal-index.json`, then run `npm run assets:map`. The matcher
+normalises names (lowercase, alphanumerics only) so the Drive's punctuation
+differences line up on their own: `P.E.K.K.A` ↔ `troops/pekka/`,
+`L.A.S.S.I` ↔ `pets/lassi/`, `Multi-Archer Tower` ↔ `multi-archer_tower/`,
+`Builder's Hut` ↔ `builder's_hut/`. It also tries singular and plural forms, so
+`Walls` finds `buildings/home-village/wall/`. Re-run `npm run assets:list` to
+refresh `EXPECTED.md`.
+
+**Override one tile.** Drop a PNG at the flat path in `EXPECTED.md`
+(`traps/bomb.png`, `defenses/eclipse-tower.png`). Builder Base entries that share
+a name with a Home Village entry use the plain filename; the `bb-` prefix exists
+only in the catalog key, never in the file.
+
+`npm run assets:verify` fails the build if any mapped path stops existing on
+disk, so a bad map cannot ship silently.
 
 Then re-run:
 

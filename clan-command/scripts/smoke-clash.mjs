@@ -10,7 +10,7 @@
  * when it is not installed so `npm run build` stays dependency-light.
  */
 import { build } from 'esbuild';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -160,9 +160,40 @@ check('schedule derives from the tracker levels', () =>
 
 /* 4. local artwork resolver */
 
-check('catalog key resolves to a clash-assets path', () => assetPathFor('defenses:inferno-tower') === '/clash-assets/defenses/inferno-tower.png');
-check('builder-base key is namespaced', () => assetPathFor('defenses:bb-bomb-tower') === '/clash-assets/defenses/bomb-tower.png');
-check('category key resolves under categories/', () => assetPathFor('category:equipment') === '/clash-assets/categories/equipment.png');
+/* The Arsenaal drop ships in the Drive's own layout, so a catalog key resolves
+   to the real file the map points at; the flat <category>/<slug>.png path is the
+   fallback for a hand drop. Either way the url must sit under /clash-assets/. */
+check('catalog key resolves under /clash-assets/', () =>
+  String(assetPathFor('defenses:inferno-tower')).startsWith('/clash-assets/'));
+check('Inferno Tower resolves to a real file on disk', () => {
+  const url = assetPathFor('defenses:inferno-tower');
+  return Boolean(url) && existsSync(path.join(root, 'public', url));
+});
+/* "P.E.K.K.A" slugs to "p-e-k-k-a", so that is the catalog key — and the map
+   points it at the official troop icon rather than a guessed flat path. */
+check('P.E.K.K.A slugs to p-e-k-k-a and resolves on disk', () => {
+  const url = assetPathFor('laboratory:p-e-k-k-a');
+  return Boolean(url) && existsSync(path.join(root, 'public', url)) ? url : `unresolved: ${url}`;
+});
+check('builder-base Power P.E.K.K.A is namespaced and resolves', () => {
+  const url = assetPathFor('laboratory:bb-power-p-e-k-k-a');
+  return Boolean(url) && existsSync(path.join(root, 'public', url)) ? url : `unresolved: ${url}`;
+});
+check('builder-base key stays namespaced', () =>
+  String(assetPathFor('defenses:bb-bomb-tower') ?? '').startsWith('/clash-assets/'));
+check('category key resolves to a real file on disk', () => {
+  const url = assetPathFor('category:equipment');
+  return Boolean(url) && existsSync(path.join(root, 'public', url));
+});
+check('no mapped path is stale', () => {
+  const broken = expectedAssetPaths().filter((item) => item.mapped && !existsSync(path.join(root, 'public', item.path)));
+  return broken.length === 0 ? true : `${broken.length} stale: ${broken[0]?.key}`;
+});
+check('most catalog paths resolve to real artwork', () => {
+  const all = expectedAssetPaths();
+  const installed = all.filter((item) => existsSync(path.join(root, 'public', item.path))).length;
+  return installed >= 200 ? true : `only ${installed}/${all.length} installed`;
+});
 check('unknown key resolves to nothing', () => assetPathFor('nope:nope') === undefined);
 check('every catalog entry has an expected path', () => {
   const all = expectedAssetPaths();
@@ -268,6 +299,43 @@ check('legacy /app/* redirects into the mobile app', () => /Opgraderingspoorsnye
 /* ---------------- language switch ---------------- */
 
 check('Afrikaans is the shipping default', () => /Opgraderingspoorsnyer/.test(appHost.innerHTML));
+
+/* ---------------- rendered tiles use real artwork ---------------- */
+
+// Collect every <img> the app actually painted and confirm the file exists.
+const paintedSrcs = () =>
+  [...appHost.querySelectorAll('img')]
+    .map((node) => node.getAttribute('src') || '')
+    .filter((src) => src.startsWith('/clash-assets/'));
+
+const painted = paintedSrcs();
+check('tiles paint <img> tags from the local asset drop', () =>
+  painted.length > 0 ? true : 'no <img> tiles rendered at all');
+check('every painted asset tile exists on disk', () => {
+  const missing = painted.filter((src) => !existsSync(path.join(root, 'public', src)));
+  return missing.length === 0 ? true : `${missing.length} broken: ${missing.slice(0, 3).join(', ')}`;
+});
+check('the tracker view alone paints a dozen or more official tiles', () =>
+  painted.length >= 12 ? true : `only ${painted.length}`);
+
+// Walk every bottom-nav route and confirm tiles keep resolving there too.
+for (const navButton of [...appHost.querySelectorAll('nav button')]) {
+  await React.act(async () => {
+    navButton.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  });
+  const broken = paintedSrcs().filter((src) => !existsSync(path.join(root, 'public', src)));
+  if (broken.length) {
+    check(`tiles resolve on the ${navButton.textContent.trim() || 'nav'} screen`, () => `broken: ${broken[0]}`);
+  }
+}
+check('tiles resolve on every bottom-nav screen', () =>
+  paintedSrcs().every((src) => existsSync(path.join(root, 'public', src))) ? true : 'a screen painted a dead tile');
+
+// Leave the app back on the tracker; the language checks below expect it.
+await React.act(async () => {
+  const profileTab = [...appHost.querySelectorAll('nav button')][1];
+  profileTab.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+});
 
 await React.act(async () => {
   window.history.pushState({}, '', '/');

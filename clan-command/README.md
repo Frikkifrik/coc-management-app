@@ -125,9 +125,53 @@ Base, Buildings, Defenses, Traps, Supercharge, Laboratory, Equipment, Pets,
 Walls, Guardians, Builder/Builders, Pass, Trophies, Stars, Destruction, and
 every asset name (P.E.K.K.A, Inferno Tower, Barbarian King, Town Hall, …).
 
+The switch is a compact **AF / EN pill in the top-right header**, next to the
+share, settings and info icons. It only mutates the i18n context, so the whole
+tree re-renders in place — no reload, no route change, no lost scroll position.
+Settings carries the same pill so the setting stays discoverable.
+
 Translation is keyed on the **English source string** — `t('Remaining')` — so a
 string with no Afrikaans entry renders its English source instead of a blank or
 a raw key. See `src/clash/i18n.tsx`.
+
+## Sign-in
+
+The dark `/login` screen offers three routes, because they do different jobs:
+
+- **Continue with Discord** — `supabase.auth.signInWithOAuth({ provider: 'discord' })`.
+  Supabase redirects back to the app root and `detectSessionInUrl` picks the
+  session up from the URL fragment, which the auth watcher turns into a redirect
+  into the app.
+- **Email + password**, or a **magic link** (`signInWithOtp`) on the Supabase tab.
+- **Clan server** — this app's own `POST /api/auth/login`, which issues the
+  session cookie the Supercell proxy checks.
+
+**Supabase sign-in does not by itself unlock live Supercell lookups.** Those go
+through this app's server (`/api/supercell/*`), which gates on its own session
+against the local SQLite user table; the server does not verify Supabase tokens.
+Bridging the two means adding token verification server-side, which has not been
+done — so the screen offers both and says which is which. When
+`VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are unset the Supabase routes
+report that plainly instead of failing silently. Setup steps are in
+`.env.example`.
+
+Linked player tags live in `localStorage` and are untouched by any sign-in flow,
+so the `#tag` you linked is still there when the tracker remounts after a
+redirect. `npm run smoke` asserts this end to end.
+
+## Supercell Fan Content Policy
+
+Every screen renders official Supercell artwork, so the disclaimer Supercell
+asks fan content to carry appears in the app footer, in the info sheet, and on
+the sign-in screen, quoted verbatim from
+[supercell.com/en/fan-content-policy](https://supercell.com/en/fan-content-policy):
+
+> This material is unofficial and is not endorsed by Supercell. For more
+> information see Supercell's Fan Content Policy:
+> www.supercell.com/fan-content-policy.
+
+The exact string lives in `FAN_CONTENT_NOTICE` (`src/clash/components.tsx`) and
+the smoke suite fails if the wording drifts.
 
 ## Data notes
 
@@ -160,10 +204,12 @@ For the full go-live walkthrough — hosting choices, why `node:sqlite` rules ou
 ## Checks
 
 ```bash
-npm run check        # tsc --noEmit
-npm run build        # vite build && tsc
-npm run smoke        # headless jsdom render of every screen (npm i --no-save jsdom)
-npm run assets:list  # regenerate public/clash-assets/EXPECTED.md
+npm run check          # tsc --noEmit
+npm run build          # vite build && tsc
+npm run smoke          # headless jsdom render of every screen (npm i --no-save jsdom)
+npm run assets:map     # rebuild src/clash/asset-map.json from the Arsenaal index
+npm run assets:list    # regenerate public/clash-assets/EXPECTED.md
+npm run assets:verify  # assert every mapped artwork path exists on disk
 ```
 
-`npm run smoke` mounts the real component tree in jsdom, drives the bottom nav through all four routes and the view selector through all five views, opens the settings, info and scout sheets, asserts the completion maths on the seeded village, checks the artwork resolver, and confirms `/`, `/login` and `/app/*` route correctly. Add `--report` to print the category table.
+`npm run smoke` mounts the real component tree in jsdom, drives the bottom nav through all four routes and the view selector through all five views, opens the settings, info and scout sheets, and asserts the completion maths on the seeded village. It also proves the things that are easy to regress silently: every `<img>` the app paints points at a file that exists, the header AF/EN pill re-renders the tree in both languages and persists the choice, the Supabase auth entry points guard an unconfigured build instead of throwing, the linked player tag survives a sign-in redirect, and the fan-content disclaimer still matches Supercell's official wording. Add `--report` to print the category table.

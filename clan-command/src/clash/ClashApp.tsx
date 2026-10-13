@@ -24,7 +24,9 @@ import {
   BottomNav,
   Card,
   Chip,
+  FanContentNotice,
   InnerBox,
+  LangToggle,
   NoticeStack,
   SectionTitle,
   Sheet,
@@ -69,7 +71,6 @@ const SCREEN_INFO: Record<string, { title: string; body: string[] }> = {
 
 function Shell() {
   const { t } = useI18n();
-  const { lang, setLang } = useI18n();
   const auth = useOptionalAuth();
   const { state, route, view, setRoute, syncLive, syncing, exportJson, importJson, resetDemo, linkTag, unlinkTag, verifyTag, setIntegrations, notify } = useClash();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -140,6 +141,10 @@ function Shell() {
               </div>
             </>
           ) : null}
+
+          {/* Every screen shows official Supercell artwork, so the disclaimer
+              travels with it rather than hiding behind the info sheet. */}
+          <FanContentNotice />
         </main>
 
         <BottomNav />
@@ -187,6 +192,12 @@ function Shell() {
                     )}
               </p>
             </InnerBox>
+            <InnerBox className="px-3 py-3">
+              <span className="mb-1.5 block text-[9px] font-bold uppercase tracking-[0.14em] text-neutral-500">
+                {t('Fan content')}
+              </span>
+              <FanContentNotice className="p-0 text-left" />
+            </InnerBox>
           </div>
         </Sheet>
       ) : null}
@@ -204,33 +215,14 @@ function Shell() {
           }
         >
           <div className="flex flex-col gap-4">
-            {/* language — the whole interface, not just this sheet */}
-            <section className="flex flex-col gap-2">
-              <SectionTitle
-                title={t('Language')}
-                detail={t('Game terms stay in English, as the game shows them.')}
-              />
-              <div className="flex items-center gap-2 rounded-xl border border-[#27272A]/40 bg-[#18181A] p-1.5">
-                {(['af', 'en'] as const).map((code) => {
-                  const active = lang === code;
-                  return (
-                    <button
-                      key={code}
-                      type="button"
-                      onClick={() => setLang(code)}
-                      aria-pressed={active}
-                      className={`cc-tap flex-1 rounded-lg border px-3 py-2 text-[12px] font-bold tracking-tight transition-colors ${
-                        active
-                          ? 'border-[#2563EB]/50 bg-[#0F172A] text-[#93C5FD]'
-                          : 'border-transparent text-neutral-500 hover:text-neutral-200'
-                      }`}
-                    >
-                      {code === 'af' ? 'Afrikaans' : 'English'}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
+            {/* The AF/EN switch lives in the header pill now; this line just
+                points at it so the setting stays discoverable. */}
+            <Card className="flex items-center gap-2.5 p-3">
+              <LangToggle />
+              <span className="min-w-0 text-[10px] leading-snug text-neutral-500">
+                {t('Language')} — {t('Game terms stay in English, as the game shows them.')}
+              </span>
+            </Card>
 
             {/* linked tags */}
             <section className="flex flex-col gap-2">

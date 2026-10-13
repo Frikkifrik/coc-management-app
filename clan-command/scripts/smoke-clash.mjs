@@ -34,7 +34,8 @@ import ClashApp from './src/clash/ClashApp';
 import App from './src/app';
 import { createDemoState, categoryRows } from './src/clash/demo';
 import { assetPathFor, expectedAssetPaths } from './src/clash/assets';
-export { React, createRoot, ClashApp, App, createDemoState, categoryRows, assetPathFor, expectedAssetPaths };
+import { signInWithDiscord, signInWithEmail, signInWithMagicLink, FAN_CONTENT_NOTICE } from './src/clash/auth-probe';
+export { React, createRoot, ClashApp, App, createDemoState, categoryRows, assetPathFor, expectedAssetPaths, signInWithDiscord, signInWithEmail, signInWithMagicLink, FAN_CONTENT_NOTICE };
 `;
 
 await build({
@@ -84,7 +85,7 @@ window.localStorage.setItem('clash-command:lang:v1', 'af');
 window.matchMedia = window.matchMedia || (() => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
 
 const mod = await import(pathToFileURL(outfile).href);
-const { React, createRoot, ClashApp, App, createDemoState, categoryRows, assetPathFor, expectedAssetPaths } = mod;
+const { React, createRoot, ClashApp, App, createDemoState, categoryRows, assetPathFor, expectedAssetPaths, signInWithDiscord, signInWithEmail, signInWithMagicLink, FAN_CONTENT_NOTICE } = mod;
 
 const results = [];
 function check(name, fn) {
@@ -342,25 +343,121 @@ await React.act(async () => {
   window.dispatchEvent(new window.PopStateEvent('popstate', { state: {} }));
 });
 
-// Open Settings, flip to English, confirm the whole tree re-renders in English.
-await React.act(async () => {
-  const settingsButton = appHost.querySelector('button[aria-label="Instellings"]');
-  settingsButton.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
-});
-check('settings sheet offers the language switch', () => /Afrikaans/.test(appHost.innerHTML) && /English/.test(appHost.innerHTML));
+/* ---------------- header language toggle ---------------- */
 
+const langButton = (label) => appHost.querySelector(`button[aria-label="${label}"]`);
+
+check('header carries an AF/EN toggle pill', () =>
+  Boolean(langButton('Afrikaans')) && Boolean(langButton('English')) ? true : 'toggle not found');
+check('the toggle lives in the top bar, not Settings', () => {
+  const header = appHost.querySelector('header');
+  return header && header.querySelector('button[aria-label="English"]') ? true : 'toggle is not inside <header>';
+});
+check('the active language is marked on the toggle', () => {
+  const af = langButton('Afrikaans');
+  return af?.getAttribute('aria-pressed') === 'true' ? true : `aria-pressed=${af?.getAttribute('aria-pressed')}`;
+});
+
+// Flipping language must re-render in place — no reload, no sheet opened.
 await React.act(async () => {
-  const english = [...appHost.querySelectorAll('button')].find((node) => node.textContent.trim() === 'English');
-  english.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  langButton('English').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 });
 check('switching to English re-renders the UI', () => /Upgrade tracker/.test(appHost.innerHTML));
 check('language choice persists to localStorage', () => window.localStorage.getItem('clash-command:lang:v1') === 'en');
+check('the toggle now marks English as active', () =>
+  langButton('English')?.getAttribute('aria-pressed') === 'true');
 
 await React.act(async () => {
-  const afrikaans = [...appHost.querySelectorAll('button')].find((node) => node.textContent.trim() === 'Afrikaans');
-  afrikaans.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  langButton('Afrikaans').dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 });
 check('switching back to Afrikaans works', () => /Opgraderingspoorsnyer/.test(appHost.innerHTML));
+
+/* ---------------- Supercell fan content policy ---------------- */
+
+check('the fan content disclaimer is shown in the app', () =>
+  /This material is unofficial and is not endorsed by Supercell/.test(appHost.innerHTML));
+check('the disclaimer links the official policy page', () =>
+  /www\.supercell\.com\/fan-content-policy/.test(appHost.innerHTML));
+
+/* ---------------- login screen ---------------- */
+
+await React.act(async () => {
+  window.history.pushState({}, '', '/login');
+  window.dispatchEvent(new window.PopStateEvent('popstate', { state: {} }));
+});
+check('login offers a branded Discord button', () =>
+  /Continue with Discord|Gaan voort met Discord/.test(appHost.innerHTML));
+// Exercise the real auth entry points. Supabase is unconfigured in this build,
+// so each must report that honestly instead of throwing or silently resolving.
+const discordResult = await signInWithDiscord();
+check('Discord sign-in guards an unconfigured Supabase', () =>
+  discordResult.ok === false && discordResult.unconfigured === true
+    ? true
+    : `unexpected: ${JSON.stringify(discordResult)}`);
+const emailResult = await signInWithEmail('a@b.co', 'pw');
+check('email sign-in guards an unconfigured Supabase', () =>
+  emailResult.ok === false && emailResult.unconfigured === true);
+const magicResult = await signInWithMagicLink('a@b.co');
+check('magic-link sign-in guards an unconfigured Supabase', () =>
+  magicResult.ok === false && magicResult.unconfigured === true);
+check('the disclaimer constant is the official Supercell wording', () =>
+  FAN_CONTENT_NOTICE ===
+  "This material is unofficial and is not endorsed by Supercell. For more information see Supercell's Fan Content Policy: www.supercell.com/fan-content-policy."
+    ? true
+    : 'wording drifted from the official policy');
+check('login offers an email + password form', () =>
+  appHost.querySelectorAll('input[type="email"]').length > 0 &&
+  appHost.querySelectorAll('input[type="password"]').length > 0);
+// The magic link is a Supabase feature, so it only appears on that tab — and
+// the tab defaults to the clan server when Supabase is unconfigured.
+await React.act(async () => {
+  const supabaseTab = [...appHost.querySelectorAll('button')].find((node) => /Supabase/.test(node.textContent || ''));
+  supabaseTab.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+});
+check('login offers a magic-link option on the Supabase tab', () =>
+  /sign-in link|aanmeldskakel/i.test(appHost.innerHTML));
+check('login is honest when Supabase is unconfigured', () =>
+  /Supabase is not configured|Supabase is nie/.test(appHost.innerHTML));
+check('login keeps the clan-server path that unlocks live lookups', () =>
+  /Clan server|Clan-bediener/.test(appHost.innerHTML));
+check('login carries the fan content disclaimer too', () =>
+  /This material is unofficial and is not endorsed by Supercell/.test(appHost.innerHTML));
+
+/* ---------------- linked player tag survives sign-in ---------------- */
+
+// Seed a linked tag, mount a fresh app the way a post-login redirect would, and
+// confirm the tag is still there. This is the "preserve the #tag" requirement
+// proved end to end rather than assumed from localStorage semantics.
+const STATE_KEY = 'clash-command:state:v1';
+const seededState = createDemoState();
+const SEEDED_TAG = '#2YQ8RJLP0';
+seededState.linkedTags = [
+  { tag: SEEDED_TAG, label: 'War alt', tokenFingerprint: 'abcd1234', verified: false },
+  ...(seededState.linkedTags ?? []),
+];
+window.localStorage.setItem(STATE_KEY, JSON.stringify(seededState));
+
+const tagHost = window.document.createElement('div');
+window.document.body.appendChild(tagHost);
+await React.act(async () => {
+  window.history.pushState({}, '', '/');
+  window.dispatchEvent(new window.PopStateEvent('popstate', { state: {} }));
+  createRoot(tagHost).render(React.createElement(App));
+});
+
+check('a fresh mount hydrates the linked player tag from storage', () => {
+  const parsed = JSON.parse(window.localStorage.getItem(STATE_KEY));
+  return parsed.linkedTags.some((entry) => entry.tag === SEEDED_TAG) ? true : 'tag was dropped';
+});
+
+await React.act(async () => {
+  const settings = tagHost.querySelector('button[aria-label="Instellings"], button[aria-label="Settings"]');
+  settings.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+});
+check('the linked tag renders after the sign-in redirect', () =>
+  tagHost.innerHTML.includes(SEEDED_TAG) ? true : 'tag did not render in Settings');
+check('sign-in does not clear the workspace state', () =>
+  JSON.parse(window.localStorage.getItem(STATE_KEY)).linkedTags.length >= 1);
 
 let failures = 0;
 for (const result of results) {

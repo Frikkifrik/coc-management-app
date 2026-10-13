@@ -432,6 +432,28 @@ export const AF: Record<string, string> = {
   '{0} — level {1}, {2} left': '{0} — vlak {1}, {2} oor',
   '{0} segments to level {1}': '{0} segmente tot vlak {1}',
 
+
+  // ---- sign-in: Supabase + Discord ----
+  'Continue with Discord': 'Gaan voort met Discord',
+  'Opening Discord…': 'Maak tans Discord oop…',
+  'or': 'of',
+  'Supabase account': 'Supabase-rekening',
+  'Clan server': 'Clan-bediener',
+  'Signs you into your account. Live Supercell lookups still need a clan-server session.':
+    'Meld jou by jou rekening aan. Direkte Supercell-soektogte benodig steeds ’n clan-bediener-sessie.',
+  'Issues the session the Supercell proxy checks, which unlocks live lookups.':
+    'Reik die sessie uit wat die Supercell-instaanbediener kontroleer, wat direkte soektogte ontsluit.',
+  'Enter your email address first.': 'Voer eers jou e-posadres in.',
+  'Check your inbox for the sign-in link.': 'Kyk in jou inkassie vir die aanmeldskakel.',
+  'The magic link could not be sent.': 'Die towenskakel kon nie gestuur word nie.',
+  'Discord sign-in could not start.': 'Discord-aanmelding kon nie begin nie.',
+  'Email me a sign-in link instead': 'Stuur eerder ’n aanmeldskakel per e-pos',
+  'Supabase is not configured on this build.': 'Supabase is nie op hierdie bou opgestel nie.',
+  'The clan server below still works.': 'Die clan-bediener hieronder werk steeds.',
+  'Continue without signing in': 'Gaan voort sonder om aan te meld',
+  'Demo password is': 'Demo-wagwoord is',
+  'Fan content': 'Ondersteunersinhoud',
+
   /* `Clan`, `War`, `Home Village` and `Builder Base` map to themselves on
      purpose: they are Clash of Clans game terms and must stay verbatim in the
      Afrikaans interface. Listing them explicitly keeps that decision visible

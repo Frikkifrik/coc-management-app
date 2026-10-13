@@ -329,6 +329,7 @@ export function TopBar({
         </div>
 
         <div className="flex items-center gap-1">
+          <LangToggle />
           {onShare ? (
             <NavButton label={t('Share')} onClick={onShare}>
               <Share2 size={17} />
@@ -681,6 +682,65 @@ export function Chip({
     >
       {children}
     </span>
+  );
+}
+
+/* ================================================================== */
+/* Language toggle — lives in the header, flips the i18n context live  */
+/* ================================================================== */
+
+/**
+ * Compact AF/EN pill for the top-right header cluster. Switching language only
+ * mutates the i18n context, so the whole tree re-renders in place — no reload,
+ * no route change, no loss of scroll position or open sheets.
+ */
+export function LangToggle({ className = '' }: { className?: string }) {
+  const { lang, setLang } = useI18n();
+  return (
+    <div
+      role="group"
+      aria-label="Language / Taal"
+      className={`flex items-center gap-0.5 rounded-full border border-[#27272A]/60 bg-[#18181A]/80 p-0.5 ${className}`.trim()}
+    >
+      {(['af', 'en'] as const).map((code) => {
+        const active = lang === code;
+        return (
+          <button
+            key={code}
+            type="button"
+            onClick={() => setLang(code)}
+            aria-pressed={active}
+            aria-label={code === 'af' ? 'Afrikaans' : 'English'}
+            title={code === 'af' ? 'Afrikaans' : 'English'}
+            className={`cc-tap rounded-full px-2 py-1 text-[9px] font-bold uppercase leading-none tracking-[0.08em] transition-colors ${
+              active
+                ? 'bg-[#2563EB] text-white'
+                : 'text-neutral-500 hover:text-neutral-200'
+            }`}
+          >
+            {code}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ================================================================== */
+/* Supercell Fan Content Policy disclaimer                             */
+/* ================================================================== */
+
+/**
+ * The notice Supercell's Fan Content Policy asks fan content to carry, quoted
+ * verbatim from supercell.com/en/fan-content-policy. Rendered wherever official
+ * Supercell artwork appears, so the disclaimer always travels with the assets.
+ */
+export const FAN_CONTENT_NOTICE =
+  "This material is unofficial and is not endorsed by Supercell. For more information see Supercell's Fan Content Policy: www.supercell.com/fan-content-policy.";
+
+export function FanContentNotice({ className = '' }: { className?: string }) {
+  return (
+    <p className={`text-xs text-center text-neutral-500 p-4 ${className}`.trim()}>{FAN_CONTENT_NOTICE}</p>
   );
 }
 

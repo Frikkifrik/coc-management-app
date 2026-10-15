@@ -16,14 +16,6 @@ Open `http://localhost:4173`. The Express API and Vite app are served from one o
 
 The root page opens the **public recruitment search**; it does not require a login. Visit `/login` to enter the private command center. In development, use **Sandbox access → Leader** (or Co-Leader, Elder and Member) to explore role-specific screens. Demo names, tags, stats and history are synthetic. Direct demo passwords are `Clash2026!` for `leader@clan.demo`, `coleader@clan.demo`, `elder@clan.demo` and `member@clan.demo`.
 
-## Lukulele learning page
-
-The standalone learning app is available at `/Lukulele.html` in the local preview and after a production build. On iPhone, open its HTTPS link in Safari, tap **Share**, then **Add to Home Screen**; launch it from the new Home Screen icon. On Android, use Chrome on the HTTPS link. When Chrome considers the PWA installable, the page offers an **Install Lukulele** button and Chrome may also offer **Install app** in its menu; the browser controls whether the prompt is available. If updating an existing iPhone shortcut, remove it and add it again after deploying the latest page so iOS picks up its standalone settings and icon. The app saves Luke's progress in this browser. After opening it and tapping **Let's Go** while online, it saves the page for later offline use; the Practice section shows whether the offline copy is ready. The built-in reference tones and microphone pitch analysis work on the device without sending audio to a server.
-
-The metronome-led practice session counts in for two bars with **Ready?**, then two bars with **Here we go!**. It then starts the practice timer and changes the chord card every four bars. The session stops the metronome and chord prompts when the timer ends.
-
-The live microphone tuner needs a secure page (`https://` or `localhost`) and microphone permission. Opening the HTML directly as a `file://` page does not provide microphone or offline-cache support. Open the page once while online before trying to reopen it offline.
-
 ## Modules
 
 - **Family Hub** — totals across the three clans, live war status, clan tabs, member search, join/leave dates, former-member flags, account history, profile drawer and a registration form for a phone number, main tag and linked alt/baby tags. Phone numbers are kept only in this browser's local demo state; they are not returned by the public API.

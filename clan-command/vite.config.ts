@@ -16,7 +16,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
-        lukulele: 'Lukulele.html',
       },
       output: {
         manualChunks(id) {
